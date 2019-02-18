@@ -89,7 +89,7 @@ public class CustomerOrder {
 			return this;
 		}
 		
-		public Builder buyer_apt_suit_unit_etc(final String apt) {
+		public Builder buyer_apt_suite_unit_etc(final String apt) {
 			this.buyer_apt_suite_unit_etc = apt;
 			return this;
 		}
