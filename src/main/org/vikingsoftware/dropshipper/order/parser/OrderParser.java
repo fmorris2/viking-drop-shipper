@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
-import main.org.vikingsoftware.dropshipper.core.data.CustomerOrder;
+import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;

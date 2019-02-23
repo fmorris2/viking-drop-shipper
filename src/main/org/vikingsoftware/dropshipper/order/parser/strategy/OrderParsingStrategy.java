@@ -2,7 +2,7 @@ package main.org.vikingsoftware.dropshipper.order.parser.strategy;
 
 import java.util.Collection;
 
-import main.org.vikingsoftware.dropshipper.core.data.CustomerOrder;
+import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 
 public interface OrderParsingStrategy {
 	

@@ -14,7 +14,7 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import main.org.vikingsoftware.dropshipper.core.data.CustomerOrder;
+import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.order.parser.strategy.OrderParsingStrategy;

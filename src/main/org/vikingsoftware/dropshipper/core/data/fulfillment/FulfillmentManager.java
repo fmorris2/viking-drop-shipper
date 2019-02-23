@@ -3,16 +3,19 @@ package main.org.vikingsoftware.dropshipper.core.data.fulfillment;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
 
 public class FulfillmentManager {
 	
 	//marketplace listing id ==> fulfillment listing
-	private static Map<Integer, FulfillmentListing> listings = new HashMap<>();
+	private static Map<Integer, List<FulfillmentListing>> listings = new HashMap<>();
 	
 	//db primary key id ==> fulfillment platform
 	private static Map<Integer, FulfillmentPlatform> platforms = new HashMap<>();
@@ -26,6 +29,10 @@ public class FulfillmentManager {
 	
 	public static boolean isLoaded() {
 		return !listings.isEmpty() && !platforms.isEmpty();
+	}
+	
+	public static List<FulfillmentListing> getListingsForOrder(final CustomerOrder order) {
+		return listings.getOrDefault(order.marketplace_listing_id, new ArrayList<>());
 	}
 	
 	private static void loadFulfillmentListings() {
@@ -42,10 +49,11 @@ public class FulfillmentManager {
 					.listing_id(results.getString("listing_id"))
 					.listing_url(results.getString("listing_url"))
 					.listing_max_price(results.getDouble("listing_max_price"))
-					.listing_options(results.getString("listing_options"))
 					.build();
 				
-				listings.put(marketplace_listing_id, listing);
+				final List<FulfillmentListing> currentListings = listings.getOrDefault(marketplace_listing_id, new ArrayList<>());
+				currentListings.add(listing);
+				listings.put(marketplace_listing_id, currentListings);
 			}
 		} catch(final SQLException e) {
 			e.printStackTrace();

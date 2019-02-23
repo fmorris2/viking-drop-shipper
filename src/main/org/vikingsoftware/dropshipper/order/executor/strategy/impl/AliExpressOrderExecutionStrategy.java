@@ -3,14 +3,20 @@ package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import main.org.vikingsoftware.dropshipper.core.data.CustomerOrder;
+import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 
@@ -40,26 +46,23 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 	}
 	
 	@Override
-	public boolean order(final CustomerOrder order) {
-		return order(order, false);
+	public List<Boolean> order(final List<CustomerOrder> orders) {
+		return order(orders, false);
 	}
 	
-	public boolean testOrder(final CustomerOrder order) {
-		return order(order, true);
+	public List<Boolean> testOrder(final List<CustomerOrder> orders) {
+		return order(orders, true);
 	}
 	
-	private boolean order(final CustomerOrder order, final boolean isTest) {
-		
-		final boolean success = false;
-		final FulfillmentListing listing = loadFulfillmentListingForOrder(order);
-				
+	private List<Boolean> order(final List<CustomerOrder> orders, final boolean isTest) {
+		final List<Boolean> results = new ArrayList<>();
 		final ChromeOptions options = new ChromeOptions();
 		options.setHeadless(false);
 		
-		final WebDriver browser = new ChromeDriver(options);
-		browser.manage().timeouts().implicitlyWait(DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
-		
 		try {
+			final WebDriver browser = new ChromeDriver(options);
+			browser.manage().timeouts().implicitlyWait(DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
+			
 			//sign in to ali express
 			browser.get("https://login.aliexpress.com/");
 			browser.switchTo().frame(browser.findElement(By.id("alibaba-login-box")));
@@ -68,20 +71,99 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 			browser.findElement(By.id("fm-login-submit")).click();
 			
 			//wait for home page to appear
-			browser.findElement(By.className("nav-user-account"));		
+			browser.findElement(By.className("nav-user-account"));
 			
-			
-			Thread.sleep(5000);
-		} catch (final InterruptedException e) {
-			e.printStackTrace();
+			for(final CustomerOrder order : orders) {
+				try {
+					final List<FulfillmentListing> listings = FulfillmentManager.getListingsForOrder(order);
+					
+					if(listings.isEmpty()) {
+						System.out.println("There are no FulfillmentListings present for customer order id " + order.id);
+						results.add(false);
+					}
+					
+					final boolean success = false;
+					for(final FulfillmentListing listing : listings) {
+						//navigate to fulfillment listing page
+						browser.get(listing.listing_url);
+						
+						//select appropriate order options (color, length, etc)
+						if(!selectOrderOptions(browser, order, listing)) {
+							continue;
+						}
+					}
+					
+					results.add(success);
+				} catch(final Exception e) {
+					results.add(false);
+					e.printStackTrace();
+				}
+			}
 		} finally {
 			//browser.close();
 		}
 		
-		return success;
+		return results;
 	}
 	
-	private FulfillmentListing loadFulfillmentListingForOrder(final CustomerOrder order) {
-		return null;
+	private static boolean selectOrderOptions(final WebDriver browser, final CustomerOrder order, final FulfillmentListing listing) {
+		try {
+			final WebElement productInfoDiv = browser.findElement(By.id("j-product-info-sku"));
+			final List<WebElement> propertyItems = productInfoDiv == null ? null : productInfoDiv.findElements(By.className("p-property-item"));
+			if(propertyItems != null && !propertyItems.isEmpty()) {
+				final JSONParser parser = new JSONParser();
+				final JSONObject jsonObj = (JSONObject)parser.parse(order.item_options);
+				options:
+				for(final WebElement propertyItem : propertyItems) {
+					final String itemTitle = propertyItem.findElement(By.className("p-item-title"))
+							.getText()
+							.replace(":", "");
+					
+					final String valueToSelect = jsonObj.get(itemTitle).toString();
+					System.out.println("Selecting " + valueToSelect + " for item " + itemTitle);
+					
+					final WebElement valueList = propertyItem.findElement(By.className("sku-attr-list"));
+					final List<WebElement> listElements = valueList.findElements(By.xpath(".//li"));
+					for(final WebElement listElement : listElements) {
+						if(isMatchingOrderOption(listElement, valueToSelect)) {
+							System.out.println("Clicking " + valueToSelect + " option for " + itemTitle);
+							listElement.click();
+							continue options;
+						}
+					}
+					
+					return false;
+				}
+			}
+		} catch(final Exception e) {
+			e.printStackTrace();
+			System.out.println("Failed to select order options");
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private static boolean isMatchingOrderOption(final WebElement listElement, final String valueToSelect) {
+		final WebElement dataRole = listElement.findElement(By.xpath(".//a"));
+		if(dataRole == null) {
+			return false;
+		}
+		else if(listElement.getAttribute("class").equals("item-sku-image")) { //image list item
+			System.out.println("Dealing with an image list item!");
+			if(dataRole != null && dataRole.getAttribute("title").equalsIgnoreCase(valueToSelect)) {
+				System.out.println("Found matching image list item for " + valueToSelect);
+				return true;
+			}
+		} else { //normal list item
+			System.out.println("Dealing with a normal list item!");
+			final WebElement span = dataRole.findElement(By.xpath(".//span"));
+			if(span != null && span.getText().equals(valueToSelect)) {
+				System.out.println("Found matching normal list item for " + valueToSelect);
+				return true;
+			}
+		}
+		
+		return false;
 	}
 }

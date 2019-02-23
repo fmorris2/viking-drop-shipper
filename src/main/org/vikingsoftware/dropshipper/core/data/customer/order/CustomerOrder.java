@@ -1,4 +1,4 @@
-package main.org.vikingsoftware.dropshipper.core.data;
+package main.org.vikingsoftware.dropshipper.core.data.customer.order;
 
 public class CustomerOrder {
 	
@@ -7,6 +7,7 @@ public class CustomerOrder {
 	 */
 	public final int id;
 	public final int marketplace_listing_id;
+	public final String item_options;
 	public final int quantity;
 	
 	public final String marketplace_order_id;
@@ -22,6 +23,7 @@ public class CustomerOrder {
 	private CustomerOrder(final Builder builder) {
 		this.id = builder.id;
 		this.marketplace_listing_id = builder.marketplace_listing_id;
+		this.item_options = builder.item_options;
 		this.quantity = builder.quantity;
 		this.marketplace_order_id = builder.marketplace_order_id;
 		this.buyer_username = builder.buyer_username;
@@ -37,6 +39,7 @@ public class CustomerOrder {
 	public static class Builder {
 		private int id;
 		private int marketplace_listing_id;
+		private String item_options;
 		private int quantity;
 		
 		private String marketplace_order_id;
@@ -56,6 +59,11 @@ public class CustomerOrder {
 		
 		public Builder marketplace_listing_id(final int id) {
 			this.marketplace_listing_id = id;
+			return this;
+		}
+		
+		public Builder item_options(final String item_options) {
+			this.item_options = item_options;
 			return this;
 		}
 		

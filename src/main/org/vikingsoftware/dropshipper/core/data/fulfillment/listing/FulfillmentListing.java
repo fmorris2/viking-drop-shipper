@@ -7,7 +7,6 @@ public class FulfillmentListing {
 	public final String listing_id;
 	public final String listing_url;
 	public final double listing_max_price;
-	public final String listing_options;
 	
 	private FulfillmentListing(final Builder builder) {
 		this.id = builder.id;
@@ -15,7 +14,6 @@ public class FulfillmentListing {
 		this.listing_id = builder.listing_id;
 		this.listing_url = builder.listing_url;
 		this.listing_max_price = builder.listing_max_price;
-		this.listing_options = builder.listing_options;
 	}
 	
 	public static class Builder {		
@@ -24,7 +22,6 @@ public class FulfillmentListing {
 		private String listing_id;
 		private String listing_url;
 		private double listing_max_price;
-		private String listing_options;
 	
 		public Builder id(final int id) {
 			this.id = id;
@@ -48,11 +45,6 @@ public class FulfillmentListing {
 		
 		public Builder listing_max_price(final double price) {
 			this.listing_max_price = price;
-			return this;
-		}
-		
-		public Builder listing_options(final String json) {
-			this.listing_options = json;
 			return this;
 		}
 		
