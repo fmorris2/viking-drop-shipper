@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class DBCredentialManager {
-	private static final String CREDS_FILE = "db_creds.secure";
+	private static final String CREDS_FILE = "/data/db_creds.secure";
 	
 	private static String user;
 	private static String pass;
