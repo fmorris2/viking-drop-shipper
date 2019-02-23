@@ -36,6 +36,10 @@ public class Marketplace {
 		knownOrderIds.add(id);
 	}
 	
+	public void clearKnownOrderIds() {
+		knownOrderIds.clear();
+	}
+	
 	public Set<MarketplaceListing> getMarketplaceListings() {
 		final Set<MarketplaceListing> listings = new HashSet<>();
 		final Statement st = VDSDBManager.get().createStatement();

@@ -8,18 +8,28 @@ import main.org.vikingsoftware.dropshipper.order.parser.strategy.impl.EbayOrderP
 
 public enum Marketplaces {
 	
-	EBAY(new EbayOrderParsingStrategy());
+	EBAY(EbayOrderParsingStrategy.class);
 	
 	private static Map<Integer, Marketplace> MARKETPLACES = new HashMap<>();
 	
-	public final OrderParsingStrategy parsingStrategy;
+	private final Class<? extends OrderParsingStrategy> parsingStrategy;
 	
-	Marketplaces(final OrderParsingStrategy parsingStrategy) {
+	Marketplaces(final Class<? extends OrderParsingStrategy> parsingStrategy) {
 		this.parsingStrategy = parsingStrategy;
 	}
 	
 	public static void addMarketplace(final Marketplace marketplace) {
 		MARKETPLACES.put(marketplace.id, marketplace);
+	}
+	
+	public OrderParsingStrategy generateParsingStrategy() {
+		try {
+			return parsingStrategy.newInstance();
+		} catch (final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 	
 	public Marketplace getMarketplace() {

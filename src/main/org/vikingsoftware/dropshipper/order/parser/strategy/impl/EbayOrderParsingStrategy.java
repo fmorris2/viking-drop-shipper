@@ -55,10 +55,6 @@ public class EbayOrderParsingStrategy implements OrderParsingStrategy {
 	
 	@Override
 	public Collection<CustomerOrder> parseNewOrders() {
-		return null;
-	}
-	
-	public Collection<CustomerOrder> parseOrders() {
 		final Set<CustomerOrder> orders = new HashSet<>();
 		
 		final ChromeOptions options = new ChromeOptions();
@@ -77,7 +73,10 @@ public class EbayOrderParsingStrategy implements OrderParsingStrategy {
 			if(!soldItems.isEmpty()) {
 				//Convert all Sold Item WebElements to our CustomerOrder POJO (Plain Old Java Object)
 				System.out.println("Found " + soldItems.size() + " sold items");
-				orders.addAll(parseSoldItems(browser, soldItems));
+				final Collection<CustomerOrder> parsedOrders = parseSoldItems(browser, soldItems);
+				if(parsedOrders != null) {
+					orders.addAll(parsedOrders);
+				}
 			}
 		} finally {
 			browser.close();
@@ -112,7 +111,6 @@ public class EbayOrderParsingStrategy implements OrderParsingStrategy {
 			final WebElement listingId = soldItem.findElement(By.className("g-vxs")); //parse the listing id out of the sold item block
 			if(listingId != null) { //clearly we can't continue if we weren't able to parse the listing id
 				final String listingIdText = listingId.getText().replace("(", "").replace(")", ""); //strip parenthesis from listing id
-				//TODO uncomment the line below during production
 				if(ebayListingsMap.keySet().contains(listingIdText)) { //verify listing id is contained in our DB
 					System.out.println("Found listing id: " + listingIdText);
 					
@@ -195,19 +193,20 @@ public class EbayOrderParsingStrategy implements OrderParsingStrategy {
 			
 			//parse price
 			final WebElement priceElement = itemDetailsElement.findElement(By.xpath("//*[@id=\""+listingIdText+"_Price\"]"));
-			final double price = priceElement == null ? -1 : Double.parseDouble(priceElement.getText().replace("$", ""));
+			final Double price = priceElement == null ? null : Double.parseDouble(priceElement.getText().replace("$", ""));
 			System.out.println("Order Price: " + price);
-			if(price == -1) {
+			if(price == null) {
 				System.out.println("Could not parse price for transaction " + transactionId);
-				return null;
 			}
 			
 			//parse buyer name
-			final String buyerName = browser.findElement(By.id("shippingAddressName")).getText();
+			final WebElement buyerNameEl = browser.findElement(By.id("shippingAddressName"));
+			final String buyerName = buyerNameEl == null ? null : buyerNameEl.getText();
 			System.out.println("Buyer Name: " + buyerName);
 			
 			//parse street address
-			final String streetAddress = browser.findElement(By.id("shippingAddressLine1")).getText();
+			final WebElement streetAddressEl = browser.findElement(By.id("shippingAddressLine1"));
+			final String streetAddress = streetAddressEl == null ? null : streetAddressEl.getText();
 			System.out.println("Buyer Street Address: " + streetAddress);
 			
 			//parse apt / suite / unit / etc
@@ -216,32 +215,35 @@ public class EbayOrderParsingStrategy implements OrderParsingStrategy {
 			System.out.println("Buyer Apt Suite Unit Etc: " + buyerAptSuiteUnitEtc);
 			
 			//parse city state zip parts
-			final String cityStateZip = browser.findElement(By.id("shippingAddressCityStateZip")).getText();
+			final WebElement cityStateZipEl = browser.findElement(By.id("shippingAddressCityStateZip"));
+			final String cityStateZip = cityStateZipEl == null ? null : cityStateZipEl.getText();
 			final String[] cityStateZipParts = cityStateZip.split(" ");
+			String zip = null, city = null, state = null;
 			if(cityStateZipParts.length < 3) {
 				System.out.println("Unknown city state zip format: " + cityStateZip);
-				return null;
+			} else {		
+				//parse zip from parts
+				zip = cityStateZipParts[cityStateZipParts.length - 1];
+				System.out.println("Buyer Zip Code: " + zip);
+				
+				//parse state from parts
+				state = cityStateZipParts[cityStateZipParts.length - 2];
+				System.out.println("Buyer State: " + state);
+				
+				//parse city from parts
+				city = "";
+				for(int i = 0; i < cityStateZipParts.length - 2; i++) {
+					city += cityStateZipParts[i];
+					city += " ";
+				}
+				city = city.trim();		
+				System.out.println("Buyer City: " + city);
 			}
-			
-			//parse zip from parts
-			final String zip = cityStateZipParts[cityStateZipParts.length - 1];
-			System.out.println("Buyer Zip Code: " + zip);
-			
-			//parse state from parts
-			final String state = cityStateZipParts[cityStateZipParts.length - 2];
-			System.out.println("Buyer State: " + state);
-			
-			//parse city from parts
-			String city = "";
-			for(int i = 0; i < cityStateZipParts.length - 2; i++) {
-				city += cityStateZipParts[i];
-				city += " ";
-			}
-			city = city.trim();		
-			System.out.println("Buyer City: " + city);
 			
 			//parse country from parts
-			final String country = browser.findElement(By.id("shippingAddressCountry")).getText();
+			final WebElement countryEl = browser.findElement(By.id("shippingAddressCountry"));
+			final String country = countryEl == null ? null : countryEl.getText();
+			
 			System.out.println("Buyer Country: " + country);
 			
 			//build our CustomerOrder POJO from all parsed info
