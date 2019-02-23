@@ -48,9 +48,9 @@ public class EbayOrderParsingStrategy implements OrderParsingStrategy {
 			) {
 				username = bR.readLine().trim();
 				password = bR.readLine().trim();
-			} catch (final Exception e) {
-				e.printStackTrace();
-			}
+		} catch (final Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Override
