@@ -1,5 +1,11 @@
 package main.org.vikingsoftware.dropshipper.order.validator;
 
-public class OrderValidator {
+import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
+
+public class OrderValidator implements CycleParticipant {
+
+	@Override
+	public void cycle() {
+	}
 
 }

@@ -2,6 +2,7 @@ package main.org.vikingsoftware.dropshipper.core.db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
@@ -35,6 +36,19 @@ public abstract class DBManager {
 				refreshConnection();
 			}	
 			return connection.createStatement();
+		}catch(final SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	public PreparedStatement createPreparedStatement(final String sql) {
+		try {
+			if(!isConnectionValid()) {
+				refreshConnection();
+			}	
+			return connection.prepareStatement(sql);
 		}catch(final SQLException e) {
 			e.printStackTrace();
 		}
