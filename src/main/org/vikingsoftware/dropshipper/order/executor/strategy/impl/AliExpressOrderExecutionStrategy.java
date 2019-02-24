@@ -1,23 +1,38 @@
 package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import javax.imageio.ImageIO;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
+import main.org.vikingsoftware.dropshipper.core.data.misc.CreditCardInfo;
 import main.org.vikingsoftware.dropshipper.core.data.misc.StateUtils;
+import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
+import main.org.vikingsoftware.dropshipper.core.utils.CaptchaUtils;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.Point;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -27,13 +42,18 @@ import org.openqa.selenium.support.ui.Select;
 public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy {
 	
 	private static final String CREDS_FILE_PATH = "/data/aliexpress-creds.secure";
+	private static final String CARD_INFO_PATH = "/data/aliexpress-payment-method.secure";
+	private static final String ORDER_ID_PATTERN = "orderId=([^&]*)";
 	private static final int DEFAULT_VISIBILITY_WAIT_SECONDS = 5;
+	private static final int ORDER_SUCCESS_WAIT_SECONDS = 60;
 	
 	private String username;
 	private String password;
+	private CreditCardInfo cardInfo;
 	
 	public AliExpressOrderExecutionStrategy() {
 		parseCredentials();
+		parseCardInfo();
 	}
 	
 	private void parseCredentials() {
@@ -49,27 +69,62 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		}
 	}
 	
+	private void parseCardInfo() {
+		cardInfo = new CreditCardInfo();
+		try(
+				final InputStream inputStream = getClass().getResourceAsStream(CARD_INFO_PATH);
+				final InputStreamReader reader = new InputStreamReader(inputStream);
+				final BufferedReader bR = new BufferedReader(reader);
+			) {
+				cardInfo.cardNumber = bR.readLine().trim();
+				cardInfo.expMonth = bR.readLine().trim();
+				cardInfo.expYear = bR.readLine().trim();
+				cardInfo.secCode = bR.readLine().trim();
+				cardInfo.firstName = bR.readLine().trim();
+				cardInfo.lastName = bR.readLine().trim();
+				
+				cardInfo.country = bR.readLine().trim();
+				cardInfo.streetAddr = bR.readLine().trim();
+				cardInfo.streetAddr2 = bR.readLine().trim();
+				cardInfo.city = bR.readLine().trim();
+				cardInfo.state = bR.readLine().trim();
+				cardInfo.zip = bR.readLine().trim();
+		} catch (final Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	@Override
-	public List<Boolean> order(final List<CustomerOrder> orders) {
+	public List<ProcessedOrder> order(final List<CustomerOrder> orders) {
 		return order(orders, false);
 	}
 	
-	public List<Boolean> testOrder(final List<CustomerOrder> orders) {
+	public List<ProcessedOrder> testOrder(final List<CustomerOrder> orders) {
 		return order(orders, true);
 	}
 	
-	private List<Boolean> order(final List<CustomerOrder> orders, final boolean isTest) {
-		final List<Boolean> results = new ArrayList<>();
+	private List<ProcessedOrder> order(final List<CustomerOrder> orders, final boolean isTest) {
+		final List<ProcessedOrder> results = new ArrayList<>();
 		final ChromeOptions options = new ChromeOptions();
-		options.setHeadless(false);
-		
+		options.setHeadless(true);
+		final WebDriver browser = new ChromeDriver(options);
 		try {
-			final WebDriver browser = new ChromeDriver(options);
+			browser.manage().window().maximize();
 			browser.manage().timeouts().implicitlyWait(DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
 			
 			//sign in to ali express
 			browser.get("https://login.aliexpress.com/");
 			browser.switchTo().frame(browser.findElement(By.id("alibaba-login-box")));
+			
+			try {
+				final WebElement verificationElement = browser.findElement(By.xpath("//*[@id=\"nc_1__scale_text\"]/span"));
+				if(verificationElement.isDisplayed() && verificationElement.isEnabled()) {
+					System.out.println("encountered verification element... retrying.");
+					return order(orders, isTest);
+				}
+			} catch(final NoSuchElementException e) {
+				//swallow exception
+			}
 			browser.findElement(By.id("fm-login-id")).sendKeys(username);
 			browser.findElement(By.id("fm-login-password")).sendKeys(password);
 			browser.findElement(By.id("fm-login-submit")).click();
@@ -83,10 +138,11 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 					
 					if(listings.isEmpty()) {
 						System.out.println("There are no FulfillmentListings present for customer order id " + order.id);
-						results.add(false);
+						results.add(null);
+						continue;
 					}
 					
-					final boolean success = false;
+					ProcessedOrder processedOrder = null;
 					for(final FulfillmentListing listing : listings) {
 						//navigate to fulfillment listing page
 						browser.get(listing.listing_url);
@@ -116,19 +172,151 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 						}
 						
 						System.out.println("selecting payment method...");
+						if(!enterPaymentMethod(browser, order, listing)) {
+							continue;
+						}
+						
+						try {
+							final WebElement captchaElement = browser.findElement(By.id("captcha-image"));
+							if(captchaElement != null) {
+								System.out.println("solving captcha...");
+								final File screenshot = takeScreenshot(browser, captchaElement);
+								final String solvedCaptcha = CaptchaUtils.solveSimpleCaptcha(screenshot);
+							}
+						} catch(final NoSuchElementException e) {
+							System.out.println("there is no captcha to solve, moving forward...");
+						}
+						
+						if(!isTest) {
+							System.out.println("clicking confirm & pay...");
+							browser.findElement(By.id("place-order-btn")).click();
+							
+							browser.manage().timeouts().implicitlyWait(ORDER_SUCCESS_WAIT_SECONDS, TimeUnit.SECONDS);
+							
+							try {
+								final WebElement feedbackHeader = browser.findElement(By.xpath("/html/body/div[5]/div[1]/div/h3"));
+								if(feedbackHeader.getText().toLowerCase().contains("thank you for your payment")) {
+									final WebElement orderDetailsLink = browser.findElement(By.xpath("/html/body/div[5]/div[1]/div/div[5]/a[1]"));
+									final Pattern regex = Pattern.compile(ORDER_ID_PATTERN);
+									final Matcher matcher = regex.matcher(orderDetailsLink.getAttribute("href"));
+									if(matcher.find()) {
+										final String transactionId = matcher.group(1);
+										System.out.println("Successfully parsed transaction id: " + transactionId);
+										processedOrder = new ProcessedOrder(order.id, listing.id, transactionId, "processing");
+										break;
+									} else {
+										System.out.println("Could not find order details link...");
+									}
+								}
+							} catch(final NoSuchElementException e) {
+								e.printStackTrace();
+								System.out.println("submitting the order failed...");
+							}
+						} else {
+							processedOrder = new ProcessedOrder(-1, -1, null, null);
+						}
+						
 					}
 					
-					results.add(success);
+					results.add(processedOrder);
 				} catch(final Exception e) {
-					results.add(false);
+					results.add(null);
 					e.printStackTrace();
 				}
 			}
 		} finally {
-			//browser.close();
+			browser.close();
 		}
 		
 		return results;
+	}
+	
+	private boolean enterPaymentMethod(final WebDriver browser, final CustomerOrder order, final FulfillmentListing listing) {
+		final WebElement useNewCard = browser.findElement(By.className("use-new-card"));
+		useNewCard.findElement(By.tagName("input")).click();
+		
+		//enter details
+		browser.findElement(By.xpath("//*[@id=\"j-payment-method\"]/div[4]/ul/li[1]/div[2]/div/div[1]/input[1]"))
+			.sendKeys(cardInfo.cardNumber);
+		
+		browser.findElement(By.xpath("//*[@id=\"j-payment-method\"]/div[4]/ul/li[1]/div[2]/div/div[2]/div[1]/input[1]"))
+			.sendKeys(cardInfo.expMonth);
+		
+		browser.findElement(By.xpath("//*[@id=\"j-payment-method\"]/div[4]/ul/li[1]/div[2]/div/div[2]/div[1]/input[2]"))
+			.sendKeys(cardInfo.expYear);
+		
+		browser.findElement(By.xpath("//*[@id=\"j-payment-method\"]/div[4]/ul/li[1]/div[2]/div/div[2]/div[2]/input"))
+			.sendKeys(cardInfo.secCode);
+		
+		browser.findElement(By.xpath("//*[@id=\"j-payment-method\"]/div[4]/ul/li[1]/div[2]/div/div[3]/div[1]/input"))
+			.sendKeys(cardInfo.firstName);
+		
+		browser.findElement(By.xpath("//*[@id=\"j-payment-method\"]/div[4]/ul/li[1]/div[2]/div/div[3]/div[2]/input"))
+			.sendKeys(cardInfo.lastName);
+		
+		browser.findElement(By.xpath("//*[@id=\"baddress\"]/span")).click();
+		
+		new Select(browser.findElement(By.xpath("//*[@id=\"baddress-form\"]/select[1]")))
+			.selectByVisibleText(cardInfo.country);
+		
+		browser.findElement(By.xpath("//*[@id=\"baddress-form\"]/input[1]"))
+			.sendKeys(cardInfo.streetAddr);
+		
+		if(!cardInfo.streetAddr2.isEmpty()) {
+			browser.findElement(By.xpath("//*[@id=\"baddress-form\"]/input[2]"))
+				.sendKeys(cardInfo.streetAddr2);
+		}
+		
+		final WebElement cityInput = browser.findElement(By.xpath("//*[@id=\"baddress-form\"]/input[3]"));
+		cityInput.clear();
+		cityInput.sendKeys(cardInfo.city);
+		
+		new Select(browser.findElement(By.xpath("//*[@id=\"baddress-form\"]/select[2]")))
+			.selectByVisibleText(cardInfo.state);
+		
+		final WebElement zipInput = browser.findElement(By.xpath("//*[@id=\"baddress-form\"]/input[4]"));
+		zipInput.clear();
+		zipInput.sendKeys(cardInfo.zip);
+		
+		browser.findElement(By.xpath("//*[@id=\"j-payment-method\"]/div[4]/ul/li[1]/div[2]/div/div[8]/button[1]")).click();
+			
+		return true;
+	}
+	
+	private File takeScreenshot(final WebDriver browser, final WebElement element) {
+		try {
+			
+			((JavascriptExecutor) browser).executeScript("window.scrollTo(document.body.scrollWidth, document.body.scrollHeight)");
+			final int bodyWidth = Integer.parseInt(((JavascriptExecutor) browser).executeScript("return document.body.scrollWidth").toString());
+			final int bodyHeight = Integer.parseInt(((JavascriptExecutor) browser).executeScript("return document.body.scrollHeight").toString());
+			System.out.println("BodyWidth: " + bodyWidth + ", height: " + bodyHeight);
+			
+			element.click();
+			final File screenshot = ((TakesScreenshot)browser).getScreenshotAs(OutputType.FILE);
+			final BufferedImage fullImg = ImageIO.read(screenshot);
+			System.out.println("fullImg size: " + fullImg.getWidth() + " x " + fullImg.getHeight());
+			ImageIO.write(fullImg, "png", new File("full-screen-output.png"));
+			
+			final Point point = element.getLocation();
+			System.out.println("point: " + point);
+			final int adjustedImageX = Math.max(0, fullImg.getWidth() - (bodyWidth - point.getX()));
+			final int adjustedImageY = Math.max(0, fullImg.getHeight() - (bodyHeight - point.getY()));
+			System.out.println("adjustedX: " + adjustedImageX + ", adjustedY: " + adjustedImageY);
+			final int width = element.getSize().getWidth();
+			final int height = element.getSize().getHeight();
+			
+			final BufferedImage img = fullImg.getSubimage(adjustedImageX, adjustedImageY, width, height);
+			final File imgFile = new File("captcha-image.png");
+			ImageIO.write(img, "png", imgFile);
+			System.out.println("img size: " + img.getWidth() + " x " + img.getHeight());
+			return imgFile;
+			
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+		
 	}
 	
 	private static boolean verifyShippingDetails(final WebDriver browser, final CustomerOrder order, final FulfillmentListing listing) {
@@ -145,38 +333,24 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 				.collect(Collectors.toList());
 		
 		System.out.println("verifying location details...");
-		int locMatches = 0;
+		final AtomicInteger matches = new AtomicInteger(0);
 		for(final String locItem : locItems) {
-			if(locItem.contains(order.buyer_street_address)) {
-				locMatches++;
-			}
-			
-			if(locItem.contains(order.buyer_apt_suite_unit_etc)) {
-				locMatches++;
-			}
-			
-			if(locItem.contains(order.buyer_city)) {
-				locMatches++;
-			}
-			
-			if(locItem.contains(order.buyer_state_province_region)) {
-				locMatches++;
-			}
-			
-			if(locItem.contains(StateUtils.getStateNameFromCode(order.buyer_state_province_region))) {
-				locMatches++;
-			}
-			
-			if(locItem.contains(order.buyer_zip_postal_code)) {
-				locMatches++;
-			}
-			
-			if(locItem.contains(order.buyer_country)) {
-				locMatches++;
-			}
+			incrementIfMatch(matches, locItem, order.buyer_street_address);
+			incrementIfMatch(matches, locItem, order.buyer_apt_suite_unit_etc);
+			incrementIfMatch(matches, locItem, order.buyer_city);
+			incrementIfMatch(matches, locItem, order.buyer_state_province_region);
+			incrementIfMatch(matches, locItem, StateUtils.getStateNameFromCode(order.buyer_state_province_region));
+			incrementIfMatch(matches, locItem, order.buyer_zip_postal_code);
+			incrementIfMatch(matches, locItem, order.buyer_country);
 		}
 		
-		return locMatches >= 6;	
+		return matches.intValue() >= 6;	
+	}
+	
+	private static void incrementIfMatch(final AtomicInteger matches, final String toSearch, final String substr) {
+		if(toSearch.contains(substr)) {
+			matches.incrementAndGet();
+		}
 	}
 	
 	private static boolean enterShippingAddress(final WebDriver browser, final CustomerOrder order, final FulfillmentListing listing) {
@@ -197,22 +371,28 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		final Select city = new Select(browser.findElement(By.xpath("//*[@id=\"address-main\"]/div[1]/div[5]/div/select")));
 		city.selectByVisibleText(order.buyer_city);
 		
-		System.out.println("Iterating through inputs");
 		final List<WebElement> inputs = browser.findElements(By.tagName("input"));
-		System.out.println("inputs size: " + inputs.size());
+		int inputsComplete = 0;
 		for(final WebElement input : inputs) { 
+			if(inputsComplete == 4) {
+				break;
+			}
+			System.out.println("checking input: " + input.getAttribute("name"));
 			switch(input.getAttribute("name").toLowerCase()) {
 				case "contactperson":
 					System.out.println("Setting contact name...");
 					clearAndTypeInElement(input, order.buyer_name);
+					inputsComplete++;
 				break;
 				case "address":
 					System.out.println("Setting street address...");
 					clearAndTypeInElement(input, order.buyer_street_address);
+					inputsComplete++;
 				break;
 				case "address2":
 					System.out.println("Setting apt / suite / unit / etc...");
 					clearAndTypeInElement(input, order.buyer_apt_suite_unit_etc);
+					inputsComplete++;
 				break;
 				case "zip":
 					System.out.println("Setting zip code...");
@@ -227,8 +407,8 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 							return false;
 						}
 					}
-				break;
-				
+					inputsComplete++;
+				break;			
 			}
 		}
 		
@@ -266,6 +446,10 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 					final String itemTitle = propertyItem.findElement(By.className("p-item-title"))
 							.getText()
 							.replace(":", "");
+					
+					if(!jsonObj.containsKey(itemTitle)) {
+						continue;
+					}
 					
 					final String valueToSelect = jsonObj.get(itemTitle).toString();
 					System.out.println("Selecting " + valueToSelect + " for item " + itemTitle);

@@ -18,7 +18,7 @@ public class TestAliExpressOrderExecutionStrategy {
 		
 		FulfillmentManager.load();
 		Assert.assertTrue(new AliExpressOrderExecutionStrategy()
-			.testOrder(Collections.singletonList(customerOrder)).stream().noneMatch(res -> !res));
+			.testOrder(Collections.singletonList(customerOrder)).stream().noneMatch(res -> res == null));
 	}
 
 }
