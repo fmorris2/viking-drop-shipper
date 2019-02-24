@@ -13,12 +13,14 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.order.parser.strategy.OrderParsingStrategy;
 
+import org.json.simple.JSONObject;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -143,9 +145,11 @@ public class EbayOrderParsingStrategy implements OrderParsingStrategy {
 						final String buyerUsername = soldItem.findElement(By.className("mbg-nw")).getText();
 						final int dbId = ebayListingsMap.get(listingIdText);
 						
+						final String customizationJson = parseCustomizationJson(soldItem);
+						
 						//Add a parse request to the queue, but don't actually parse it yet.
 						final Supplier<CustomerOrder> order = () -> parseOrderFromDetails(browser, dbId,
-								listingIdText, transactionId, orderDetailsLinkString, buyerUsername);
+								listingIdText, transactionId, orderDetailsLinkString, buyerUsername, customizationJson);
 						orderSuppliers.add(order);
 					}
 				} else {
@@ -167,8 +171,37 @@ public class EbayOrderParsingStrategy implements OrderParsingStrategy {
 		return orders;
 	}
 	
+	private String parseCustomizationJson(final WebElement soldItem) {
+		final List<String> detailKeys = soldItem.findElements(By.className("g-vxsB"))
+				.stream()
+				.filter(element -> !element.getText().isEmpty())
+				.map(element -> element.getText())
+				.collect(Collectors.toList());
+		
+		List<String> detailVals = soldItem.findElements(By.className("g-vxs"))
+				.stream()
+				.filter(element -> !element.getText().isEmpty())
+				.map(element -> element.getText())
+				.collect(Collectors.toList());
+		
+		detailVals = detailVals.subList(2, detailVals.size());
+		
+		final JSONObject customizationJson = new JSONObject();
+		for(int i = 0; i < detailKeys.size(); i++) {
+			final String detailKey = detailKeys.get(i);
+			if(detailKey.startsWith("Available Quantity")) {
+				break;
+			}
+			
+			customizationJson.put(detailKey.replace(":", ""), detailVals.get(i));
+		}
+		
+		System.out.println("customizationJson: " + customizationJson.toJSONString());
+		return customizationJson.toJSONString();
+	}
+	
 	private CustomerOrder parseOrderFromDetails(final WebDriver browser, final int listingDbID, final String listingIdText, 
-			final String transactionId, final String orderDetailsLink, final String buyerUsername) {
+			final String transactionId, final String orderDetailsLink, final String buyerUsername, final String customizationJson) {
 		
 		CustomerOrder order = null;
 		/*
@@ -250,6 +283,7 @@ public class EbayOrderParsingStrategy implements OrderParsingStrategy {
 			order = new CustomerOrder.Builder()
 				.marketplace_listing_id(listingDbID)
 				.quantity(quantity)
+				.item_options(customizationJson)
 				.marketplace_order_id(transactionId)
 				.buyer_username(buyerUsername)
 				.buyer_name(buyerName)
