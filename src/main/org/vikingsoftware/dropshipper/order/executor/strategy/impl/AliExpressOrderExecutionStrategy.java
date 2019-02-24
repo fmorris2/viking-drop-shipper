@@ -134,91 +134,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 			
 			for(final CustomerOrder order : orders) {
 				try {
-					final List<FulfillmentListing> listings = FulfillmentManager.getListingsForOrder(order);
-					
-					if(listings.isEmpty()) {
-						System.out.println("There are no FulfillmentListings present for customer order id " + order.id);
-						results.add(null);
-						continue;
-					}
-					
-					ProcessedOrder processedOrder = null;
-					for(final FulfillmentListing listing : listings) {
-						//navigate to fulfillment listing page
-						browser.get(listing.listing_url);
-						
-						//select appropriate order options (color, length, etc)
-						System.out.println("selecting order options...");
-						if(!selectOrderOptions(browser, order, listing)) {
-							continue;
-						}
-						
-						browser.findElement(By.id("j-buy-now-btn")).click();
-						
-						System.out.println("entering shipping address...");
-						if(!enterShippingAddress(browser, order, listing)) {
-							continue;
-						}
-						
-						System.out.println("saving shipping address...");
-						browser.findElement(By.className("sa-confirm")).click();
-						
-						System.out.println("refreshing page...");
-						browser.navigate().refresh();
-						
-						System.out.println("verifying shipping details...");
-						if(!verifyShippingDetails(browser, order, listing)) {
-							continue;
-						}
-						
-						System.out.println("selecting payment method...");
-						if(!enterPaymentMethod(browser, order, listing)) {
-							continue;
-						}
-						
-						try {
-							final WebElement captchaElement = browser.findElement(By.id("captcha-image"));
-							if(captchaElement != null) {
-								System.out.println("solving captcha...");
-								final File screenshot = takeScreenshot(browser, captchaElement);
-								final String solvedCaptcha = CaptchaUtils.solveSimpleCaptcha(screenshot);
-							}
-						} catch(final NoSuchElementException e) {
-							System.out.println("there is no captcha to solve, moving forward...");
-						}
-						
-						if(!isTest) {
-							System.out.println("clicking confirm & pay...");
-							browser.findElement(By.id("place-order-btn")).click();
-							
-							browser.manage().timeouts().implicitlyWait(ORDER_SUCCESS_WAIT_SECONDS, TimeUnit.SECONDS);
-							
-							try {
-								final WebElement feedbackHeader = browser.findElement(By.xpath("/html/body/div[5]/div[1]/div/h3"));
-								if(feedbackHeader.getText().toLowerCase().contains("thank you for your payment")) {
-									final WebElement orderDetailsLink = browser.findElement(By.xpath("/html/body/div[5]/div[1]/div/div[5]/a[1]"));
-									final Pattern regex = Pattern.compile(ORDER_ID_PATTERN);
-									final Matcher matcher = regex.matcher(orderDetailsLink.getAttribute("href"));
-									if(matcher.find()) {
-										final String transactionId = matcher.group(1);
-										System.out.println("Successfully parsed transaction id: " + transactionId);
-										processedOrder = new ProcessedOrder(order.id, listing.id, transactionId, "processing");
-										break;
-									} else {
-										System.out.println("Could not find order details link...");
-									}
-								}
-							} catch(final NoSuchElementException e) {
-								e.printStackTrace();
-								System.out.println("submitting the order failed...");
-							}
-						} else {
-							processedOrder = new ProcessedOrder(-1, -1, null, null);
-						}
-						
-					}
-					
-					results.add(processedOrder);
+					executeOrder(order, browser, isTest, results);
 				} catch(final Exception e) {
 					results.add(null);
 					e.printStackTrace();
@@ -229,6 +145,94 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		}
 		
 		return results;
+	}
+	
+	private void executeOrder(final CustomerOrder order, final WebDriver browser, final boolean isTest, final List<ProcessedOrder> results) {
+		final List<FulfillmentListing> listings = FulfillmentManager.getListingsForOrder(order);
+		
+		if(listings.isEmpty()) {
+			System.out.println("There are no FulfillmentListings present for customer order id " + order.id);
+			results.add(null);
+			return;
+		}
+		
+		ProcessedOrder processedOrder = null;
+		for(final FulfillmentListing listing : listings) {
+			//navigate to fulfillment listing page
+			browser.get(listing.listing_url);
+			
+			//select appropriate order options (color, length, etc)
+			System.out.println("selecting order options...");
+			if(!selectOrderOptions(browser, order, listing)) {
+				continue;
+			}
+			
+			browser.findElement(By.id("j-buy-now-btn")).click();
+			
+			System.out.println("entering shipping address...");
+			if(!enterShippingAddress(browser, order, listing)) {
+				continue;
+			}
+			
+			System.out.println("saving shipping address...");
+			browser.findElement(By.className("sa-confirm")).click();
+			
+			System.out.println("refreshing page...");
+			browser.navigate().refresh();
+			
+			System.out.println("verifying shipping details...");
+			if(!verifyShippingDetails(browser, order, listing)) {
+				continue;
+			}
+			
+			System.out.println("selecting payment method...");
+			if(!enterPaymentMethod(browser, order, listing)) {
+				continue;
+			}
+			
+			try {
+				final WebElement captchaElement = browser.findElement(By.id("captcha-image"));
+				if(captchaElement != null) {
+					System.out.println("solving captcha...");
+					final File screenshot = takeScreenshot(browser, captchaElement);
+					final String solvedCaptcha = CaptchaUtils.solveSimpleCaptcha(screenshot);
+				}
+			} catch(final NoSuchElementException e) {
+				System.out.println("there is no captcha to solve, moving forward...");
+			}
+			
+			if(!isTest) {
+				System.out.println("clicking confirm & pay...");
+				browser.findElement(By.id("place-order-btn")).click();
+				
+				browser.manage().timeouts().implicitlyWait(ORDER_SUCCESS_WAIT_SECONDS, TimeUnit.SECONDS);
+				
+				try {
+					final WebElement feedbackHeader = browser.findElement(By.xpath("/html/body/div[5]/div[1]/div/h3"));
+					if(feedbackHeader.getText().toLowerCase().contains("thank you for your payment")) {
+						final WebElement orderDetailsLink = browser.findElement(By.xpath("/html/body/div[5]/div[1]/div/div[5]/a[1]"));
+						final Pattern regex = Pattern.compile(ORDER_ID_PATTERN);
+						final Matcher matcher = regex.matcher(orderDetailsLink.getAttribute("href"));
+						if(matcher.find()) {
+							final String transactionId = matcher.group(1);
+							System.out.println("Successfully parsed transaction id: " + transactionId);
+							processedOrder = new ProcessedOrder(order.id, listing.id, transactionId, "processing");
+							break;
+						} else {
+							System.out.println("Could not find order details link...");
+						}
+					}
+				} catch(final NoSuchElementException e) {
+					e.printStackTrace();
+					System.out.println("submitting the order failed...");
+				}
+			} else {
+				processedOrder = new ProcessedOrder(-1, -1, null, null);
+			}
+			
+		}
+		
+		results.add(processedOrder);
 	}
 	
 	private boolean enterPaymentMethod(final WebDriver browser, final CustomerOrder order, final FulfillmentListing listing) {
