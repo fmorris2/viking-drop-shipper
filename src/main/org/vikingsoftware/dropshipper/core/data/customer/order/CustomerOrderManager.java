@@ -3,10 +3,31 @@ package main.org.vikingsoftware.dropshipper.core.data.customer.order;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
 
 public class CustomerOrderManager {
+	
+	public static List<CustomerOrder> loadOrdersToExecute() {
+		final List<CustomerOrder> toExecute = new ArrayList<>();
+		try {
+			final Statement st = VDSDBManager.get().createStatement();
+			final ResultSet results = st.executeQuery("SELECT * FROM customer_order"
+					+ " LEFT JOIN processed_orders ON customer_order.id=processed_orders.customer_order_id"
+					+ " WHERE processed_orders.customer_order_id IS NULL");
+			
+			while(results.next()) {
+				toExecute.add(buildOrderFromResultSet(results));
+			}
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		System.out.println("loaded " + toExecute.size() + " orders to execute");
+		return toExecute;
+	}
 
 	public static CustomerOrder loadFirstCustomerOrder() {
 		CustomerOrder toReturn = null;

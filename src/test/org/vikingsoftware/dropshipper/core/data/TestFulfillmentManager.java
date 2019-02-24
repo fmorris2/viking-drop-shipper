@@ -9,8 +9,9 @@ public class TestFulfillmentManager {
 
 	@Test
 	public void test() {
-		FulfillmentManager.load();
-		Assert.assertTrue(FulfillmentManager.isLoaded());
+		FulfillmentManager.get().prepareForFulfillment();
+		Assert.assertTrue(FulfillmentManager.get().isLoaded());
+		FulfillmentManager.get().endFulfillment();
 	}
 
 }

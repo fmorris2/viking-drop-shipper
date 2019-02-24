@@ -10,32 +10,78 @@ import java.util.Map;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
+import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
 
 public class FulfillmentManager {
 	
+	private static FulfillmentManager instance;
+	
 	//marketplace listing id ==> fulfillment listing
-	private static Map<Integer, List<FulfillmentListing>> listings = new HashMap<>();
+	private final Map<Integer, List<FulfillmentListing>> listings = new HashMap<>();
 	
 	//db primary key id ==> fulfillment platform
-	private static Map<Integer, FulfillmentPlatform> platforms = new HashMap<>();
+	private final Map<Integer, FulfillmentPlatform> platforms = new HashMap<>();
 	
-	public static void load() {
+	private final Map<FulfillmentPlatforms, OrderExecutionStrategy> strategies = new HashMap<>();
+	
+	private FulfillmentManager() {
+		
+	}
+	
+	public static FulfillmentManager get() {
+		if(instance == null) {
+			instance = new FulfillmentManager();
+		}
+		
+		return instance;
+	}
+	
+	public void load() {
 		listings.clear();
 		platforms.clear();
 		loadFulfillmentListings();
 		loadFulfillmentPlatforms();
 	}
 	
-	public static boolean isLoaded() {
+	public boolean prepareForFulfillment() {
+		load();
+		for(final FulfillmentPlatforms platform : FulfillmentPlatforms.values()) {
+			final OrderExecutionStrategy strategy = platform.generateStrategy();
+			if(!strategy.prepareForExecution()) {
+				return false;
+			}
+			strategies.put(platform, strategy);
+		}
+		
+		return true;
+	}
+	
+	public ProcessedOrder fulfill(final CustomerOrder order, final FulfillmentListing listing) {
+		final FulfillmentPlatforms applicablePlatform = FulfillmentPlatforms.getById(listing.fulfillment_platform_id);
+		System.out.println("Applicable fulfillment platform for order " + order.id + ": " + applicablePlatform);
+		final OrderExecutionStrategy strategy = strategies.get(applicablePlatform);
+		return strategy.order(order, listing);
+	}
+	
+	public void endFulfillment() {
+		for(final OrderExecutionStrategy strategy : strategies.values()) {
+			strategy.finishExecution();
+		}
+		
+		strategies.clear();
+	}
+	
+	public boolean isLoaded() {
 		return !listings.isEmpty() && !platforms.isEmpty();
 	}
 	
-	public static List<FulfillmentListing> getListingsForOrder(final CustomerOrder order) {
+	public List<FulfillmentListing> getListingsForOrder(final CustomerOrder order) {
 		return listings.getOrDefault(order.marketplace_listing_id, new ArrayList<>());
 	}
 	
-	private static void loadFulfillmentListings() {
+	private void loadFulfillmentListings() {
 		final Statement st = VDSDBManager.get().createStatement();
 		try {
 			final ResultSet results = st.executeQuery("SELECT * FROM fulfillment_listing"
@@ -60,7 +106,7 @@ public class FulfillmentManager {
 		}
 	}
 	
-	private static void loadFulfillmentPlatforms() {
+	private void loadFulfillmentPlatforms() {
 		final Statement st = VDSDBManager.get().createStatement();
 		try {
 			final ResultSet results = st.executeQuery("SELECT * FROM fulfillment_platform");
