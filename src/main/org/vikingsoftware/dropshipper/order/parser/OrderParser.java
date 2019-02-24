@@ -31,24 +31,25 @@ public class OrderParser implements CycleParticipant {
 		}
 		
 		//store all new orders in DB
-		final String sql = "INSERT INTO customer_order(marketplace_listing_id, quantity, marketplace_order_id, buyer_username,"
+		final String sql = "INSERT INTO customer_order(marketplace_listing_id, item_options, quantity, marketplace_order_id, buyer_username,"
 				+ " buyer_name, buyer_country, buyer_street_address, buyer_apt_suite_unit_etc, buyer_state_province_region,"
-				+ "buyer_city, buyer_zip_postal_code) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
+				+ "buyer_city, buyer_zip_postal_code) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
 		
 		final PreparedStatement prepared = VDSDBManager.get().createPreparedStatement(sql);
 		try {
 			for(final CustomerOrder order : newOrders) {
 				prepared.setInt(1, order.marketplace_listing_id);
-				prepared.setInt(2, order.quantity);
-				prepared.setString(3, order.marketplace_order_id);
-				prepared.setString(4, order.buyer_username);
-				prepared.setString(5, order.buyer_name);
-				prepared.setString(6, order.buyer_country);
-				prepared.setString(7, order.buyer_street_address);
-				prepared.setString(8, order.buyer_apt_suite_unit_etc);
-				prepared.setString(9, order.buyer_state_province_region);
-				prepared.setString(10, order.buyer_city);
-				prepared.setString(11, order.buyer_zip_postal_code);
+				prepared.setString(2, order.item_options);
+				prepared.setInt(3, order.quantity);
+				prepared.setString(4, order.marketplace_order_id);
+				prepared.setString(5, order.buyer_username);
+				prepared.setString(6, order.buyer_name);
+				prepared.setString(7, order.buyer_country);
+				prepared.setString(8, order.buyer_street_address);
+				prepared.setString(9, order.buyer_apt_suite_unit_etc);
+				prepared.setString(10, order.buyer_state_province_region);
+				prepared.setString(11, order.buyer_city);
+				prepared.setString(12, order.buyer_zip_postal_code);
 				prepared.addBatch();
 			}
 		

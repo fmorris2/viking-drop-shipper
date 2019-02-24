@@ -27,6 +27,7 @@ public class CustomerOrderManager {
 		return new CustomerOrder.Builder()
 			.id(results.getInt("id"))
 			.marketplace_listing_id(results.getInt("marketplace_listing_id"))
+			.item_options(results.getString("item_options"))
 			.quantity(results.getInt("quantity"))
 			.marketplace_order_id(results.getString("marketplace_order_id"))
 			.buyer_username(results.getString("buyer_username"))
