@@ -41,11 +41,23 @@ public class Marketplace {
 	}
 	
 	public Set<MarketplaceListing> getMarketplaceListings() {
+		return getMarketplaceListings(false);
+	}
+	
+	public Set<MarketplaceListing> getActiveMarketplaceListings() {
+		return getMarketplaceListings(true);
+	}
+	
+	private Set<MarketplaceListing> getMarketplaceListings(final boolean activeOnly) {
 		final Set<MarketplaceListing> listings = new HashSet<>();
 		final Statement st = VDSDBManager.get().createStatement();
 		
 		try {
-			final ResultSet results = st.executeQuery("SELECT * FROM marketplace_listing WHERE marketplace_id="+id);
+			String sql = "SELECT * FROM marketplace_listing WHERE marketplace_id="+id;
+			if(activeOnly) {
+				sql += " AND active=1";
+			}
+			final ResultSet results = st.executeQuery(sql);
 			while(results.next()) {
 				final MarketplaceListing listing = new MarketplaceListing.Builder()
 					.id(results.getInt("id"))

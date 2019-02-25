@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
@@ -25,6 +26,7 @@ public class FulfillmentManager {
 	private final Map<Integer, FulfillmentPlatform> platforms = new HashMap<>();
 	
 	private final Map<FulfillmentPlatforms, OrderExecutionStrategy> strategies = new HashMap<>();
+	private final Map<Integer, List<FulfillmentMapping>> mappings = new HashMap<>();
 	
 	private FulfillmentManager() {
 		
@@ -41,8 +43,10 @@ public class FulfillmentManager {
 	public void load() {
 		listings.clear();
 		platforms.clear();
+		mappings.clear();
 		loadFulfillmentListings();
 		loadFulfillmentPlatforms();
+		loadFulfillmentMappings();
 	}
 	
 	public boolean prepareForFulfillment() {
@@ -79,6 +83,21 @@ public class FulfillmentManager {
 	
 	public List<FulfillmentListing> getListingsForOrder(final CustomerOrder order) {
 		return listings.getOrDefault(order.marketplace_listing_id, new ArrayList<>());
+	}
+	
+	public Optional<FulfillmentMapping> getFulfillmentMapping(final int marketplaceListingId, final int fulfillmentListingId) {
+		final List<FulfillmentMapping> mappingz = mappings.getOrDefault(marketplaceListingId, new ArrayList<>());
+		for(final FulfillmentMapping mapping : mappingz) {
+			if(mapping.fulfillment_listing_id == fulfillmentListingId) {
+				return Optional.of(mapping);
+			}
+		}
+		
+		return Optional.empty();
+	}
+	
+	public List<FulfillmentMapping> getFulfillmentMappings(final int marketplaceListingId) {
+		return mappings.getOrDefault(marketplaceListingId, new ArrayList<>());
 	}
 	
 	private void loadFulfillmentListings() {
@@ -118,6 +137,23 @@ public class FulfillmentManager {
 					.build();
 				
 				platforms.put(platform.id, platform);
+			}
+		} catch(final SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void loadFulfillmentMappings() {
+		final Statement st = VDSDBManager.get().createStatement();
+		try {
+			final ResultSet results = st.executeQuery("SELECT * FROM fulfillment_mapping");
+			while(results.next()) {
+				final FulfillmentMapping mapping = new FulfillmentMapping(results.getInt("id"), results.getInt("marketplace_listing_id"),
+						results.getInt("fulfillment_listing_id"), results.getString("item_options_mappings"));
+				
+				final List<FulfillmentMapping> currentMappings = mappings.getOrDefault(mapping.marketplace_listing_id, new ArrayList<>());
+				currentMappings.add(mapping);
+				mappings.put(mapping.marketplace_listing_id, currentMappings);
 			}
 		} catch(final SQLException e) {
 			e.printStackTrace();
