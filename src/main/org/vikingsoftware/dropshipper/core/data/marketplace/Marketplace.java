@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
@@ -19,6 +20,7 @@ public class Marketplace {
 	public final double marketplace_profit_cut;
 	
 	private final Set<String> knownOrderIds;
+	private final Map<String, Integer> listings;
 	
 	private Marketplace(final Builder builder) {
 		this.id = builder.id;
@@ -26,6 +28,7 @@ public class Marketplace {
 		this.marketplace_url = builder.marketplace_url;
 		this.marketplace_profit_cut = builder.marketplace_profit_cut;
 		this.knownOrderIds = builder.knownOrderIds;
+		this.listings = builder.listings;
 	}
 	
 	public boolean isOrderIdKnown(final String id) {
@@ -46,6 +49,10 @@ public class Marketplace {
 	
 	public Set<MarketplaceListing> getActiveMarketplaceListings() {
 		return getMarketplaceListings(true);
+	}
+	
+	public int getMarketplaceListingIndex(final String listingId) {
+		return listings.get(listingId);
 	}
 	
 	private Set<MarketplaceListing> getMarketplaceListings(final boolean activeOnly) {
@@ -83,6 +90,7 @@ public class Marketplace {
 		private URL marketplace_url;
 		private double marketplace_profit_cut;
 		private Set<String> knownOrderIds;
+		private Map<String, Integer> listings;
 		
 		public Builder id(final int id) {
 			this.id = id;
@@ -110,6 +118,11 @@ public class Marketplace {
 		
 		public Builder known_order_ids(final Set<String> knownOrderIds) {
 			this.knownOrderIds = knownOrderIds;
+			return this;
+		}
+		
+		public Builder listings(final Map<String, Integer> listings) {
+			this.listings = listings;
 			return this;
 		}
 		
