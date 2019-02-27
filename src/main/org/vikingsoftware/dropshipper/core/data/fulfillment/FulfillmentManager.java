@@ -46,7 +46,6 @@ public class FulfillmentManager {
 		mappings.clear();
 		loadFulfillmentListings();
 		loadFulfillmentPlatforms();
-		loadFulfillmentMappings();
 	}
 	
 	public boolean prepareForFulfillment() {
@@ -137,23 +136,6 @@ public class FulfillmentManager {
 					.build();
 				
 				platforms.put(platform.id, platform);
-			}
-		} catch(final SQLException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	private void loadFulfillmentMappings() {
-		final Statement st = VDSDBManager.get().createStatement();
-		try {
-			final ResultSet results = st.executeQuery("SELECT * FROM fulfillment_mapping");
-			while(results.next()) {
-				final FulfillmentMapping mapping = new FulfillmentMapping(results.getInt("id"), results.getInt("marketplace_listing_id"),
-						results.getInt("fulfillment_listing_id"), results.getString("item_options_mappings"));
-				
-				final List<FulfillmentMapping> currentMappings = mappings.getOrDefault(mapping.marketplace_listing_id, new ArrayList<>());
-				currentMappings.add(mapping);
-				mappings.put(mapping.marketplace_listing_id, currentMappings);
 			}
 		} catch(final SQLException e) {
 			e.printStackTrace();
