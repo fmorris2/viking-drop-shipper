@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
@@ -19,6 +20,8 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.Fulfill
 import main.org.vikingsoftware.dropshipper.core.data.misc.CreditCardInfo;
 import main.org.vikingsoftware.dropshipper.core.data.misc.StateUtils;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
+import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
+import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
 import main.org.vikingsoftware.dropshipper.core.utils.CaptchaUtils;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
 
@@ -52,6 +55,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 	private WebDriver browser;
 	
 	private int loginTries = 0;
+	private ProcessedOrder processedOrder;
 	
 	public AliExpressOrderExecutionStrategy() {
 		parseCredentials();
@@ -153,7 +157,11 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 	}
 	
 	private ProcessedOrder order(final CustomerOrder customerOrder, final FulfillmentListing fulfillmentListing, final boolean isTest) {
-		final ProcessedOrder processedOrder = new ProcessedOrder(customerOrder.id, fulfillmentListing.id, null, "failed");		
+		processedOrder = new ProcessedOrder.Builder()
+				.customer_order_id(customerOrder.id)
+				.fulfillment_listing_id(fulfillmentListing.id)
+				.build();
+		
 			try {
 				return executeOrder(customerOrder, fulfillmentListing, browser, isTest);
 			} catch(final Exception e) {
@@ -166,7 +174,6 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 	private ProcessedOrder executeOrder(final CustomerOrder order, final FulfillmentListing fulfillmentListing, 
 			final WebDriver browser, final boolean isTest) {
 		
-		final ProcessedOrder processedOrder = new ProcessedOrder(order.id, fulfillmentListing.id, null, "failed");
 		//navigate to fulfillment listing page
 		browser.get(fulfillmentListing.listing_url);
 		
@@ -177,11 +184,6 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		}
 		
 		browser.findElement(By.id("j-buy-now-btn")).click();
-		
-		System.out.println("verifying price...");
-		if(!verifyPrice(browser, order, fulfillmentListing)) {
-			return processedOrder;
-		}
 		
 		System.out.println("entering shipping address...");
 		if(!enterShippingAddress(browser, order, fulfillmentListing)) {
@@ -217,12 +219,11 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		}
 		
 
-		return isTest ? new ProcessedOrder(order.id, fulfillmentListing.id, "test", "failed")
+		return isTest ? new ProcessedOrder.Builder().fulfillment_transaction_id("test").build()
 					  : finalizeOrder(browser, order, fulfillmentListing);
 	}
 	
 	private ProcessedOrder finalizeOrder(final WebDriver browser, final CustomerOrder order, final FulfillmentListing listing) {
-		final ProcessedOrder failedOrder = new ProcessedOrder(order.id, listing.id, null, "failed");
 		System.out.println("clicking confirm & pay...");
 		browser.findElement(By.id("place-order-btn")).click();
 		
@@ -237,7 +238,12 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 				if(matcher.find()) {
 					final String transactionId = matcher.group(1);
 					System.out.println("Successfully parsed transaction id: " + transactionId);
-					return new ProcessedOrder(order.id, listing.id, transactionId, "processing");
+					return new ProcessedOrder.Builder()
+						.customer_order_id(order.id)
+						.fulfillment_listing_id(listing.id)
+						.fulfillment_transaction_id(transactionId)
+						.order_status("processing")
+						.build();
 				} else {
 					System.out.println("Could not find order details link...");
 				}
@@ -247,16 +253,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 			System.out.println("submitting the order failed...");
 		}
 		
-		return failedOrder;
-	}
-	
-	private boolean verifyPrice(final WebDriver browser, final CustomerOrder order, final FulfillmentListing listing) {
-		final WebElement priceElement = browser.findElement(By.xpath("//*[@id=\"orders-main\"]/div[3]/table/tfoot/tr/td/div[2]/p[2]/span[2]/b"));
-		final String priceStr = priceElement.getText();
-		final double parsedPrice = Double.parseDouble(priceStr.replace("US $", "").trim());
-		final double maxPrice = order.quantity * listing.listing_max_price;
-		System.out.println("parsed price: " + parsedPrice + ", maxPrice: " + maxPrice);
-		return parsedPrice <= maxPrice;
+		return processedOrder;
 	}
 	
 	private boolean enterPaymentMethod(final WebDriver browser, final CustomerOrder order, final FulfillmentListing listing) {
@@ -447,7 +444,10 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 	
 	private static void clearAndTypeInElement(final WebElement element, final String str) {
 		element.clear();
-		element.sendKeys(str);
+		
+		if(str != null) {
+			element.sendKeys(str);
+		}
 	}
 	
 	private static boolean selectOrderOptions(final WebDriver browser, final CustomerOrder order, final FulfillmentListing listing) {
@@ -467,7 +467,13 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 			final List<WebElement> propertyItems = productInfoDiv == null ? null : productInfoDiv.findElements(By.className("p-property-item"));
 			if(propertyItems != null && !propertyItems.isEmpty()) {
 				final JSONParser parser = new JSONParser();
-				final JSONObject jsonObj = order.item_options == null ? new JSONObject() : (JSONObject)parser.parse(order.item_options);
+				final Optional<SkuMapping> skuMapping = SkuMappingManager.getMapping(order.marketplace_listing_id, order.sku);
+				if(!skuMapping.isPresent()) {
+					return false;
+				}
+				
+				final JSONObject jsonObj = (JSONObject)parser.parse(skuMapping.get().ali_express_options);
+				System.out.println("json obj: " + jsonObj);
 				if(jsonObj.isEmpty()) {
 					return true;
 				}
