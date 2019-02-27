@@ -3,7 +3,9 @@ package main.org.vikingsoftware.dropshipper.core.data.sku;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -12,9 +14,10 @@ import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
 public class SkuMappingManager {
 	
 	private static Map<SkuMappingKey, SkuMapping> mappings = new HashMap<>();
+	private static Map<Integer, List<SkuMapping>> marketplaceToMappings = new HashMap<>();
 	
 	public static boolean load() {
-		mappings.clear();
+		clear();
 		final Statement st = VDSDBManager.get().createStatement();
 		try {
 			final ResultSet results = st.executeQuery("SELECT * FROM sku_mappings");
@@ -27,12 +30,23 @@ public class SkuMappingManager {
 					.build();
 				
 				mappings.put(new SkuMappingKey(mapping.marketplace_listing_id, mapping.item_sku), mapping);
+				
+				final List<SkuMapping> marketplaceMappings = marketplaceToMappings
+						.getOrDefault(mapping.marketplace_listing_id, new ArrayList<>());
+				
+				marketplaceMappings.add(mapping);
+				marketplaceToMappings.put(mapping.marketplace_listing_id, marketplaceMappings);
 			}
 		} catch (final SQLException e) {
 			e.printStackTrace();
 		}
 		
 		return !mappings.isEmpty();
+	}
+	
+	public static void clear() {
+		mappings.clear();
+		marketplaceToMappings.clear();
 	}
 	
 	public static Optional<SkuMapping> getMapping(final int marketplaceListingId, final String sku) {
@@ -43,42 +57,7 @@ public class SkuMappingManager {
 		return Optional.ofNullable(mappings.get(new SkuMappingKey(marketplaceListingId, sku)));
 	}
 	
-	private static class SkuMappingKey {
-		private final int marketplaceListingId;
-		private final String itemSku;
-		
-		public SkuMappingKey(final int id, final String sku) {
-			this.marketplaceListingId = id;
-			this.itemSku = sku;
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result
-					+ ((itemSku == null) ? 0 : itemSku.hashCode());
-			result = prime * result + marketplaceListingId;
-			return result;
-		}
-
-		@Override
-		public boolean equals(final Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			final SkuMappingKey other = (SkuMappingKey) obj;
-			if (itemSku == null) {
-				if (other.itemSku != null)
-					return false;
-			} else if (!itemSku.equals(other.itemSku))
-				return false;
-			if (marketplaceListingId != other.marketplaceListingId)
-				return false;
-			return true;
-		}
+	public static List<SkuMapping> getMappingsForMarketplaceListing(final int marketplaceListingId) {
+		return marketplaceToMappings.getOrDefault(marketplaceListingId, new ArrayList<>());
 	}
 }

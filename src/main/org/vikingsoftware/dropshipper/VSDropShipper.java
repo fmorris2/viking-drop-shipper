@@ -1,6 +1,7 @@
 package main.org.vikingsoftware.dropshipper;
 
 import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
+import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
 import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
 import main.org.vikingsoftware.dropshipper.order.parser.OrderParser;
 
@@ -26,6 +27,7 @@ public class VSDropShipper {
 				}
 			}
 			
+			SkuMappingManager.clear();
 			Thread.sleep(CYCLE_TIME_MS);
 		}
 		

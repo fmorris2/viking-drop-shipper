@@ -1,8 +1,9 @@
 package main.org.vikingsoftware.dropshipper.inventory.impl;
 
+import java.util.concurrent.Future;
+
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.inventory.AutomaticInventoryUpdater;
-import main.org.vikingsoftware.dropshipper.inventory.InventoryUpdateInfo;
 
 public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 
@@ -12,8 +13,8 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 	}
 
 	@Override
-	public boolean updateInventory(final MarketplaceListing listing, final InventoryUpdateInfo info) {
-		return false;
+	public Future<Boolean> updateInventory(final MarketplaceListing listing) {
+		return null;
 	}
 
 	@Override
