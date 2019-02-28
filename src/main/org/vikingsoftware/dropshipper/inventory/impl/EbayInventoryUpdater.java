@@ -17,7 +17,12 @@ import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
 import main.org.vikingsoftware.dropshipper.inventory.AutomaticInventoryUpdater;
 
 public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
-
+	
+	//576 seconds minimum between updates for a specific listing. eBay caps revisions at 150 per day for a listing
+	private static final int MIN_UPDATE_TIME_THRESH = 576_000;
+	
+	private static final Map<String, Long> updateCache = new HashMap<>();
+	
 	@Override
 	public boolean prepareForUpdateCycle() {
 		return true;
@@ -30,6 +35,11 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 	
 	private boolean updateImpl(final MarketplaceListing listing) {
 		try {
+			if(isOnCooldown(listing)) {
+				System.out.println("eBay listing " + listing.id + " is on cooldown.");
+				return true;
+			}
+			
 			System.out.println("Updating inventory for eBay listing " + listing);
 			final Map<String, Integer> skuStocks = new HashMap<>();
 			final List<FulfillmentListing> fulfillmentListings = FulfillmentManager.get().getListingsForMarketplaceListing(listing.id);
@@ -64,12 +74,17 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 					.collect(Collectors.toList());
 			
 			EbayCalls.updateInventory(listing.listingId, entries);
+			updateCache.put(listing.listingId, System.currentTimeMillis());
 			return true;
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
 		
 		return false;
+	}
+	
+	private boolean isOnCooldown(final MarketplaceListing listing) {
+		return System.currentTimeMillis() - updateCache.getOrDefault(listing.listingId, 0L) < MIN_UPDATE_TIME_THRESH;
 	}
 
 	@Override

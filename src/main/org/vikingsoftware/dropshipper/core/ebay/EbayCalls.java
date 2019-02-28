@@ -20,7 +20,7 @@ import com.ebay.soap.eBLBaseComponents.VariationsType;
 
 public class EbayCalls {
 	
-	private static final int FAKE_MAX_QUANTITY = 50;
+	private static final int FAKE_MAX_QUANTITY = 2;
 	
 	private EbayCalls() {}
 	
@@ -54,7 +54,7 @@ public class EbayCalls {
 			for(final SkuInventoryEntry entry : invEntries) {
 				final VariationType variation = new VariationType();
 				variation.setSKU(entry.sku);
-				variation.setQuantity(Math.max(FAKE_MAX_QUANTITY, entry.stock));
+				variation.setQuantity(Math.min(FAKE_MAX_QUANTITY, entry.stock));
 				entries.add(variation);
 			}
 			variations.setVariation(entries.stream().toArray(VariationType[]::new));
