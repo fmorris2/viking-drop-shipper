@@ -14,6 +14,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.Fulfillme
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
+import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
 
 public class InventoryUpdater implements CycleParticipant {
 	
@@ -28,6 +29,7 @@ public class InventoryUpdater implements CycleParticipant {
 	@Override
 	public void cycle() {
 		MarketplaceLoader.loadMarketplaces();
+		SkuMappingManager.load();
 		populateInventoryUpdaters();
 		if(!setupInventoryUpdaters()) {
 			return;

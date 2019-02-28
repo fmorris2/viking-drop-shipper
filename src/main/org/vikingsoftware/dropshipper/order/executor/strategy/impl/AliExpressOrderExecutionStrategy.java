@@ -26,8 +26,6 @@ import main.org.vikingsoftware.dropshipper.core.utils.CaptchaUtils;
 import main.org.vikingsoftware.dropshipper.core.web.AliExpressWebDriver;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
@@ -119,9 +117,19 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		//navigate to fulfillment listing page
 		browser.get(fulfillmentListing.listing_url);
 		
+		System.out.println("setting order quantity...");
+		if(!setOrderQuantity(order)) {
+			return processedOrder;
+		}
+		
 		//select appropriate order options (color, length, etc)
 		System.out.println("selecting order options...");
-		if(!selectOrderOptions(order, fulfillmentListing)) {
+		final Optional<SkuMapping> skuMapping = SkuMappingManager.getMapping(order.marketplace_listing_id, order.sku);
+		if(!skuMapping.isPresent()) {
+			return processedOrder;
+		}
+		
+		if(!browser.selectOrderOptions(skuMapping.get(), fulfillmentListing)) {
 			return processedOrder;
 		}
 		
@@ -392,88 +400,18 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		}
 	}
 	
-	private boolean selectOrderOptions(final CustomerOrder order, final FulfillmentListing listing) {
-		try {
-			//quantity input
-			if(order.quantity > 1) {
-				final WebElement quantityInput = browser.findElement(By.id("j-p-quantity-input"));
-				if(quantityInput == null) {
-					return false;
-				}
-				
-				quantityInput.sendKeys(Keys.BACK_SPACE);
-				quantityInput.sendKeys(Integer.toString(order.quantity));
+	private boolean setOrderQuantity(final CustomerOrder order) {
+		//quantity input
+		if(order.quantity > 1) {
+			final WebElement quantityInput = browser.findElement(By.id("j-p-quantity-input"));
+			if(quantityInput == null) {
+				return false;
 			}
 			
-			final WebElement productInfoDiv = browser.findElement(By.id("j-product-info-sku"));
-			final List<WebElement> propertyItems = productInfoDiv == null ? null : productInfoDiv.findElements(By.className("p-property-item"));
-			if(propertyItems != null && !propertyItems.isEmpty()) {
-				final JSONParser parser = new JSONParser();
-				final Optional<SkuMapping> skuMapping = SkuMappingManager.getMapping(order.marketplace_listing_id, order.sku);
-				if(!skuMapping.isPresent()) {
-					return false;
-				}
-				
-				final JSONObject jsonObj = (JSONObject)parser.parse(skuMapping.get().ali_express_options);
-				System.out.println("json obj: " + jsonObj);
-				if(jsonObj.isEmpty()) {
-					return true;
-				}
-				options:
-				for(final WebElement propertyItem : propertyItems) {
-					final String itemTitle = propertyItem.findElement(By.className("p-item-title"))
-							.getText()
-							.replace(":", "");
-					
-					if(!jsonObj.containsKey(itemTitle)) {
-						continue;
-					}
-					
-					final String valueToSelect = jsonObj.get(itemTitle).toString();
-					System.out.println("Selecting " + valueToSelect + " for item " + itemTitle);
-					
-					final WebElement valueList = propertyItem.findElement(By.className("sku-attr-list"));
-					final List<WebElement> listElements = valueList.findElements(By.xpath(".//li"));
-					for(final WebElement listElement : listElements) {
-						if(isMatchingOrderOption(listElement, valueToSelect)) {
-							System.out.println("Clicking " + valueToSelect + " option for " + itemTitle);
-							listElement.click();
-							continue options;
-						}
-					}
-					
-					return false;
-				}
-			}
-		} catch(final Exception e) {
-			e.printStackTrace();
-			System.out.println("Failed to select order options");
-			return false;
+			quantityInput.sendKeys(Keys.BACK_SPACE);
+			quantityInput.sendKeys(Integer.toString(order.quantity));
 		}
 		
 		return true;
-	}
-	
-	private boolean isMatchingOrderOption(final WebElement listElement, final String valueToSelect) {
-		final WebElement dataRole = listElement.findElement(By.xpath(".//a"));
-		if(dataRole == null) {
-			return false;
-		}
-		else if(listElement.getAttribute("class").equals("item-sku-image")) { //image list item
-			System.out.println("Dealing with an image list item!");
-			if(dataRole != null && dataRole.getAttribute("title").equalsIgnoreCase(valueToSelect)) {
-				System.out.println("Found matching image list item for " + valueToSelect);
-				return true;
-			}
-		} else { //normal list item
-			System.out.println("Dealing with a normal list item!");
-			final WebElement span = dataRole.findElement(By.xpath(".//span"));
-			if(span != null && span.getText().equals(valueToSelect)) {
-				System.out.println("Found matching normal list item for " + valueToSelect);
-				return true;
-			}
-		}
-		
-		return false;
 	}
 }
