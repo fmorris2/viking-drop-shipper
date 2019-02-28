@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentMapping;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
@@ -48,10 +48,25 @@ public class InventoryUpdater implements CycleParticipant {
 	}
 	
 	private void updateListings() {
+		
+		final List<Future<Boolean>> updates = new ArrayList<>();
 		for(final MarketplaceListing listing : activeListings) {
-			final List<FulfillmentMapping> fulfillmentMappings = FulfillmentManager.get().getFulfillmentMappings(listing.marketplaceId);
 			final AutomaticInventoryUpdater updater = inventoryUpdaters.get(listing.marketplaceId);
-			
+			updates.add(updater.updateInventory(listing));
+		}
+		
+		for(int i = 0; i < activeListings.size(); i++) {
+			boolean successfulUpdate = false;
+			try {
+				successfulUpdate = updates.get(i).get();
+			} catch(final Exception e) {
+				e.printStackTrace();
+			}
+			if(successfulUpdate) {
+				System.out.println("Successfully updated inventory for listing " + activeListings.get(i));
+			} else {
+				System.out.println("Failed to update inventory for listing " + activeListings.get(i));
+			}
 		}
 	}
 	

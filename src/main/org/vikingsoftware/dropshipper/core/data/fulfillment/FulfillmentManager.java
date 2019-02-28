@@ -84,6 +84,10 @@ public class FulfillmentManager {
 		return listings.getOrDefault(order.marketplace_listing_id, new ArrayList<>());
 	}
 	
+	public List<FulfillmentListing> getListingsForMarketplaceListing(final int marketplaceListingId) {
+		return listings.getOrDefault(marketplaceListingId, new ArrayList<>());
+	}
+	
 	public Optional<FulfillmentMapping> getFulfillmentMapping(final int marketplaceListingId, final int fulfillmentListingId) {
 		final List<FulfillmentMapping> mappingz = mappings.getOrDefault(marketplaceListingId, new ArrayList<>());
 		for(final FulfillmentMapping mapping : mappingz) {
