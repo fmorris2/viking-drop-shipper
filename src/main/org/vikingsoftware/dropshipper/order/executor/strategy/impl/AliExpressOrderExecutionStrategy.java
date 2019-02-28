@@ -23,6 +23,7 @@ import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOr
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
 import main.org.vikingsoftware.dropshipper.core.utils.CaptchaUtils;
+import main.org.vikingsoftware.dropshipper.core.web.AliExpressWebDriver;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
 
 import org.json.simple.JSONObject;
@@ -36,43 +37,21 @@ import org.openqa.selenium.Point;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.Select;
 
 public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy {
 	
-	private static final String CREDS_FILE_PATH = "/data/aliexpress-creds.secure";
 	private static final String CARD_INFO_PATH = "/data/aliexpress-payment-method.secure";
 	private static final String ORDER_ID_PATTERN = "orderId=([^&]*)";
-	private static final int DEFAULT_VISIBILITY_WAIT_SECONDS = 5;
 	private static final int ORDER_SUCCESS_WAIT_SECONDS = 60;
-	private static final int MAX_LOGIN_TRIES = 20;
 	
-	private String username;
-	private String password;
 	private CreditCardInfo cardInfo;
-	private WebDriver browser;
 	
-	private int loginTries = 0;
 	private ProcessedOrder processedOrder;
+	private AliExpressWebDriver browser;
 	
 	public AliExpressOrderExecutionStrategy() {
-		parseCredentials();
 		parseCardInfo();
-	}
-	
-	private void parseCredentials() {
-		try(
-				final InputStream inputStream = getClass().getResourceAsStream(CREDS_FILE_PATH);
-				final InputStreamReader reader = new InputStreamReader(inputStream);
-				final BufferedReader bR = new BufferedReader(reader);
-			) {
-				username = bR.readLine().trim();
-				password = bR.readLine().trim();
-		} catch (final Exception e) {
-			e.printStackTrace();
-		}
 	}
 	
 	private void parseCardInfo() {
@@ -102,44 +81,8 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 	
 	@Override
 	public boolean prepareForExecution() {
-		try {
-			final ChromeOptions options = new ChromeOptions();
-			options.setHeadless(false);
-			
-			browser = new ChromeDriver(options);
-			
-			browser.manage().window().maximize();
-			browser.manage().timeouts().implicitlyWait(DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
-			
-			//sign in to ali express
-			browser.get("https://login.aliexpress.com/");
-			browser.switchTo().frame(browser.findElement(By.id("alibaba-login-box")));
-			
-			browser.findElement(By.id("fm-login-id")).sendKeys(username);
-			browser.findElement(By.id("fm-login-password")).sendKeys(password);
-			browser.findElement(By.id("fm-login-submit")).click();
-
-			try {
-				//wait for home page to appear
-				browser.findElement(By.className("nav-user-account"));
-			} catch(final NoSuchElementException e) {
-				if(loginTries < MAX_LOGIN_TRIES) {
-					System.out.println("encountered verification element... retrying.");
-					browser.close();
-					loginTries++;
-					return prepareForExecution();
-				} else {
-					return false;
-				}
-			}
-			
-			return true;
-		} catch(final Exception e) {
-			e.printStackTrace();
-		}
-		
-		browser.close();
-		return false;
+		browser = new AliExpressWebDriver();
+		return browser.getReady();
 	}
 	
 	@Override
@@ -161,9 +104,8 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 				.customer_order_id(customerOrder.id)
 				.fulfillment_listing_id(fulfillmentListing.id)
 				.build();
-		
 			try {
-				return executeOrder(customerOrder, fulfillmentListing, browser, isTest);
+				return executeOrder(customerOrder, fulfillmentListing, isTest);
 			} catch(final Exception e) {
 				e.printStackTrace();
 			}
@@ -172,21 +114,21 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 	}
 	
 	private ProcessedOrder executeOrder(final CustomerOrder order, final FulfillmentListing fulfillmentListing, 
-			final WebDriver browser, final boolean isTest) {
+			final boolean isTest) {
 		
 		//navigate to fulfillment listing page
 		browser.get(fulfillmentListing.listing_url);
 		
 		//select appropriate order options (color, length, etc)
 		System.out.println("selecting order options...");
-		if(!selectOrderOptions(browser, order, fulfillmentListing)) {
+		if(!selectOrderOptions(order, fulfillmentListing)) {
 			return processedOrder;
 		}
 		
 		browser.findElement(By.id("j-buy-now-btn")).click();
 		
 		System.out.println("entering shipping address...");
-		if(!enterShippingAddress(browser, order, fulfillmentListing)) {
+		if(!enterShippingAddress(order, fulfillmentListing)) {
 			return processedOrder;
 		}
 		
@@ -197,12 +139,12 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		browser.navigate().refresh();
 		
 		System.out.println("verifying shipping details...");
-		if(!verifyShippingDetails(browser, order, fulfillmentListing)) {
+		if(!verifyShippingDetails(order, fulfillmentListing)) {
 			return processedOrder;
 		}
 		
 		System.out.println("selecting payment method...");
-		if(!enterPaymentMethod(browser, order, fulfillmentListing)) {
+		if(!enterPaymentMethod(order, fulfillmentListing)) {
 			return processedOrder;
 		}
 		
@@ -220,10 +162,10 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		
 
 		return isTest ? new ProcessedOrder.Builder().fulfillment_transaction_id("test").build()
-					  : finalizeOrder(browser, order, fulfillmentListing);
+					  : finalizeOrder(order, fulfillmentListing);
 	}
 	
-	private ProcessedOrder finalizeOrder(final WebDriver browser, final CustomerOrder order, final FulfillmentListing listing) {
+	private ProcessedOrder finalizeOrder(final CustomerOrder order, final FulfillmentListing listing) {
 		System.out.println("clicking confirm & pay...");
 		browser.findElement(By.id("place-order-btn")).click();
 		
@@ -256,7 +198,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		return processedOrder;
 	}
 	
-	private boolean enterPaymentMethod(final WebDriver browser, final CustomerOrder order, final FulfillmentListing listing) {
+	private boolean enterPaymentMethod(final CustomerOrder order, final FulfillmentListing listing) {
 		final WebElement useNewCard = browser.findElement(By.className("use-new-card"));
 		useNewCard.findElement(By.tagName("input")).click();
 		
@@ -344,7 +286,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		
 	}
 	
-	private static boolean verifyShippingDetails(final WebDriver browser, final CustomerOrder order, final FulfillmentListing listing) {
+	private boolean verifyShippingDetails(final CustomerOrder order, final FulfillmentListing listing) {
 		
 		System.out.println("verifying buyer name...");
 		if(!browser.findElement(By.className("sa-username")).getText().equalsIgnoreCase(order.buyer_name)) {
@@ -380,7 +322,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		}
 	}
 	
-	private static boolean enterShippingAddress(final WebDriver browser, final CustomerOrder order, final FulfillmentListing listing) {
+	private boolean enterShippingAddress(final CustomerOrder order, final FulfillmentListing listing) {
 		System.out.println("Clicking edit address...");
 		browser.findElement(By.className("sa-edit")).click();
 		
@@ -442,7 +384,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		return true;
 	}
 	
-	private static void clearAndTypeInElement(final WebElement element, final String str) {
+	private void clearAndTypeInElement(final WebElement element, final String str) {
 		element.clear();
 		
 		if(str != null) {
@@ -450,7 +392,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		}
 	}
 	
-	private static boolean selectOrderOptions(final WebDriver browser, final CustomerOrder order, final FulfillmentListing listing) {
+	private boolean selectOrderOptions(final CustomerOrder order, final FulfillmentListing listing) {
 		try {
 			//quantity input
 			if(order.quantity > 1) {
@@ -512,7 +454,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		return true;
 	}
 	
-	private static boolean isMatchingOrderOption(final WebElement listElement, final String valueToSelect) {
+	private boolean isMatchingOrderOption(final WebElement listElement, final String valueToSelect) {
 		final WebElement dataRole = listElement.findElement(By.xpath(".//a"));
 		if(dataRole == null) {
 			return false;
