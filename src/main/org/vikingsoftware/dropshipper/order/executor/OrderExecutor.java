@@ -17,6 +17,9 @@ import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
 
 public class OrderExecutor implements CycleParticipant {
 	
+	public static boolean isTestMode = false;
+	public static boolean freezeOrders = false;
+	
 	@Override
 	public void cycle() {
 		final FulfillmentManager manager = FulfillmentManager.get();
@@ -26,35 +29,42 @@ public class OrderExecutor implements CycleParticipant {
 		final List<ProcessedOrder> failedOrders = new ArrayList<>();
 		final List<CustomerOrder> ordersToExecute = CustomerOrderManager.loadOrdersToExecute();
 		
-		for(final CustomerOrder order : ordersToExecute) {
-			final List<FulfillmentListing> fulfillmentListings = manager.getListingsForOrder(order);
-			for(final FulfillmentListing listing : fulfillmentListings) {
-				final ProcessedOrder processedOrder = manager.fulfill(order, listing);
-				
-				if(processedOrder.fulfillment_transaction_id == null) { //TODO LOG UNSUCCESSFUL ORDER
-					System.out.println("Failed to fulfill order.");
-					failedOrders.add(processedOrder);
-				} else {
-					System.out.println("Successful order from ali express!");
-					successfulOrders.add(processedOrder);
+		if(!freezeOrders) {
+			for(final CustomerOrder order : ordersToExecute) {
+				if(freezeOrders) {
 					break;
 				}
+				final List<FulfillmentListing> fulfillmentListings = manager.getListingsForOrder(order);
+				for(final FulfillmentListing listing : fulfillmentListings) {
+					final ProcessedOrder processedOrder = manager.fulfill(order, listing);
+					
+					if(processedOrder.fulfillment_transaction_id == null) { //TODO LOG UNSUCCESSFUL ORDER
+						System.out.println("Failed to fulfill order.");
+						failedOrders.add(processedOrder);
+					} else {
+						System.out.println("Successful order from ali express!");
+						successfulOrders.add(processedOrder);
+						break;
+					}
+				}
 			}
+			
+			//save to DB
+			System.out.println("Saving successful orders to DB");
+			insertSuccessfulOrdersIntoDB(successfulOrders);
+			
+			System.out.println("Saving failed orders to DB");
+			insertFailedOrdersIntoDB(failedOrders);
+		} else {
+			//TODO NOTIFY DEVELOPERS VIA SMS OF FROZEN ORDER STATE
 		}
-		
-		//save to DB
-		System.out.println("Saving successful orders to DB");
-		insertSuccessfulOrdersIntoDB(successfulOrders);
-		
-		System.out.println("Saving failed orders to DB");
-		insertFailedOrdersIntoDB(failedOrders);
 		manager.endFulfillment();
 	}
 	
 	private void insertSuccessfulOrdersIntoDB(final Collection<ProcessedOrder> successfulOrders) {
 		//store all new orders in DB
 		final String sql = "INSERT INTO processed_orders(customer_order_id, fulfillment_listing_id, fulfillment_transaction_id,"
-				+ "order_status) VALUES(?,?,?,?)";
+				+ "sale_price, quantity, order_status) VALUES(?,?,?,?,?,?)";
 		
 		final PreparedStatement prepared = VDSDBManager.get().createPreparedStatement(sql);
 		final Statement deleteBatch = VDSDBManager.get().createStatement();
@@ -63,7 +73,9 @@ public class OrderExecutor implements CycleParticipant {
 				prepared.setInt(1, order.customer_order_id);
 				prepared.setInt(2, order.fulfillment_listing_id);
 				prepared.setString(3, order.fulfillment_transaction_id);
-				prepared.setString(4, order.order_status);
+				prepared.setDouble(4, order.sale_price);
+				prepared.setInt(5, order.quantity);
+				prepared.setString(6, order.order_status);
 				prepared.addBatch();
 				
 				final String removeSql = "DELETE FROM failed_fulfillment_attempts WHERE customer_order_id="+order.customer_order_id;

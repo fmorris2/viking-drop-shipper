@@ -5,6 +5,7 @@ import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrde
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
+import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.AliExpressOrderExecutionStrategy;
 
 import org.junit.Assert;
@@ -16,6 +17,7 @@ public class TestAliExpressOrderExecutionStrategy {
 	
 	@Test
 	public void test() {
+		OrderExecutor.isTestMode = true;
 		final CustomerOrder customerOrder = CustomerOrderManager.loadFirstCustomerOrder();
 		
 		final AliExpressOrderExecutionStrategy strategy = new AliExpressOrderExecutionStrategy();
@@ -29,7 +31,7 @@ public class TestAliExpressOrderExecutionStrategy {
 		Assert.assertNotNull(listing);
 		
 		for(int i = 0; i < NUM_ITERATIONS; i++) {
-			Assert.assertTrue(strategy.testOrder(customerOrder, listing).fulfillment_transaction_id != null);
+			Assert.assertTrue(strategy.order(customerOrder, listing).fulfillment_transaction_id != null);
 		}
 		strategy.finishExecution();
 	}

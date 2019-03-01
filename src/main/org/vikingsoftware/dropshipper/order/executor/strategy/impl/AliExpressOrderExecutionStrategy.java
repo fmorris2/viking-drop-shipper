@@ -24,6 +24,7 @@ import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
 import main.org.vikingsoftware.dropshipper.core.utils.CaptchaUtils;
 import main.org.vikingsoftware.dropshipper.core.web.AliExpressWebDriver;
+import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
 
 import org.openqa.selenium.By;
@@ -41,7 +42,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 	
 	private static final String CARD_INFO_PATH = "/data/aliexpress-payment-method.secure";
 	private static final String ORDER_ID_PATTERN = "orderId=([^&]*)";
-	private static final int ORDER_SUCCESS_WAIT_SECONDS = 60;
+	private static final int ORDER_SUCCESS_WAIT_SECONDS = 180;
 	
 	private CreditCardInfo cardInfo;
 	
@@ -89,21 +90,13 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 	}
 	
 	@Override
-	public ProcessedOrder order(final CustomerOrder order, final FulfillmentListing fulfillmentListing) {
-		return order(order, fulfillmentListing, false);
-	}
-	
-	public ProcessedOrder testOrder(final CustomerOrder order, final FulfillmentListing fulfillmentListing) {
-		return order(order, fulfillmentListing, true);
-	}
-	
-	private ProcessedOrder order(final CustomerOrder customerOrder, final FulfillmentListing fulfillmentListing, final boolean isTest) {
+	public ProcessedOrder order(final CustomerOrder customerOrder, final FulfillmentListing fulfillmentListing) {
 		processedOrder = new ProcessedOrder.Builder()
 				.customer_order_id(customerOrder.id)
 				.fulfillment_listing_id(fulfillmentListing.id)
 				.build();
 			try {
-				return executeOrder(customerOrder, fulfillmentListing, isTest);
+				return executeOrder(customerOrder, fulfillmentListing);
 			} catch(final Exception e) {
 				e.printStackTrace();
 			}
@@ -111,8 +104,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		return processedOrder;
 	}
 	
-	private ProcessedOrder executeOrder(final CustomerOrder order, final FulfillmentListing fulfillmentListing, 
-			final boolean isTest) {
+	private ProcessedOrder executeOrder(final CustomerOrder order, final FulfillmentListing fulfillmentListing) {
 		
 		//navigate to fulfillment listing page
 		browser.get(fulfillmentListing.listing_url);
@@ -156,6 +148,12 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 			return processedOrder;
 		}
 		
+		System.out.println("verifying final order price...");
+		final double finalOrderPrice = parseFinalOrderPrice();
+		if(finalOrderPrice > fulfillmentListing.listing_max_price * order.quantity) {
+			return processedOrder;
+		}
+		
 		try {
 			final WebElement captchaElement = browser.findElement(By.id("captcha-image"));
 			if(captchaElement != null) {
@@ -166,19 +164,43 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 			}
 		} catch(final NoSuchElementException e) {
 			System.out.println("there is no captcha to solve, moving forward...");
-		}
-		
+		}		
 
-		return isTest ? new ProcessedOrder.Builder().fulfillment_transaction_id("test").build()
-					  : finalizeOrder(order, fulfillmentListing);
+		return OrderExecutor.isTestMode ? new ProcessedOrder.Builder()
+				.customer_order_id(order.id)
+				.fulfillment_listing_id(fulfillmentListing.id)
+				.fulfillment_transaction_id("test_trans_id")
+				.sale_price(finalOrderPrice)
+				.quantity(order.quantity)
+				.order_status("test")
+				.build()
+			   : finalizeOrder(order, fulfillmentListing, finalOrderPrice);
 	}
 	
-	private ProcessedOrder finalizeOrder(final CustomerOrder order, final FulfillmentListing listing) {
+	private double parseFinalOrderPrice() {
+		try {
+			final String unparsedPrice = browser.findElement(By.id("total-price-fee-amount-post-currency")).getAttribute("value");
+			return Double.parseDouble(unparsedPrice);
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return Double.MAX_VALUE;
+	}
+	
+	private ProcessedOrder finalizeOrder(final CustomerOrder order, final FulfillmentListing listing, final double finalOrderPrice) {
 		System.out.println("clicking confirm & pay...");
 		browser.findElement(By.id("place-order-btn")).click();
 		
 		browser.manage().timeouts().implicitlyWait(ORDER_SUCCESS_WAIT_SECONDS, TimeUnit.SECONDS);
 		
+		final ProcessedOrder.Builder builder = new ProcessedOrder.Builder()
+			.customer_order_id(order.id)
+			.fulfillment_listing_id(listing.id)
+			.sale_price(finalOrderPrice)
+			.quantity(order.quantity)
+			.order_status("attempted to order (status unknown)");
+				
 		try {
 			final WebElement feedbackHeader = browser.findElement(By.xpath("/html/body/div[5]/div[1]/div/h3"));
 			if(feedbackHeader.getText().toLowerCase().contains("thank you for your payment")) {
@@ -188,11 +210,9 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 				if(matcher.find()) {
 					final String transactionId = matcher.group(1);
 					System.out.println("Successfully parsed transaction id: " + transactionId);
-					return new ProcessedOrder.Builder()
-						.customer_order_id(order.id)
-						.fulfillment_listing_id(listing.id)
+					return builder
 						.fulfillment_transaction_id(transactionId)
-						.order_status("processing")
+						.order_status("successfully ordered")
 						.build();
 				} else {
 					System.out.println("Could not find order details link...");
@@ -203,7 +223,14 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 			System.out.println("submitting the order failed...");
 		}
 		
-		return processedOrder;
+		//THIS IS VERY VERY BAD!!! ALIEXPRESS MIGHT HAVE CHANGED THEIR FRONT END? WE SHOULD NO LONGER PROCESS ORDERS
+		//AND WE SHOULD NOTIFY DEVELOPERS IMMEDIATELY
+		OrderExecutor.freezeOrders = true;
+		System.out.println("Submitted an order, but we failed to parse whether it was a success or not. Freezing orders...");
+		
+		return builder
+				.fulfillment_transaction_id(null)
+				.build();
 	}
 	
 	private boolean enterPaymentMethod(final CustomerOrder order, final FulfillmentListing listing) {
