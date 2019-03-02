@@ -55,8 +55,8 @@ public class AliExpressWebDriver extends LoginWebDriver {
 			} catch(final NoSuchElementException e) {
 				if(loginTries < MAX_LOGIN_TRIES) {
 					System.out.println("encountered verification element... retrying.");
-					close();
 					loginTries++;
+					get("http://www.google.com");
 					return prepareForExecution();
 				} else {
 					return false;

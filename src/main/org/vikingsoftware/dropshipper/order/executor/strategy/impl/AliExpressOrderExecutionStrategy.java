@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.misc.CreditCardInfo;
 import main.org.vikingsoftware.dropshipper.core.data.misc.StateUtils;
@@ -225,7 +227,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		
 		//THIS IS VERY VERY BAD!!! ALIEXPRESS MIGHT HAVE CHANGED THEIR FRONT END? WE SHOULD NO LONGER PROCESS ORDERS
 		//AND WE SHOULD NOTIFY DEVELOPERS IMMEDIATELY
-		OrderExecutor.freezeOrders = true;
+		FulfillmentManager.freeze(FulfillmentPlatforms.ALI_EXPRESS.getId());
 		System.out.println("Submitted an order, but we failed to parse whether it was a success or not. Freezing orders...");
 		
 		return builder

@@ -5,9 +5,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
@@ -16,6 +18,8 @@ import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
 
 public class FulfillmentManager {
+	
+	private static final Set<Integer> frozenFulfillmentPlatforms = new HashSet<>();
 	
 	private static FulfillmentManager instance;
 	
@@ -40,7 +44,22 @@ public class FulfillmentManager {
 		return instance;
 	}
 	
+	public static final boolean isFrozen(final int fulfillmentPlatformId) {
+		return frozenFulfillmentPlatforms.contains(fulfillmentPlatformId);
+	}
+	
+	public static void freeze(final int fulfillmentPlatformId) {
+		frozenFulfillmentPlatforms.add(fulfillmentPlatformId);
+		try {
+			final Statement st = VDSDBManager.get().createStatement();
+			st.execute("UPDATE fulfillment_platform SET frozen=1 WHERE id=" + fulfillmentPlatformId);
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public void load() {
+		frozenFulfillmentPlatforms.clear();
 		listings.clear();
 		platforms.clear();
 		mappings.clear();
@@ -136,9 +155,13 @@ public class FulfillmentManager {
 				final FulfillmentPlatform platform = new FulfillmentPlatform.Builder()
 					.id(results.getInt("id"))
 					.platform_name(results.getString("platform_name"))
-					.platform_url(results.getString("platform_url"))					
+					.platform_url(results.getString("platform_url"))	
+					.frozen(results.getBoolean("frozen"))
 					.build();
 				
+				if(platform.frozen) {
+					frozenFulfillmentPlatforms.add(platform.id);
+				}
 				platforms.put(platform.id, platform);
 			}
 		} catch(final SQLException e) {

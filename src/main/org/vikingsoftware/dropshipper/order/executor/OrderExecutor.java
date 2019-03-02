@@ -18,46 +18,46 @@ import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
 public class OrderExecutor implements CycleParticipant {
 	
 	public static boolean isTestMode = false;
-	public static boolean freezeOrders = false;
 	
 	@Override
 	public void cycle() {
-		final FulfillmentManager manager = FulfillmentManager.get();
-		manager.prepareForFulfillment();
+		final List<CustomerOrder> ordersToExecute = CustomerOrderManager.loadOrdersToExecute();
+		
+		if(ordersToExecute.isEmpty()) {
+			return;
+		}
 		
 		final List<ProcessedOrder> successfulOrders = new ArrayList<>();
 		final List<ProcessedOrder> failedOrders = new ArrayList<>();
-		final List<CustomerOrder> ordersToExecute = CustomerOrderManager.loadOrdersToExecute();
+		final FulfillmentManager manager = FulfillmentManager.get();
+		manager.prepareForFulfillment();
 		
-		if(!freezeOrders) {
-			for(final CustomerOrder order : ordersToExecute) {
-				if(freezeOrders) {
+		for(final CustomerOrder order : ordersToExecute) {
+			final List<FulfillmentListing> fulfillmentListings = manager.getListingsForOrder(order);
+			for(final FulfillmentListing listing : fulfillmentListings) {
+				if(FulfillmentManager.isFrozen(listing.fulfillment_platform_id)) {
+					System.out.println("Fulfillment manager " + manager + " is frozen.");
+					continue;
+				}
+				final ProcessedOrder processedOrder = manager.fulfill(order, listing);
+				
+				if(processedOrder.fulfillment_transaction_id == null) { //TODO LOG UNSUCCESSFUL ORDER
+					System.out.println("Failed to fulfill order.");
+					failedOrders.add(processedOrder);
+				} else {
+					System.out.println("Successful order from ali express!");
+					successfulOrders.add(processedOrder);
 					break;
 				}
-				final List<FulfillmentListing> fulfillmentListings = manager.getListingsForOrder(order);
-				for(final FulfillmentListing listing : fulfillmentListings) {
-					final ProcessedOrder processedOrder = manager.fulfill(order, listing);
-					
-					if(processedOrder.fulfillment_transaction_id == null) { //TODO LOG UNSUCCESSFUL ORDER
-						System.out.println("Failed to fulfill order.");
-						failedOrders.add(processedOrder);
-					} else {
-						System.out.println("Successful order from ali express!");
-						successfulOrders.add(processedOrder);
-						break;
-					}
-				}
 			}
-			
-			//save to DB
-			System.out.println("Saving successful orders to DB");
-			insertSuccessfulOrdersIntoDB(successfulOrders);
-			
-			System.out.println("Saving failed orders to DB");
-			insertFailedOrdersIntoDB(failedOrders);
-		} else {
-			//TODO NOTIFY DEVELOPERS VIA SMS OF FROZEN ORDER STATE
 		}
+		
+		//save to DB
+		System.out.println("Saving successful orders to DB");
+		insertSuccessfulOrdersIntoDB(successfulOrders);
+		
+		System.out.println("Saving failed orders to DB");
+		insertFailedOrdersIntoDB(failedOrders);
 		manager.endFulfillment();
 	}
 	

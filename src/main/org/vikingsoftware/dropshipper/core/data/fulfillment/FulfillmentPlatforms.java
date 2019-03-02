@@ -24,4 +24,8 @@ public enum FulfillmentPlatforms {
 		
 		return null;
 	}
+	
+	public int getId() {
+		return ordinal() + 1;
+	}
 }
