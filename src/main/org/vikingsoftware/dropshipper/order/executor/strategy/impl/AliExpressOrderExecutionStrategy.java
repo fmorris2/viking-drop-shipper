@@ -111,6 +111,11 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		//navigate to fulfillment listing page
 		browser.get(fulfillmentListing.listing_url);
 		
+		System.out.println("verifying listing title...");
+		if(!verifyListingTitle(fulfillmentListing)) {
+			return processedOrder;
+		}
+		
 		System.out.println("setting order quantity...");
 		if(!setOrderQuantity(order)) {
 			return processedOrder;
@@ -177,6 +182,22 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 				.order_status("test")
 				.build()
 			   : finalizeOrder(order, fulfillmentListing, finalOrderPrice);
+	}
+	
+	private boolean verifyListingTitle(final FulfillmentListing listing) {
+		try {
+			final String title = browser.findElement(By.className("product-name")).getText();
+			final boolean matches = title.equalsIgnoreCase(listing.listing_title);
+			
+			if(!matches) {
+				FulfillmentManager.get().flagFulfillmentListingForExamination(listing, title);
+			}
+			return matches;
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return false;
 	}
 	
 	private double parseFinalOrderPrice() {

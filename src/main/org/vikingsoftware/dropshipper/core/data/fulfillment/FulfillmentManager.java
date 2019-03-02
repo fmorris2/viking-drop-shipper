@@ -58,12 +58,28 @@ public class FulfillmentManager {
 		}
 	}
 	
+	public void flagFulfillmentListingForExamination(final FulfillmentListing listing, final String newTitle) {
+		System.out.println("Flagging listing " + listing + " for examination");
+		for(final List<FulfillmentListing> listingsForOrder : listings.values()) {
+			listingsForOrder.remove(listing);
+		}
+		
+		try {
+			final Statement st = VDSDBManager.get().createStatement();
+			st.execute("INSERT INTO fulfillment_listings_to_examine(fulfillment_listing_id, current_listing_title)"
+					+ " VALUES("+listing.id+",'"+newTitle+"')");
+			System.out.println("Successfully flagged listing " + listing + " for examination");
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public void load() {
 		frozenFulfillmentPlatforms.clear();
 		listings.clear();
 		platforms.clear();
 		mappings.clear();
-		loadFulfillmentListings();
+		loadValidFulfillmentListings();
 		loadFulfillmentPlatforms();
 	}
 	
@@ -122,18 +138,22 @@ public class FulfillmentManager {
 		return mappings.getOrDefault(marketplaceListingId, new ArrayList<>());
 	}
 	
-	private void loadFulfillmentListings() {
+	private void loadValidFulfillmentListings() {
 		final Statement st = VDSDBManager.get().createStatement();
 		try {
 			final ResultSet results = st.executeQuery("SELECT * FROM fulfillment_listing"
 					+ " INNER JOIN fulfillment_mapping ON"
-					+ " fulfillment_listing.id=fulfillment_mapping.fulfillment_listing_id");
+					+ " fulfillment_listing.id=fulfillment_mapping.fulfillment_listing_id"
+					+ " LEFT JOIN fulfillment_listings_to_examine ON"
+					+ " fulfillment_listing.id=fulfillment_listings_to_examine.fulfillment_listing_id"
+					+ "	WHERE fulfillment_listings_to_examine.id IS NULL");
 			while(results.next()) {
 				final int marketplace_listing_id = results.getInt("marketplace_listing_id");
 				final FulfillmentListing listing = new FulfillmentListing.Builder()
 					.id(results.getInt("fulfillment_listing.id"))
 					.fulfillment_platform_id(results.getInt("fulfillment_platform_id"))
 					.listing_id(results.getString("listing_id"))
+					.listing_title(results.getString("listing_title"))
 					.listing_url(results.getString("listing_url"))
 					.listing_max_price(results.getDouble("listing_max_price"))
 					.build();
