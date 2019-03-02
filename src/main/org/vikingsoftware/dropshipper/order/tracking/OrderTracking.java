@@ -4,8 +4,10 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 
 import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
 
@@ -13,8 +15,28 @@ public class OrderTracking implements CycleParticipant {
 
 	@Override
 	public void cycle() {
+		
+		if(!TrackingManager.get().prepareForCycle()) {
+			System.out.println("Tracking manager failed to prepare for cycle...");
+			return;
+		}
+		
+		if(!FulfillmentManager.get().isLoaded()) {
+			FulfillmentManager.get().load();
+		}
+		
 		final Collection<ProcessedOrder> untrackedOrders = getUntrackedOrders();
 		System.out.println("Loaded " + untrackedOrders.size() + " untracked orders");
+		
+		for(final ProcessedOrder order : untrackedOrders) {
+			final Optional<String> trackingNumber = TrackingManager.get().getTrackingNum(order);
+			if(trackingNumber.isPresent()) {
+				updateTrackingNumber(order, trackingNumber.get());
+				//TODO UPDATE EBAY ORDER W/ TRACKING INFO
+			}
+		}
+		
+		TrackingManager.get().endCycle();
 	}
 	
 	private Collection<ProcessedOrder> getUntrackedOrders() {
@@ -41,6 +63,10 @@ public class OrderTracking implements CycleParticipant {
 		}
 		
 		return orders;
+	}
+	
+	private void updateTrackingNumber(final ProcessedOrder order, final String trackingNumber) {
+		
 	}
 
 }

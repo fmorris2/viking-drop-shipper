@@ -30,7 +30,6 @@ public class FulfillmentManager {
 	private final Map<Integer, FulfillmentPlatform> platforms = new HashMap<>();
 	
 	private final Map<FulfillmentPlatforms, OrderExecutionStrategy> strategies = new HashMap<>();
-	private final Map<Integer, List<FulfillmentMapping>> mappings = new HashMap<>();
 	
 	private FulfillmentManager() {
 		
@@ -78,7 +77,6 @@ public class FulfillmentManager {
 		frozenFulfillmentPlatforms.clear();
 		listings.clear();
 		platforms.clear();
-		mappings.clear();
 		loadValidFulfillmentListings();
 		loadFulfillmentPlatforms();
 	}
@@ -115,27 +113,24 @@ public class FulfillmentManager {
 		return !listings.isEmpty() && !platforms.isEmpty();
 	}
 	
-	public List<FulfillmentListing> getListingsForOrder(final CustomerOrder order) {
-		return listings.getOrDefault(order.marketplace_listing_id, new ArrayList<>());
-	}
-	
-	public List<FulfillmentListing> getListingsForMarketplaceListing(final int marketplaceListingId) {
-		return listings.getOrDefault(marketplaceListingId, new ArrayList<>());
-	}
-	
-	public Optional<FulfillmentMapping> getFulfillmentMapping(final int marketplaceListingId, final int fulfillmentListingId) {
-		final List<FulfillmentMapping> mappingz = mappings.getOrDefault(marketplaceListingId, new ArrayList<>());
-		for(final FulfillmentMapping mapping : mappingz) {
-			if(mapping.fulfillment_listing_id == fulfillmentListingId) {
-				return Optional.of(mapping);
+	public Optional<FulfillmentListing> getListingForProcessedOrder(final ProcessedOrder order) {
+		for(final List<FulfillmentListing> list : listings.values()) {
+			for(final FulfillmentListing listing : list) {
+				if(listing.id == order.fulfillment_listing_id) {
+					return Optional.of(listing);
+				}
 			}
 		}
 		
 		return Optional.empty();
 	}
 	
-	public List<FulfillmentMapping> getFulfillmentMappings(final int marketplaceListingId) {
-		return mappings.getOrDefault(marketplaceListingId, new ArrayList<>());
+	public List<FulfillmentListing> getListingsForOrder(final CustomerOrder order) {
+		return listings.getOrDefault(order.marketplace_listing_id, new ArrayList<>());
+	}
+	
+	public List<FulfillmentListing> getListingsForMarketplaceListing(final int marketplaceListingId) {
+		return listings.getOrDefault(marketplaceListingId, new ArrayList<>());
 	}
 	
 	private void loadValidFulfillmentListings() {
