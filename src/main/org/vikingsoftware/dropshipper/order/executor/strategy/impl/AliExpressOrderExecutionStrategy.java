@@ -26,6 +26,7 @@ import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
 import main.org.vikingsoftware.dropshipper.core.utils.CaptchaUtils;
 import main.org.vikingsoftware.dropshipper.core.web.AliExpressWebDriver;
+import main.org.vikingsoftware.dropshipper.core.web.CustomSelect;
 import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
 
@@ -43,13 +44,15 @@ import org.openqa.selenium.support.ui.Select;
 public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy {
 	
 	private static final String CARD_INFO_PATH = "/data/aliexpress-payment-method.secure";
-	private static final String ORDER_ID_PATTERN = "orderId=([^&]*)";
+	private static final String ORDER_ID_PATTERN = "orderIds=([^&]*)";
 	private static final int ORDER_SUCCESS_WAIT_SECONDS = 180;
 	
 	private CreditCardInfo cardInfo;
 	
 	private ProcessedOrder processedOrder;
 	private AliExpressWebDriver browser;
+	
+	private String currentURL;
 	
 	public AliExpressOrderExecutionStrategy() {
 		parseCardInfo();
@@ -147,6 +150,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		
 		System.out.println("verifying shipping details...");
 		if(!verifyShippingDetails(order, fulfillmentListing)) {
+			System.out.println("failed to verify shipping details...");
 			return processedOrder;
 		}
 		
@@ -168,11 +172,15 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 				final File screenshot = takeScreenshot(browser, captchaElement);
 				final String solvedCaptcha = CaptchaUtils.solveSimpleCaptcha(screenshot);
 				System.out.println("solvedCaptcha: " + solvedCaptcha);
+				final WebElement captchaInput = browser.findElement(By.id("captcha-input"));
+				captchaInput.sendKeys(solvedCaptcha);
 			}
 		} catch(final NoSuchElementException e) {
 			System.out.println("there is no captcha to solve, moving forward...");
 		}		
 
+		currentURL = browser.getCurrentUrl();
+		
 		return OrderExecutor.isTestMode ? new ProcessedOrder.Builder()
 				.customer_order_id(order.id)
 				.fulfillment_listing_id(fulfillmentListing.id)
@@ -220,16 +228,22 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		final ProcessedOrder.Builder builder = new ProcessedOrder.Builder()
 			.customer_order_id(order.id)
 			.fulfillment_listing_id(listing.id)
+			.fulfillment_transaction_id("unknown")
 			.sale_price(finalOrderPrice)
 			.quantity(order.quantity)
 			.order_status("attempted to order (status unknown)");
 				
 		try {
-			final WebElement feedbackHeader = browser.findElement(By.xpath("/html/body/div[5]/div[1]/div/h3"));
-			if(feedbackHeader.getText().toLowerCase().contains("thank you for your payment")) {
-				final WebElement orderDetailsLink = browser.findElement(By.xpath("/html/body/div[5]/div[1]/div/div[5]/a[1]"));
+			final WebElement feedbackHeader = browser.findElement(By.className("ui-feedback-success"));
+			if(feedbackHeader.getText().toLowerCase().contains("thank you")) {
+				final long start = System.currentTimeMillis();
+				while(browser.getCurrentUrl().equals(currentURL) && System.currentTimeMillis() - start < 60_000) {
+					Thread.sleep(10);
+				}
+				System.out.println("currentUrl: " + browser.getCurrentUrl());
+				final String currentUrl = browser.getCurrentUrl();
 				final Pattern regex = Pattern.compile(ORDER_ID_PATTERN);
-				final Matcher matcher = regex.matcher(orderDetailsLink.getAttribute("href"));
+				final Matcher matcher = regex.matcher(currentUrl);
 				if(matcher.find()) {
 					final String transactionId = matcher.group(1);
 					System.out.println("Successfully parsed transaction id: " + transactionId);
@@ -241,7 +255,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 					System.out.println("Could not find order details link...");
 				}
 			}
-		} catch(final NoSuchElementException e) {
+		} catch(final Exception e) {
 			e.printStackTrace();
 			System.out.println("submitting the order failed...");
 		}
@@ -251,9 +265,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		FulfillmentManager.freeze(FulfillmentPlatforms.ALI_EXPRESS.getId());
 		System.out.println("Submitted an order, but we failed to parse whether it was a success or not. Freezing orders...");
 		
-		return builder
-				.fulfillment_transaction_id(null)
-				.build();
+		return builder.build();
 	}
 	
 	private boolean enterPaymentMethod(final CustomerOrder order, final FulfillmentListing listing) {
@@ -371,11 +383,23 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 			incrementIfMatch(matches, locItem, order.buyer_country);
 		}
 		
-		return matches.intValue() >= 6;	
+		return matches.intValue() >= getNumNonNullOrderFields(order);	
+	}
+	
+	private static int getNumNonNullOrderFields(final CustomerOrder order) {
+		int fields = 0;
+		fields += order.buyer_street_address != null ? 1 : 0;
+		fields += order.buyer_apt_suite_unit_etc != null ? 1 : 0;
+		fields += order.buyer_city != null ? 1 : 0;
+		fields += order.buyer_state_province_region != null ? 1 : 0;
+		fields += order.buyer_zip_postal_code != null ? 1 : 0;
+		fields += order.buyer_country != null ? 1 : 0;
+		
+		return fields;
 	}
 	
 	private static void incrementIfMatch(final AtomicInteger matches, final String toSearch, final String substr) {
-		if(toSearch.contains(substr)) {
+		if(toSearch != null && substr != null && toSearch.toLowerCase().contains(substr.toLowerCase())) {
 			matches.incrementAndGet();
 		}
 	}
@@ -392,11 +416,17 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		final Select stateProvRegion = new Select(browser.findElement(By.xpath("//*[@id=\"address-main\"]/div[1]/div[4]/div/select")));
 		final String fullState = order.buyer_state_province_region.length() == 2 ? StateUtils.getStateNameFromCode(order.buyer_state_province_region)
 				: order.buyer_state_province_region;
+		stateProvRegion.selectByIndex(0);
 		stateProvRegion.selectByVisibleText(fullState);
 		
 		System.out.println("Selecting city...");
-		final Select city = new Select(browser.findElement(By.xpath("//*[@id=\"address-main\"]/div[1]/div[5]/div/select")));
-		city.selectByVisibleText(order.buyer_city);
+		final CustomSelect city = new CustomSelect(browser.findElement(By.xpath("//*[@id=\"address-main\"]/div[1]/div[5]/div/select")));
+		final Optional<WebElement> toSelect = city.findOptionByCaseInsensitiveValue(order.buyer_city);
+		if(!toSelect.isPresent()) {
+			return false;
+		}
+		
+		city.selectByValue(toSelect.get().getAttribute("value"));
 		
 		final List<WebElement> inputs = browser.findElements(By.tagName("input"));
 		int inputsComplete = 0;
