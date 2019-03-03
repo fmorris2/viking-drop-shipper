@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 public class CustomerOrderManager {
 	
@@ -40,7 +41,7 @@ public class CustomerOrderManager {
 				return Optional.of(buildOrderFromResultSet(results));
 			}
 		} catch(final Exception e) {
-			e.printStackTrace();
+			DBLogging.medium(CustomerOrder.class, "failed to load customer order by id " + id, e);
 		}
 		
 		return Optional.empty();

@@ -16,6 +16,7 @@ import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.Marketp
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.web.AliExpressWebDriver;
 
 import org.openqa.selenium.By;
@@ -87,7 +88,8 @@ public class AliExpressFulfillmentStockChecker implements FulfillmentStockChecke
 				return entries;
 			}
 		} catch(final Exception e) {
-			e.printStackTrace();
+			DBLogging.medium(getClass(), "failed to get stock for market listing " + marketListing + " and fulfillment listing "
+					+ fulfillmentListing + ": ", e);
 		} finally {
 			if(supplier != null) {
 				webDrivers.add(supplier);
@@ -120,7 +122,7 @@ public class AliExpressFulfillmentStockChecker implements FulfillmentStockChecke
 			System.out.println("parsed stock: " + parsedText);
 			return Integer.parseInt(parsedText);
 		} catch(final Exception e) {
-			e.printStackTrace();
+			DBLogging.medium(getClass(), "failed to parse item stock: ", e);
 		}
 		
 		return 0;

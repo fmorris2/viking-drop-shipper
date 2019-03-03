@@ -10,6 +10,7 @@ import java.util.Set;
 
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 public class MarketplaceLoader {
 	
@@ -36,7 +37,7 @@ public class MarketplaceLoader {
 				Marketplaces.addMarketplace(marketplace);
 			}
 		} catch (final SQLException e) {
-			e.printStackTrace();
+			DBLogging.high(MarketplaceLoader.class, "failed to load marketplaces: ", e);
 		}		
 	}
 	
@@ -54,7 +55,7 @@ public class MarketplaceLoader {
 				listings.put(listingId, id);
 			}
 		} catch (final SQLException e) {
-			e.printStackTrace();
+			DBLogging.high(MarketplaceLoader.class, "failed to load marketplace listings for marketplace " + marketplaceId + ": ", e);
 		}	
 		
 		return listings;
@@ -68,7 +69,7 @@ public class MarketplaceLoader {
 				return Marketplace.loadListingFromResultSet(result);
 			}
 		} catch(final SQLException e) {
-			e.printStackTrace();
+			DBLogging.high(MarketplaceLoader.class, "failed to load marketplace listing by id: " + listingId, e);
 		}
 		
 		return null;
@@ -88,7 +89,7 @@ public class MarketplaceLoader {
 				knownOrderIds.add(id);
 			}
 		} catch (final SQLException e) {
-			e.printStackTrace();
+			DBLogging.high(MarketplaceLoader.class, "failed to load known order ids for marketplace " + marketplaceId + ": ", e);
 		}	
 		
 		return knownOrderIds;

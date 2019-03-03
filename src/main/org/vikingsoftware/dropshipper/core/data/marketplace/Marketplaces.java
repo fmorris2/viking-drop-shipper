@@ -3,6 +3,7 @@ package main.org.vikingsoftware.dropshipper.core.data.marketplace;
 import java.util.HashMap;
 import java.util.Map;
 
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.inventory.AutomaticInventoryUpdater;
 import main.org.vikingsoftware.dropshipper.inventory.impl.EbayInventoryUpdater;
 import main.org.vikingsoftware.dropshipper.order.parser.strategy.OrderParsingStrategy;
@@ -35,7 +36,7 @@ public enum Marketplaces {
 		try {
 			return parsingStrategy.newInstance();
 		} catch (final Exception e) {
-			e.printStackTrace();
+			DBLogging.high(getClass(), "failed to generate parsing strategy for " +  this + ": ", e);
 		}
 		
 		return null;
@@ -45,7 +46,7 @@ public enum Marketplaces {
 		try {
 			return inventoryUpdater.newInstance();
 		} catch (final Exception e) {
-			e.printStackTrace();
+			DBLogging.high(getClass(), "failed to generate inventory updater for " + this + ": ", e);
 		}
 		
 		return null;

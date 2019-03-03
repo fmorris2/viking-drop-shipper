@@ -14,6 +14,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentMana
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 public class OrderExecutor implements CycleParticipant {
 	
@@ -86,7 +87,7 @@ public class OrderExecutor implements CycleParticipant {
 			final int numRows = prepared.executeBatch().length;
 			System.out.println("Executed batch of " + numRows + " insert queries.");
 		} catch (final SQLException e) {
-			e.printStackTrace();
+			DBLogging.high(getClass(), "failed to insert successful orders into DB: ", e);
 		}
 	}
 	
@@ -105,7 +106,7 @@ public class OrderExecutor implements CycleParticipant {
 			final int numRows = prepared.executeBatch().length;
 			System.out.println("Executed batch of " + numRows + " insert queries.");
 		} catch (final SQLException e) {
-			e.printStackTrace();
+			DBLogging.high(getClass(), "failed to insert failed orders into db: " , e);
 		}
 	}
 

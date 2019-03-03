@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 public class SkuMappingManager {
 	
@@ -38,7 +39,7 @@ public class SkuMappingManager {
 				marketplaceToMappings.put(mapping.marketplace_listing_id, marketplaceMappings);
 			}
 		} catch (final SQLException e) {
-			e.printStackTrace();
+			DBLogging.high(SkuMappingManager.class, "failed to load sku mappings: ", e);
 		}
 		
 		return !mappings.isEmpty();

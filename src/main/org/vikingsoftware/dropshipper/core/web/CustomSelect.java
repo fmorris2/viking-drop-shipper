@@ -4,6 +4,8 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
@@ -28,7 +30,7 @@ public class CustomSelect extends Select {
 			}
 			return Optional.of(options.get(0));
 		} catch(final Exception e) {
-			e.printStackTrace();
+			DBLogging.high(getClass(), "failed to findOptionByCaseInsentiveValue("+value+"): ", e);
 		}
 		
 		return Optional.empty();

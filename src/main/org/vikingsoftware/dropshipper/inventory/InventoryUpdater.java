@@ -15,6 +15,7 @@ import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoad
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 public class InventoryUpdater implements CycleParticipant {
 	
@@ -77,12 +78,12 @@ public class InventoryUpdater implements CycleParticipant {
 				System.out.println("Checking status of inventory update task #" + i + "...");
 				successfulUpdate = updates.get(i).get();
 			} catch(final Exception e) {
-				e.printStackTrace();
+				DBLogging.high(getClass(), "failed to check inventory update task: ", e);
 			}
 			if(successfulUpdate) {
 				System.out.println("Successfully updated inventory for listing " + activeListings.get(i));
 			} else {
-				System.out.println("Failed to update inventory for listing " + activeListings.get(i));
+				DBLogging.medium(getClass(), "Failed to update inventory for listing " + activeListings.get(i), null);
 			}
 		}
 	}

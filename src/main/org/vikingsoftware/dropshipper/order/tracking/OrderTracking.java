@@ -16,6 +16,7 @@ import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOr
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 public class OrderTracking implements CycleParticipant {
 
@@ -52,7 +53,7 @@ public class OrderTracking implements CycleParticipant {
 					EbayCalls.setShipmentTrackingInfo(entry.getKey(), trackingEntry);
 				}
 			} catch(final Exception e) {
-				e.printStackTrace();
+				DBLogging.high(getClass(), "failed to update order tracking for order " + entry.getKey(), e);
 			}
 		}
 		

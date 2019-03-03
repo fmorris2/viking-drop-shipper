@@ -14,6 +14,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.Fulfillme
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.inventory.AutomaticInventoryUpdater;
 
 public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
@@ -54,12 +55,12 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			}
 			
 			if(skuStocks.isEmpty()) {
-				System.out.println("Failed to grab stock for marketplace listing " + listing.id);
+				DBLogging.medium(getClass(), "Failed to grab stock for marketplace listing " + listing.id, null);
 				return false;
 			}
 			return sendInventoryUpdateToEbay(listing, skuStocks);
 		} catch(final Exception e) {
-			e.printStackTrace();
+			DBLogging.high(getClass(), "failed to update inventory for marketplace listing " + listing + ": ", e);
 		}
 		
 		return false;
@@ -77,7 +78,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			updateCache.put(listing.listingId, System.currentTimeMillis());
 			return true;
 		} catch(final Exception e) {
-			e.printStackTrace();
+			DBLogging.high(getClass(), "failed to send inventory update to ebay: ", e);
 		}
 		
 		return false;

@@ -31,7 +31,7 @@ public class CaptchaUtils {
 				}
 			}
 		} catch(final Exception e) {
-			e.printStackTrace();
+			DBLogging.high(CaptchaUtils.class, "failed to solve simple captcha: ", e);
 		}
 		
 		return null;

@@ -25,6 +25,7 @@ import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOr
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
 import main.org.vikingsoftware.dropshipper.core.utils.CaptchaUtils;
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.web.AliExpressWebDriver;
 import main.org.vikingsoftware.dropshipper.core.web.CustomSelect;
 import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
@@ -103,7 +104,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 			try {
 				return executeOrder(customerOrder, fulfillmentListing);
 			} catch(final Exception e) {
-				e.printStackTrace();
+				DBLogging.high(getClass(), "order failed: ", e);
 			}
 		
 		return processedOrder;
@@ -202,7 +203,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 			}
 			return matches;
 		} catch(final Exception e) {
-			e.printStackTrace();
+			DBLogging.high(getClass(), "failed to verify listing title for " + listing + ": ", e);
 		}
 		
 		return false;
@@ -213,7 +214,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 			final String unparsedPrice = browser.findElement(By.id("total-price-fee-amount-post-currency")).getAttribute("value");
 			return Double.parseDouble(unparsedPrice);
 		} catch(final Exception e) {
-			e.printStackTrace();
+			DBLogging.high(getClass(), "failed to parse final order price: ", e);
 		}
 		
 		return Double.MAX_VALUE;
@@ -256,7 +257,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 				}
 			}
 		} catch(final Exception e) {
-			e.printStackTrace();
+			DBLogging.critical(getClass(), "failed to submit order: " + order, e);
 			System.out.println("submitting the order failed...");
 		}
 		

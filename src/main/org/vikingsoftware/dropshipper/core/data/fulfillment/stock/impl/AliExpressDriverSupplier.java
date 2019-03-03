@@ -18,7 +18,6 @@ public class AliExpressDriverSupplier implements Supplier<AliExpressWebDriver> {
 	
 	public void close() {
 		if(driver != null) {
-			System.out.println("Closing AliExpressWebDriver...");
 			driver.close();
 		}
 	}

@@ -13,6 +13,7 @@ import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.Marketp
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.EbayConversionUtils;
 
 import com.ebay.sdk.ApiContext;
@@ -47,7 +48,7 @@ public class EbayCalls {
 					.toArray(CustomerOrder[]::new);
 			
 		} catch(final Exception e) {
-			e.printStackTrace();
+			DBLogging.high(EbayCalls.class, "failed to get orders last " + days + " days: ", e);
 		}
 		
 		return new CustomerOrder[0];
@@ -75,7 +76,7 @@ public class EbayCalls {
 			System.out.println("fees: " + fees);
 			return fees > 0;
 		} catch(final Exception e) {
-			e.printStackTrace();
+			DBLogging.high(EbayCalls.class, "failed to update inventory for listing " + listingId + " and invEntries " + invEntries + ": ", e);
 		}
 		
 		return false;
@@ -108,7 +109,7 @@ public class EbayCalls {
 				}
 			}
 		} catch(final Exception e) {
-			e.printStackTrace();
+			DBLogging.high(EbayCalls.class, "failed to set shipment tracking info for order " + order + " and tracking entry " + entry + ": ", e);
 		}
 		
 		return false;

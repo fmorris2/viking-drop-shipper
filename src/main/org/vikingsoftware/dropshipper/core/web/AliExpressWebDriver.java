@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -65,7 +66,7 @@ public class AliExpressWebDriver extends LoginWebDriver {
 			
 			return true;
 		} catch(final Exception e) {
-			e.printStackTrace();
+			DBLogging.high(getClass(), "failed to prepare for execution: ", e);
 		}
 		
 		close();
@@ -112,8 +113,7 @@ public class AliExpressWebDriver extends LoginWebDriver {
 				}
 			}
 		} catch(final Exception e) {
-			e.printStackTrace();
-			System.out.println("Failed to select order options");
+			DBLogging.high(getClass(), "Failed to select order options", e);
 			return false;
 		}
 		

@@ -11,6 +11,7 @@ import java.util.Set;
 
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 public class Marketplace {
 	
@@ -70,7 +71,7 @@ public class Marketplace {
 				listings.add(listing);
 			}
 		} catch (final SQLException e) {
-			e.printStackTrace();
+			DBLogging.high(getClass(), "failed to getMarketplaceListings: ", e);
 		}
 		
 		return listings;

@@ -15,6 +15,7 @@ import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrde
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
 
 public class FulfillmentManager {
@@ -53,7 +54,7 @@ public class FulfillmentManager {
 			final Statement st = VDSDBManager.get().createStatement();
 			st.execute("UPDATE fulfillment_platform SET frozen=1 WHERE id=" + fulfillmentPlatformId);
 		} catch(final Exception e) {
-			e.printStackTrace();
+			DBLogging.critical(FulfillmentManager.class, "failed to freeze fulfillment platform " + fulfillmentPlatformId, e);
 		}
 	}
 	
@@ -69,7 +70,7 @@ public class FulfillmentManager {
 					+ " VALUES("+listing.id+",'"+newTitle+"')");
 			System.out.println("Successfully flagged listing " + listing + " for examination");
 		} catch(final Exception e) {
-			e.printStackTrace();
+			DBLogging.high(FulfillmentManager.class, "failed to flag listing " + listing + " for examination: " , e);
 		}
 	}
 	
@@ -180,7 +181,7 @@ public class FulfillmentManager {
 				platforms.put(platform.id, platform);
 			}
 		} catch(final SQLException e) {
-			e.printStackTrace();
+			DBLogging.high(FulfillmentManager.class, "failed to load fulfillment platforms: ", e);
 		}
 	}
 }
