@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
 
@@ -27,6 +28,22 @@ public class CustomerOrderManager {
 		
 		System.out.println("loaded " + toExecute.size() + " orders to execute");
 		return toExecute;
+	}
+	
+	public static Optional<CustomerOrder> loadCustomerOrderById(final int id) {
+		try {
+			final Statement st = VDSDBManager.get().createStatement();
+			final ResultSet results = st.executeQuery("SELECT * FROM customer_order"
+					+ " WHERE id="+id);
+			
+			if(results.next()) {
+				return Optional.of(buildOrderFromResultSet(results));
+			}
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return Optional.empty();
 	}
 
 	public static CustomerOrder loadFirstCustomerOrder() {

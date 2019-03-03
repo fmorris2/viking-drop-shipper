@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
 
 public class MarketplaceLoader {
@@ -57,6 +58,20 @@ public class MarketplaceLoader {
 		}	
 		
 		return listings;
+	}
+	
+	public static MarketplaceListing loadMarketplaceListingById(final int listingId) {
+		try {
+			final Statement st = VDSDBManager.get().createStatement();
+			final ResultSet result = st.executeQuery("SELECT * from marketplace_listing WHERE id="+listingId);
+			if(result.next()) {
+				return Marketplace.loadListingFromResultSet(result);
+			}
+		} catch(final SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 	
 	private static Set<String> loadKnownOrderIds(final int marketplaceId) {

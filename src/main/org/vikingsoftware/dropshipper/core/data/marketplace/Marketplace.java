@@ -66,15 +66,7 @@ public class Marketplace {
 			}
 			final ResultSet results = st.executeQuery(sql);
 			while(results.next()) {
-				final MarketplaceListing listing = new MarketplaceListing.Builder()
-					.id(results.getInt("id"))
-					.marketplaceId(id)
-					.listingId(results.getString("listing_id"))
-					.listingTitle(results.getString("listing_title"))
-					.listingUrl(results.getString("listing_url"))
-					.listingPrice(results.getDouble("listing_price"))
-					.build();
-				
+				final MarketplaceListing listing = Marketplace.loadListingFromResultSet(results);		
 				listings.add(listing);
 			}
 		} catch (final SQLException e) {
@@ -82,6 +74,17 @@ public class Marketplace {
 		}
 		
 		return listings;
+	}
+	
+	public static MarketplaceListing loadListingFromResultSet(final ResultSet results) throws SQLException {
+		return new MarketplaceListing.Builder()
+			.id(results.getInt("id"))
+			.marketplaceId(results.getInt("marketplace_id"))
+			.listingId(results.getString("listing_id"))
+			.listingTitle(results.getString("listing_title"))
+			.listingUrl(results.getString("listing_url"))
+			.listingPrice(results.getDouble("listing_price"))
+		.build();
 	}
 	
 	public static class Builder {

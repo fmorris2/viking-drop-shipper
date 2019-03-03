@@ -58,6 +58,7 @@ public class AliExpressFulfillmentStockChecker implements FulfillmentStockChecke
 	public static void reset() {
 		if(instance != null) {
 			try {
+				System.out.println("Resetting AliExpressFulfillmentStockChecker...");
 				instance.threadPool.shutdownNow();
 				instance.webDrivers.forEach(driver -> driver.close());
 				instance.webDrivers.clear();
@@ -76,9 +77,11 @@ public class AliExpressFulfillmentStockChecker implements FulfillmentStockChecke
 	private Collection<SkuInventoryEntry> getStockImpl(final MarketplaceListing marketListing, final FulfillmentListing fulfillmentListing) {
 		
 		final Collection<SkuInventoryEntry> entries = new ArrayList<>();
+		AliExpressDriverSupplier supplier = null;
 		AliExpressWebDriver driver = null;
 		try {
-			driver = webDrivers.take().get();
+			supplier = webDrivers.take();
+			driver = supplier.get();
 			if(driver.getReady()) {
 				parseAndAddSkuInventoryEntries(driver, marketListing, fulfillmentListing, entries);
 				return entries;
@@ -86,8 +89,8 @@ public class AliExpressFulfillmentStockChecker implements FulfillmentStockChecke
 		} catch(final Exception e) {
 			e.printStackTrace();
 		} finally {
-			if(driver != null) {
-				driver.close();
+			if(supplier != null) {
+				webDrivers.add(supplier);
 			}
 		}
 		

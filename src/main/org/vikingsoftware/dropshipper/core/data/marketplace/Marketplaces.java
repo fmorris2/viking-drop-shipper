@@ -27,6 +27,10 @@ public enum Marketplaces {
 		MARKETPLACES.put(marketplace.id, marketplace);
 	}
 	
+	public static Marketplaces getById(final int id) {
+		return values()[id - 1];
+	}
+	
 	public OrderParsingStrategy generateParsingStrategy() {
 		try {
 			return parsingStrategy.newInstance();

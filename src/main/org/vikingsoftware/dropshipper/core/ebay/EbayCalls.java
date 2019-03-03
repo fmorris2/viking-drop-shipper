@@ -3,17 +3,26 @@ package main.org.vikingsoftware.dropshipper.core.ebay;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
+import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrderManager;
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
+import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
+import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
 import main.org.vikingsoftware.dropshipper.core.utils.EbayConversionUtils;
 
 import com.ebay.sdk.ApiContext;
 import com.ebay.sdk.TimeFilter;
+import com.ebay.sdk.call.CompleteSaleCall;
 import com.ebay.sdk.call.GetSellerTransactionsCall;
 import com.ebay.sdk.call.ReviseFixedPriceItemCall;
 import com.ebay.soap.eBLBaseComponents.ItemType;
+import com.ebay.soap.eBLBaseComponents.ShipmentTrackingDetailsType;
+import com.ebay.soap.eBLBaseComponents.ShipmentType;
 import com.ebay.soap.eBLBaseComponents.TransactionType;
 import com.ebay.soap.eBLBaseComponents.VariationType;
 import com.ebay.soap.eBLBaseComponents.VariationsType;
@@ -65,6 +74,39 @@ public class EbayCalls {
 			final int fees = call.reviseFixedPriceItem().getFee().length;
 			System.out.println("fees: " + fees);
 			return fees > 0;
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
+	public static boolean setShipmentTrackingInfo(final ProcessedOrder order, final TrackingEntry entry) {
+		try {
+			final ApiContext api = EbayApiContextManager.getLiveContext();
+			final CompleteSaleCall call = new CompleteSaleCall(api);
+			final Optional<CustomerOrder> customerOrder = CustomerOrderManager.loadCustomerOrderById(order.customer_order_id);
+			if(customerOrder.isPresent()) {
+				call.setTransactionID(customerOrder.get().marketplace_order_id);
+				final MarketplaceListing marketListing = MarketplaceLoader.loadMarketplaceListingById(customerOrder.get().marketplace_listing_id);
+				if(marketListing != null) {
+					call.setItemID(marketListing.listingId);
+					call.setShipped(true);
+					final ShipmentType shipmentDetails = new ShipmentType();
+					shipmentDetails.setDeliveryStatus(entry.shipmentStatus);
+					System.out.println("Shipment status: " + entry.shipmentStatus);
+					shipmentDetails.setNotes(entry.deliveryRemark);
+					System.out.println("Delivery Remark: " + entry.deliveryRemark);
+					final ShipmentTrackingDetailsType trackingDetails = new ShipmentTrackingDetailsType();
+					trackingDetails.setShipmentTrackingNumber(entry.trackingNumber);
+					trackingDetails.setShippingCarrierUsed(entry.shippingService);
+					shipmentDetails.setShipmentTrackingDetails(new ShipmentTrackingDetailsType[]{trackingDetails});
+					call.setShipment(shipmentDetails);
+					System.out.println("Updating tracking details on eBay for order " + order.id);
+					call.completeSale();
+					return true;
+				}
+			}
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}

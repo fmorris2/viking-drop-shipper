@@ -3,11 +3,14 @@ package main.org.vikingsoftware.dropshipper.order.tracking;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
+import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
 import main.org.vikingsoftware.dropshipper.order.tracking.handler.impl.AliExpressOrderTrackingHandler;
 
 public class TrackingManager {
@@ -39,18 +42,18 @@ public class TrackingManager {
 		aliExpressHandler.finishTracking();
 	}
 	
-	public Optional<String> getTrackingNum(final ProcessedOrder order) {
+	public Future<TrackingEntry> getTrackingNum(final ProcessedOrder order) {
 		final Optional<FulfillmentListing> fulfillmentListing = FulfillmentManager.get().getListingForProcessedOrder(order);
 		if(!fulfillmentListing.isPresent()) {
-			return Optional.empty();
+			return new FutureTask<>(() -> null);
 		}
 		
 		final FulfillmentPlatforms platform = FulfillmentPlatforms.getById(fulfillmentListing.get().fulfillment_platform_id);
 		switch(platform) {
 			case ALI_EXPRESS:
-				return aliExpressHandler.getTrackingNumber(order);
+				return aliExpressHandler.getTrackingInfo(order);
 			default:
-				return Optional.empty();		
+				return new FutureTask<>(() -> null);		
 		}
 	}
 }
