@@ -59,18 +59,22 @@ public class EbayCalls {
 			final ApiContext api = EbayApiContextManager.getLiveContext();
 			final ReviseFixedPriceItemCall call = new ReviseFixedPriceItemCall(api);
 			final ItemType itemToRevise = new ItemType();
-			final VariationsType variations = new VariationsType();
-			final List<VariationType> entries = new ArrayList<>();
-			for(final SkuInventoryEntry entry : invEntries) {
-				final VariationType variation = new VariationType();
-				variation.setSKU(entry.sku);
-				variation.setQuantity(Math.min(FAKE_MAX_QUANTITY, entry.stock));
-				entries.add(variation);
-			}
-			variations.setVariation(entries.stream().toArray(VariationType[]::new));
-			System.out.println("Variations: " + variations.getVariationLength());
 			itemToRevise.setItemID(listingId);
-			itemToRevise.setVariations(variations);	
+			if(invEntries.size() == 1 && invEntries.get(0).sku == null) {
+				itemToRevise.setQuantity(Math.min(FAKE_MAX_QUANTITY, invEntries.get(0).stock));
+			} else {
+				final VariationsType variations = new VariationsType();
+				final List<VariationType> entries = new ArrayList<>();
+				for(final SkuInventoryEntry entry : invEntries) {
+					final VariationType variation = new VariationType();
+					variation.setSKU(entry.sku);
+					variation.setQuantity(Math.min(FAKE_MAX_QUANTITY, entry.stock));
+					entries.add(variation);
+				}
+				variations.setVariation(entries.stream().toArray(VariationType[]::new));
+				System.out.println("Variations: " + variations.getVariationLength());
+				itemToRevise.setVariations(variations);	
+			}
 			call.setItemToBeRevised(itemToRevise);
 			final int fees = call.reviseFixedPriceItem().getFee().length;
 			System.out.println("fees: " + fees);

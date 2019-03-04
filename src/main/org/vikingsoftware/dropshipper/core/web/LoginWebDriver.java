@@ -17,6 +17,8 @@ public abstract class LoginWebDriver extends ChromeDriver {
 	protected static ChromeOptions generateOptions() {
 		final ChromeOptions options = new ChromeOptions();
 		options.setHeadless(HEADLESS);
+		options.addArguments("--no-sandbox");
+		options.addArguments("--disable-dev-shm-usage");
 		return options;
 	}
 }

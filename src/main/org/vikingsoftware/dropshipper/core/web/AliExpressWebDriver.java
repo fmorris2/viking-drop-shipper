@@ -3,7 +3,9 @@ package main.org.vikingsoftware.dropshipper.core.web;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
@@ -22,6 +24,8 @@ public class AliExpressWebDriver extends LoginWebDriver {
 	private static final String CREDS_FILE_PATH = "/data/aliexpress-creds.secure";
 	private static final int DEFAULT_VISIBILITY_WAIT_SECONDS = 5;
 	private static final int MAX_LOGIN_TRIES = 20;
+	
+	private final Map<String,String> cachedOrderOptions = new HashMap<>();
 	
 	private String username;
 	private String password;
@@ -73,6 +77,10 @@ public class AliExpressWebDriver extends LoginWebDriver {
 		return false;
 	}
 	
+	public void clearCachedSelectedOrderOptions() {
+		cachedOrderOptions.clear();
+	}
+	
 	public boolean selectOrderOptions(final SkuMapping skuMapping, final FulfillmentListing listing) {
 		try {
 			System.out.println("Selecting item options for sku mapping: " + skuMapping);
@@ -97,6 +105,11 @@ public class AliExpressWebDriver extends LoginWebDriver {
 					}
 					
 					final String valueToSelect = jsonObj.get(itemTitle).toString();
+					if(cachedOrderOptions.containsKey(itemTitle) && cachedOrderOptions.get(itemTitle).equalsIgnoreCase(valueToSelect)) {
+						System.out.println(valueToSelect + " is already selected! Continuing...");
+						continue;
+					}
+					
 					System.out.println("Selecting " + valueToSelect + " for item " + itemTitle);
 					
 					final WebElement valueList = propertyItem.findElement(By.className("sku-attr-list"));
@@ -104,6 +117,7 @@ public class AliExpressWebDriver extends LoginWebDriver {
 					for(final WebElement listElement : listElements) {
 						if(isMatchingOrderOption(listElement, valueToSelect)) {
 							System.out.println("Clicking " + valueToSelect + " option for " + itemTitle);
+							cachedOrderOptions.put(itemTitle, valueToSelect);
 							listElement.click();
 							continue options;
 						}
@@ -125,19 +139,10 @@ public class AliExpressWebDriver extends LoginWebDriver {
 		if(dataRole == null) {
 			return false;
 		}
-		else if(listElement.getAttribute("class").contains("item-sku-image")) { //image list item
-			System.out.println("Dealing with an image list item!");
-			if(dataRole != null && dataRole.getAttribute("title").equalsIgnoreCase(valueToSelect)) {
-				System.out.println("Found matching image list item for " + valueToSelect);
-				return true;
-			}
-		} else { //normal list item
-			System.out.println("Dealing with a normal list item!");
-			final WebElement span = dataRole.findElement(By.xpath(".//span"));
-			if(span != null && span.getText().equals(valueToSelect)) {
-				System.out.println("Found matching normal list item for " + valueToSelect);
-				return true;
-			}
+		
+		if(dataRole != null && dataRole.getAttribute("data-sku-id").equalsIgnoreCase(valueToSelect)) {
+			System.out.println("Found matching image list item for " + valueToSelect);
+			return true;
 		}
 		
 		return false;

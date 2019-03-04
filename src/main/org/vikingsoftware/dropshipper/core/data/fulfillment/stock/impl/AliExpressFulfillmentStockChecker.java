@@ -106,11 +106,14 @@ public class AliExpressFulfillmentStockChecker implements FulfillmentStockChecke
 		final List<SkuMapping> mappings = SkuMappingManager.getMappingsForMarketplaceListing(marketListing.id);
 		System.out.println("SKU mappings for marketplace listing " + marketListing.id + ": " + mappings.size());
 		if(!mappings.isEmpty()) {
+			driver.clearCachedSelectedOrderOptions();
 			for(final SkuMapping mapping : mappings) {
 				if(driver.selectOrderOptions(mapping, fulfillmentListing)) {
 					entries.add(new SkuInventoryEntry(mapping.item_sku, parseItemStock(driver)));
 				}
 			}
+		} else {
+			entries.add(new SkuInventoryEntry(null, parseItemStock(driver)));
 		}
 	}
 	

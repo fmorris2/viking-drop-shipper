@@ -2,7 +2,7 @@ package main.org.vikingsoftware.dropshipper.core.utils;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -22,13 +22,15 @@ public class DBLogging {
 	
 	private static void updateLogs() {
 		try {
-			final Statement st = VDSDBManager.get().createStatement();
+			final PreparedStatement st = VDSDBManager.get().createPreparedStatement("INSERT INTO logging(class,level,message,exception)"
+					+ " VALUES(?,?,?,?)");
 			while(!messageQueue.isEmpty()) {
 				final LogMessage msg = messageQueue.poll();
-				final String sql = "INSERT INTO logging(class,level,message,exception)"
-						+ " VALUES('"+msg.clazz.getName()+"','"+msg.level.name()+"','"+msg.message+"','"
-						+ convertExceptionToString(msg.exception)+"')";
-				st.addBatch(sql);
+				st.setString(1, msg.clazz.getName());
+				st.setString(2, msg.level.name());
+				st.setString(3, msg.message);
+				st.setString(4, convertExceptionToString(msg.exception));
+				st.addBatch();
 			}
 			
 			st.executeBatch();
