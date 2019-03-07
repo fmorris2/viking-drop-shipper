@@ -4,10 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
@@ -18,37 +14,21 @@ import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.web.AliExpressWebDriver;
+import main.org.vikingsoftware.dropshipper.core.web.AliExpressWebDriverQueue;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
-public class AliExpressFulfillmentStockChecker implements FulfillmentStockChecker {
-	
-	private static final int SELENIUM_INSTANCES_PER_CORE = 3;
+public class AliExpressFulfillmentStockChecker extends AliExpressWebDriverQueue implements FulfillmentStockChecker {
 	
 	private static AliExpressFulfillmentStockChecker instance;
 	
-	private final ExecutorService threadPool;
-	private final BlockingQueue<AliExpressDriverSupplier> webDrivers;
-	
 	private AliExpressFulfillmentStockChecker() {
-		final int coresAvailable = Runtime.getRuntime().availableProcessors();
-		final int numThreads = coresAvailable * SELENIUM_INSTANCES_PER_CORE;
-		System.out.println("Using " + numThreads + " threads for AliExpressFulfillmentStockChecker");
-		threadPool = Executors.newFixedThreadPool(numThreads);
-		
-		webDrivers = new ArrayBlockingQueue<>(numThreads);
-		for(int i = 0; i < numThreads; i++) {
-			try {
-				webDrivers.put(new AliExpressDriverSupplier());
-			} catch (final InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
+		super();
 	}
 	
-	public static AliExpressFulfillmentStockChecker get() {
+	public synchronized static AliExpressFulfillmentStockChecker get() {
 		if(instance == null) {
 			instance = new AliExpressFulfillmentStockChecker();
 		}

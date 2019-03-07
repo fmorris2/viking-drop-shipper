@@ -5,7 +5,7 @@ import org.openqa.selenium.chrome.ChromeOptions;
 
 public abstract class LoginWebDriver extends ChromeDriver {
 	
-	private static final boolean HEADLESS = true;
+	private static final boolean HEADLESS = false;
 	private static final ChromeOptions OPTIONS = generateOptions();
 	
 	public LoginWebDriver() {
