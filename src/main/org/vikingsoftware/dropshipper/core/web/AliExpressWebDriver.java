@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
@@ -15,6 +16,7 @@ import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 
@@ -157,6 +159,20 @@ public class AliExpressWebDriver extends LoginWebDriver {
 				username = bR.readLine().trim();
 				password = bR.readLine().trim();
 		} catch (final Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void scrollToBottomOfPage() {
+		//scroll to bottom of page to load the descrip
+		try {
+			final Supplier<Integer> pageHeight = () -> Integer.parseInt(((JavascriptExecutor) this).executeScript("return document.body.scrollHeight").toString());
+			final Supplier<Integer> currentHeight = () -> Integer.parseInt(((JavascriptExecutor) this).executeScript("return window.pageYOffset").toString());
+			while(currentHeight.get() < pageHeight.get() * .85) {
+				((JavascriptExecutor) this).executeScript("window.scrollBy(0, 300)", "");
+				Thread.sleep(5);
+			}
+		} catch(final Exception e) {
 			e.printStackTrace();
 		}
 	}
