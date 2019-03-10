@@ -6,4 +6,14 @@ public class PropertyItemOption {
 	public String title;
 	public String thumbNailUrl;
 	public String fullImageUrl;
+	
+	@Override
+	public String toString() {
+		return title;
+//		return "skuId: " + skuId + "\n"
+//			+  "elementId: " + elementId + "\n"
+//			+  "title: " + title + "\n"
+//			+  "thumbNailUrl: " + thumbNailUrl + "\n"
+//			+  "fullImageUrl: " + fullImageUrl;
+	}
 }

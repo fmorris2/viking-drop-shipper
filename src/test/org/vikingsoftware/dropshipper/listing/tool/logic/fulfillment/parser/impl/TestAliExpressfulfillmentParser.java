@@ -10,7 +10,7 @@ public class TestAliExpressfulfillmentParser {
 
 	@Test
 	public void test() {
-		final String url = "https://www.aliexpress.com/item/Silicone-Pancake-Mold-4-7-10-Holes-Egg-Ring-Maker-Round-Heart-Pancake-Mold-Nonstick-Circular/32816061966.html";
+		final String url = "https://www.aliexpress.com/item/Coolreall-usb-cable-for-lightning-cable-Fast-Charging-Cable-iPhone-Charger-Cord-Usb-Data-Cable/32955700629.html";
 		final Listing listing = AliExpressFulfillmentParser.get().getListingTemplate(url);
 		Assert.assertNotNull(listing);
 	}

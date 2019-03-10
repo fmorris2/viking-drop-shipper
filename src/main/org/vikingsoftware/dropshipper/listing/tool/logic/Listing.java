@@ -15,5 +15,5 @@ public class Listing {
 	public double price;
 	public Map<String, BufferedImage> pictures = new HashMap<>();
 	public List<PropertyItem> propertyItems = new ArrayList<>();
-	public Map<Set<PropertyItem>, Double> variations = new HashMap<>();
+	public Map<Set<PropertyItemOption>, Double> variations = new HashMap<>();
 }

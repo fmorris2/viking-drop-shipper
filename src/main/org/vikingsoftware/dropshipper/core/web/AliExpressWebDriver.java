@@ -23,8 +23,9 @@ import org.openqa.selenium.WebElement;
 
 public class AliExpressWebDriver extends LoginWebDriver {
 	
+	public static final int DEFAULT_VISIBILITY_WAIT_SECONDS = 5;
+	
 	private static final String CREDS_FILE_PATH = "/data/aliexpress-creds.secure";
-	private static final int DEFAULT_VISIBILITY_WAIT_SECONDS = 5;
 	private static final int MAX_LOGIN_TRIES = 20;
 	
 	private final Map<String,String> cachedOrderOptions = new HashMap<>();
