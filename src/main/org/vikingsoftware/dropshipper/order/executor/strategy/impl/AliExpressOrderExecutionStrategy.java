@@ -26,8 +26,8 @@ import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
 import main.org.vikingsoftware.dropshipper.core.utils.CaptchaUtils;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
-import main.org.vikingsoftware.dropshipper.core.web.AliExpressWebDriver;
 import main.org.vikingsoftware.dropshipper.core.web.CustomSelect;
+import main.org.vikingsoftware.dropshipper.core.web.aliexpress.AliExpressWebDriver;
 import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
 

@@ -2,7 +2,7 @@ package main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl;
 
 import java.util.function.Supplier;
 
-import main.org.vikingsoftware.dropshipper.core.web.AliExpressWebDriver;
+import main.org.vikingsoftware.dropshipper.core.web.aliexpress.AliExpressWebDriver;
 
 public class AliExpressDriverSupplier implements Supplier<AliExpressWebDriver> {
 

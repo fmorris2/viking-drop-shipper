@@ -1,17 +1,10 @@
-package main.org.vikingsoftware.dropshipper.core.web;
+package main.org.vikingsoftware.dropshipper.core.web.aliexpress;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
-import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
-import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -20,39 +13,35 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
+import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
+import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
+
 
 public class AliExpressWebDriver extends LoginWebDriver {
-	
-	public static final int DEFAULT_VISIBILITY_WAIT_SECONDS = 5;
-	
-	private static final String CREDS_FILE_PATH = "/data/aliexpress-creds.secure";
-	private static final int MAX_LOGIN_TRIES = 20;
-	
+
 	private final Map<String,String> cachedOrderOptions = new HashMap<>();
-	
-	private String username;
-	private String password;
-	private int loginTries = 0;
-	
-	public AliExpressWebDriver() {
-		super();
-		parseCredentials();
-	}
-	
+
 	@Override
 	public boolean getReady() {
 		return prepareForExecution();
 	}
-	
+
+	@Override
+	protected String getCredsFilePath() {
+		return "/data/aliexpress-creds.secure";
+	}
+
 	private boolean prepareForExecution() {
 		try {
 			manage().window().maximize();
 			manage().timeouts().implicitlyWait(DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
-			
+
 			//sign in to ali express
 			get("https://login.aliexpress.com/");
 			switchTo().frame(findElement(By.id("alibaba-login-box")));
-			
+
 			findElement(By.id("fm-login-id")).sendKeys(username);
 			findElement(By.id("fm-login-password")).sendKeys(password);
 			findElement(By.id("fm-login-submit")).click();
@@ -70,20 +59,20 @@ public class AliExpressWebDriver extends LoginWebDriver {
 					return false;
 				}
 			}
-			
+
 			return true;
 		} catch(final Exception e) {
 			DBLogging.high(getClass(), "failed to prepare for execution: ", e);
 		}
-		
+
 		close();
 		return false;
 	}
-	
+
 	public void clearCachedSelectedOrderOptions() {
 		cachedOrderOptions.clear();
 	}
-	
+
 	public boolean selectOrderOptions(final SkuMapping skuMapping, final FulfillmentListing listing) {
 		try {
 			System.out.println("Selecting item options for sku mapping: " + skuMapping);
@@ -91,8 +80,8 @@ public class AliExpressWebDriver extends LoginWebDriver {
 			final List<WebElement> propertyItems = productInfoDiv == null ? null : productInfoDiv.findElements(By.className("p-property-item"));
 			if(propertyItems != null && !propertyItems.isEmpty()) {
 				final JSONParser parser = new JSONParser();
-				
-				final JSONObject jsonObj = (JSONObject)parser.parse(skuMapping.ali_express_options);
+
+				final JSONObject jsonObj = (JSONObject)parser.parse(skuMapping.options);
 				System.out.println("json obj: " + jsonObj);
 				if(jsonObj.isEmpty()) {
 					return true;
@@ -102,19 +91,19 @@ public class AliExpressWebDriver extends LoginWebDriver {
 					final String itemTitle = propertyItem.findElement(By.className("p-item-title"))
 							.getText()
 							.replace(":", "");
-					
+
 					if(!jsonObj.containsKey(itemTitle)) {
 						continue;
 					}
-					
+
 					final String valueToSelect = jsonObj.get(itemTitle).toString();
 					if(cachedOrderOptions.containsKey(itemTitle) && cachedOrderOptions.get(itemTitle).equalsIgnoreCase(valueToSelect)) {
 						System.out.println(valueToSelect + " is already selected! Continuing...");
 						continue;
 					}
-					
+
 					System.out.println("Selecting " + valueToSelect + " for item " + itemTitle);
-					
+
 					final WebElement valueList = propertyItem.findElement(By.className("sku-attr-list"));
 					final List<WebElement> listElements = valueList.findElements(By.xpath(".//li"));
 					for(final WebElement listElement : listElements) {
@@ -125,7 +114,7 @@ public class AliExpressWebDriver extends LoginWebDriver {
 							continue options;
 						}
 					}
-					
+
 					return false;
 				}
 			}
@@ -133,37 +122,24 @@ public class AliExpressWebDriver extends LoginWebDriver {
 			DBLogging.high(getClass(), "Failed to select order options", e);
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	private boolean isMatchingOrderOption(final WebElement listElement, final String valueToSelect) {
 		final WebElement dataRole = listElement.findElement(By.xpath(".//a"));
 		if(dataRole == null) {
 			return false;
 		}
-		
+
 		if(dataRole != null && dataRole.getAttribute("data-sku-id").equalsIgnoreCase(valueToSelect)) {
 			System.out.println("Found matching image list item for " + valueToSelect);
 			return true;
 		}
-		
+
 		return false;
 	}
-	
-	private void parseCredentials() {
-		try(
-				final InputStream inputStream = getClass().getResourceAsStream(CREDS_FILE_PATH);
-				final InputStreamReader reader = new InputStreamReader(inputStream);
-				final BufferedReader bR = new BufferedReader(reader);
-			) {
-				username = bR.readLine().trim();
-				password = bR.readLine().trim();
-		} catch (final Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
+
 	public void scrollToBottomOfPage() {
 		//scroll to bottom of page to load the descrip
 		try {
@@ -177,5 +153,5 @@ public class AliExpressWebDriver extends LoginWebDriver {
 			e.printStackTrace();
 		}
 	}
-	
+
 }

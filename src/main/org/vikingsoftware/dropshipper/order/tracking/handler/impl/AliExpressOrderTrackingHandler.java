@@ -10,7 +10,7 @@ import java.util.concurrent.Future;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.AliExpressDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
-import main.org.vikingsoftware.dropshipper.core.web.AliExpressWebDriver;
+import main.org.vikingsoftware.dropshipper.core.web.aliexpress.AliExpressWebDriver;
 import main.org.vikingsoftware.dropshipper.order.tracking.handler.OrderTrackingHandler;
 
 import org.openqa.selenium.By;
