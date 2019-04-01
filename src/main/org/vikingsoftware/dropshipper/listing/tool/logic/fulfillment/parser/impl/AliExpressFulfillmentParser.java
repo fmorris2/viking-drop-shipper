@@ -20,16 +20,17 @@ import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
+import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.AliExpressDriverSupplier;
+import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 import main.org.vikingsoftware.dropshipper.core.web.aliexpress.AliExpressWebDriver;
-import main.org.vikingsoftware.dropshipper.core.web.aliexpress.AliExpressWebDriverQueue;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.PropertyItem;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.PropertyItemOption;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.FulfillmentParser;
 
-public class AliExpressFulfillmentParser extends AliExpressWebDriverQueue implements FulfillmentParser {
+public class AliExpressFulfillmentParser implements FulfillmentParser {
 
 	private static final int IMG_CHANGE_TIMEOUT_MS = 2000;
 
@@ -44,11 +45,11 @@ public class AliExpressFulfillmentParser extends AliExpressWebDriverQueue implem
 	@Override
 	public Listing getListingTemplate(final String url) {
 
-		AliExpressDriverSupplier supplier = null;
+		DriverSupplier<AliExpressWebDriver> supplier = null;
 		AliExpressWebDriver driver = null;
 
 		try {
-			supplier = webDrivers.take();
+			supplier = BrowserRepository.get().request(AliExpressDriverSupplier.class);
 			driver = supplier.get();
 
 			if(driver.getReady()) {
@@ -59,7 +60,7 @@ public class AliExpressFulfillmentParser extends AliExpressWebDriverQueue implem
 			e.printStackTrace();
 		} finally {
 			if(supplier != null) {
-				webDrivers.add(supplier);
+				BrowserRepository.get().relinquish(supplier);
 			}
 		}
 		return null;

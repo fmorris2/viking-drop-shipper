@@ -1,10 +1,9 @@
 package main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl;
 
-import java.util.function.Supplier;
-
+import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
 
-public class SamsClubDriverSupplier implements Supplier<SamsClubWebDriver> {
+public class SamsClubDriverSupplier extends DriverSupplier<SamsClubWebDriver> {
 
 	private SamsClubWebDriver driver = null;
 
@@ -16,11 +15,4 @@ public class SamsClubDriverSupplier implements Supplier<SamsClubWebDriver> {
 
 		return driver;
 	}
-
-	public void close() {
-		if(driver != null) {
-			driver.quit();
-		}
-	}
-
 }

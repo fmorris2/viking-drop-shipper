@@ -26,8 +26,4 @@ public class FulfillmentStockManager {
 
 		return new FutureTask<>(() -> Collections.emptyList());
 	}
-
-	public static void reset() {
-		AliExpressFulfillmentStockChecker.reset();
-	}
 }

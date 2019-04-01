@@ -65,7 +65,6 @@ public class AliExpressWebDriver extends LoginWebDriver {
 			DBLogging.high(getClass(), "failed to prepare for execution: ", e);
 		}
 
-		close();
 		return false;
 	}
 

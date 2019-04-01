@@ -1,7 +1,9 @@
 package main.org.vikingsoftware.dropshipper.core.web.samsclub;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.By;
@@ -13,7 +15,9 @@ import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 
 public class SamsClubWebDriver extends LoginWebDriver {
 
-	private static final Set<Cookie> sessionCookies = new HashSet<>();
+	private static Map<SamsClubWebDriver, Set<Cookie>> cookieCache = new WeakHashMap<>();
+
+	private static Set<Cookie> sessionCookies = new HashSet<>();
 
 	private static Object loginLock = new Object();
 
@@ -22,9 +26,11 @@ public class SamsClubWebDriver extends LoginWebDriver {
 
 		manage().timeouts().implicitlyWait(DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
 
-		if(sessionCookies.isEmpty()) {
-			System.out.println("prepareForExecution");
-			return prepareForExecutionViaLogin();
+		synchronized(loginLock) {
+			if(sessionCookies.isEmpty()) {
+				System.out.println("prepareForExecution");
+				return prepareForExecutionViaLogin();
+			}
 		}
 
 		System.out.println("prepareWithPreExistingSession");
@@ -37,27 +43,27 @@ public class SamsClubWebDriver extends LoginWebDriver {
 	}
 
 	public static void clearSession() {
-		sessionCookies.clear();
+		cookieCache.clear();
+		sessionCookies = new HashSet<>();
 	}
 
 	private boolean prepareForExecutionViaLogin() {
 		try {
-			synchronized(loginLock) {
-				if(!sessionCookies.isEmpty()) {
-					return prepareWithPreExistingSession();
-				}
-				get("https://www.samsclub.com/sams/account/signin/login.jsp");
-
-				findElement(By.id("txtLoginEmailID")).sendKeys(username);
-				findElement(By.id("txtLoginPwd")).sendKeys(password);
-				findElement(By.id("signInButton")).click();
-
-				//verify we logged in successfully
-				findElement(By.className("sc-account-member-membership-title"));
-				sessionCookies.clear();
-				sessionCookies.addAll(manage().getCookies());
-				return true;
+			if(!sessionCookies.isEmpty()) {
+				return prepareWithPreExistingSession();
 			}
+			get("https://www.samsclub.com/sams/account/signin/login.jsp");
+
+			findElement(By.id("txtLoginEmailID")).sendKeys(username);
+			findElement(By.id("txtLoginPwd")).sendKeys(password);
+			findElement(By.id("signInButton")).click();
+
+			//verify we logged in successfully
+			findElement(By.className("sc-account-member-membership-title"));
+			sessionCookies = new HashSet<>();
+			sessionCookies.addAll(manage().getCookies());
+			cookieCache.put(this, sessionCookies);
+			return true;
 
 		} catch(final Exception e) {
 			e.printStackTrace();
@@ -69,10 +75,14 @@ public class SamsClubWebDriver extends LoginWebDriver {
 
 	private boolean prepareWithPreExistingSession() {
 		try {
-			//web driver spec says we need to land on the page first before setting cookies
-			get("https://www.samsclub.com");
+			System.out.println("Checking if " + this + " already has pre existing cookies...");
+			if(cookieCache.getOrDefault(this, new HashSet<>()) != sessionCookies) {
 
-			if(!manage().getCookies().equals(sessionCookies)) {
+				//web driver spec says we need to land on the page first before setting cookies
+				get("https://www.samsclub.com");
+
+				System.out.println(this + " needs to add pre existing session cookies!");
+				manage().deleteAllCookies();
 				for(final Cookie cookie : sessionCookies) {
 					try {
 						manage().addCookie(cookie);
@@ -80,12 +90,19 @@ public class SamsClubWebDriver extends LoginWebDriver {
 						System.out.println("Unable to set cookie: " + cookie);
 					}
 				}
+
+				cookieCache.put(this, sessionCookies);
+				System.out.println(this + " is done adding pre existing session cookies");
+
+				get("https://www.samsclub.com/account");
+
+				//verify we logged in successfully
+				findElement(By.className("sc-account-member-membership-title"));
+
+			} else {
+				System.out.println(this + " HAS PRE EXISTING COOKIES!");
 			}
 
-			get("https://www.samsclub.com/account");
-
-			//verify we logged in successfully
-			findElement(By.className("sc-account-member-membership-title"));
 			return true;
 		} catch(final Exception e) {
 			e.printStackTrace();
