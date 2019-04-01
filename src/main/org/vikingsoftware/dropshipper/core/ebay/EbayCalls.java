@@ -20,7 +20,6 @@ import com.ebay.soap.eBLBaseComponents.VariationsType;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrderManager;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
-import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
@@ -30,7 +29,7 @@ import main.org.vikingsoftware.dropshipper.core.utils.EbayConversionUtils;
 
 public class EbayCalls {
 
-	private static final int FAKE_MAX_QUANTITY = 2;
+	private static final int FAKE_MAX_QUANTITY = 1;
 
 	private EbayCalls() {}
 
@@ -41,10 +40,8 @@ public class EbayCalls {
 			call.setTimeFilter(new TimeFilter(null, null)); //will use number of days filter
 			call.setNumberOfDays(days);
 			final TransactionType[] transactions = call.getSellerTransactions();
-			final String listingId = transactions[0].getItem().getItemID();
-			final int dbListingId = Marketplaces.EBAY.getMarketplace().getMarketplaceListingIndex(listingId);
 			return Arrays.stream(transactions)
-					.map(trans -> EbayConversionUtils.convertTransactionTypeToCustomerOrder(dbListingId, trans))
+					.map(trans -> EbayConversionUtils.convertTransactionTypeToCustomerOrder(trans.getItem().getItemID(), trans))
 					.toArray(CustomerOrder[]::new);
 
 		} catch(final Exception e) {

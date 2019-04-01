@@ -26,10 +26,12 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.Select;
 
+import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.AliExpressDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.data.misc.CreditCardInfo;
 import main.org.vikingsoftware.dropshipper.core.data.misc.StateUtils;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
@@ -38,6 +40,7 @@ import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
 import main.org.vikingsoftware.dropshipper.core.utils.CaptchaUtils;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.web.CustomSelect;
+import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.aliexpress.AliExpressWebDriver;
 import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
@@ -51,6 +54,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 	private CreditCardInfo cardInfo;
 
 	private ProcessedOrder processedOrder;
+	private DriverSupplier<AliExpressWebDriver> browserSupplier;
 	private AliExpressWebDriver browser;
 
 	private String currentURL;
@@ -86,13 +90,15 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 
 	@Override
 	public boolean prepareForExecution() {
-		browser = new AliExpressWebDriver();
-		return browser.getReady();
+		browserSupplier = BrowserRepository.get().request(AliExpressDriverSupplier.class);
+		return true;
 	}
 
 	@Override
 	public void finishExecution() {
-
+		BrowserRepository.get().relinquish(browserSupplier);
+		browser = null;
+		browserSupplier = null;
 	}
 
 	@Override
@@ -111,6 +117,8 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 	}
 
 	private ProcessedOrder executeOrder(final CustomerOrder order, final FulfillmentListing fulfillmentListing) {
+
+		browser = browserSupplier.get();
 
 		//navigate to fulfillment listing page
 		browser.get(fulfillmentListing.listing_url);

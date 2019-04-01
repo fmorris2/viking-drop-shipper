@@ -65,6 +65,8 @@ public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker 
 				return entries;
 			} else {
 				System.out.println("failed to get sams club driver ready!");
+				driver.quit();
+				BrowserRepository.get().replace(supplier);
 			}
 		} catch(final Exception e) {
 			e.printStackTrace();
@@ -72,7 +74,6 @@ public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker 
 					+ fulfillmentListing + ": ", e);
 			SamsClubWebDriver.clearSession(); //failed for whatever reason, we need to make sure we refresh the session amongst browsers
 		} finally {
-			System.out.println("FINALLY BLOCK!");
 			if(supplier != null) {
 				BrowserRepository.get().relinquish(supplier);
 			}

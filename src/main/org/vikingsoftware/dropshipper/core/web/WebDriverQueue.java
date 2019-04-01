@@ -11,8 +11,13 @@ public class WebDriverQueue<T extends WebDriver> {
 
 	protected final LinkedBlockingDeque<DriverSupplier<T>> webDrivers;
 
+	private final Supplier<DriverSupplier<T>> driverSupplier;
+
 	public WebDriverQueue(final Supplier<DriverSupplier<T>> driverSupplier) {
+
+		this.driverSupplier = driverSupplier;
 		webDrivers = new LinkedBlockingDeque<>(ThreadUtils.NUM_THREADS);
+
 		for(int i = 0; i < /*ThreadUtils.NUM_THREADS*/2; i++) {
 			try {
 				webDrivers.put(driverSupplier.get());
@@ -40,6 +45,15 @@ public class WebDriverQueue<T extends WebDriver> {
 			System.out.println("Attempting to reqlinquish " + supplier);
 			webDrivers.addFirst((DriverSupplier<T>)supplier);
 			System.out.println("Relinquish " + supplier + " on " + this + ": There are now " + webDrivers.size() + " drivers in the queue");
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void replace(final DriverSupplier<?> supplier) {
+		try {
+			System.out.println("Attempting to replace " + supplier);
+			webDrivers.add(driverSupplier.get());
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
