@@ -1,7 +1,8 @@
 package main.org.vikingsoftware.dropshipper.order.tracking.handler.impl;
 
 import java.util.List;
-import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.RunnableFuture;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -10,10 +11,11 @@ import org.openqa.selenium.WebElement;
 import com.ebay.soap.eBLBaseComponents.ShipmentDeliveryStatusCodeType;
 
 import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.AliExpressDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
-import main.org.vikingsoftware.dropshipper.core.utils.ThreadUtils;
 import main.org.vikingsoftware.dropshipper.core.web.aliexpress.AliExpressWebDriver;
 import main.org.vikingsoftware.dropshipper.order.tracking.handler.OrderTrackingHandler;
 
@@ -27,8 +29,8 @@ public class AliExpressOrderTrackingHandler implements OrderTrackingHandler {
 	}
 
 	@Override
-	public Future<TrackingEntry> getTrackingInfo(final ProcessedOrder order) {
-		return ThreadUtils.threadPool.submit(() -> getTrackingInfoImpl(order));
+	public RunnableFuture<TrackingEntry> getTrackingInfo(final ProcessedOrder order) {
+		return new FutureTask<>(() -> getTrackingInfoImpl(order));
 	}
 
 	private TrackingEntry getTrackingInfoImpl(final ProcessedOrder order) {
@@ -38,7 +40,8 @@ public class AliExpressOrderTrackingHandler implements OrderTrackingHandler {
 		try {
 			supplier = BrowserRepository.get().request(AliExpressDriverSupplier.class);
 			driver = supplier.get();
-			if(driver.getReady()) {
+			final FulfillmentAccount account = FulfillmentAccountManager.get().getAccountById(order.fulfillment_account_id);
+			if(driver.getReady(account)) {
 				return parseTrackingInfo(driver, order);
 			}
 		} catch(final Exception e) {

@@ -28,6 +28,7 @@ import org.openqa.selenium.support.ui.Select;
 
 import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
@@ -43,6 +44,7 @@ import main.org.vikingsoftware.dropshipper.core.web.CustomSelect;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.aliexpress.AliExpressWebDriver;
 import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
+import main.org.vikingsoftware.dropshipper.order.executor.error.OrderExecutionException;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
 
 public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy {
@@ -102,13 +104,13 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 	}
 
 	@Override
-	public ProcessedOrder order(final CustomerOrder customerOrder, final FulfillmentListing fulfillmentListing) {
+	public ProcessedOrder order(final CustomerOrder customerOrder, final FulfillmentAccount account, final FulfillmentListing fulfillmentListing) {
 		processedOrder = new ProcessedOrder.Builder()
 				.customer_order_id(customerOrder.id)
 				.fulfillment_listing_id(fulfillmentListing.id)
 				.build();
 			try {
-				return executeOrder(customerOrder, fulfillmentListing);
+				return executeOrder(customerOrder, account, fulfillmentListing);
 			} catch(final Exception e) {
 				DBLogging.high(getClass(), "order failed: ", e);
 			}
@@ -116,9 +118,13 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		return processedOrder;
 	}
 
-	private ProcessedOrder executeOrder(final CustomerOrder order, final FulfillmentListing fulfillmentListing) {
+	private ProcessedOrder executeOrder(final CustomerOrder order, final FulfillmentAccount account, final FulfillmentListing fulfillmentListing) {
 
 		browser = browserSupplier.get();
+
+		if(!browser.getReady(account)) {
+			throw new OrderExecutionException("Failed to get ready with AliExpress account: " + account.id);
+		}
 
 		//navigate to fulfillment listing page
 		browser.get(fulfillmentListing.listing_url);
@@ -195,8 +201,6 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 				.fulfillment_listing_id(fulfillmentListing.id)
 				.fulfillment_transaction_id("test_trans_id")
 				.sale_price(finalOrderPrice)
-				.quantity(order.quantity)
-				.order_status("test")
 				.build()
 			   : finalizeOrder(order, fulfillmentListing, finalOrderPrice);
 	}
@@ -238,9 +242,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 			.customer_order_id(order.id)
 			.fulfillment_listing_id(listing.id)
 			.fulfillment_transaction_id("unknown")
-			.sale_price(finalOrderPrice)
-			.quantity(order.quantity)
-			.order_status("attempted to order (status unknown)");
+			.sale_price(finalOrderPrice);
 
 		try {
 			final WebElement feedbackHeader = browser.findElement(By.className("ui-feedback-success"));
@@ -258,7 +260,6 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 					System.out.println("Successfully parsed transaction id: " + transactionId);
 					return builder
 						.fulfillment_transaction_id(transactionId)
-						.order_status("successfully ordered")
 						.build();
 				} else {
 					System.out.println("Could not find order details link...");

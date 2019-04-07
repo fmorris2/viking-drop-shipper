@@ -5,14 +5,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 
 import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.FulfillmentStockChecker;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
@@ -21,15 +20,13 @@ import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.ThreadUtils;
-import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
 
 public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker {
 
-	private static final int IN_STOCK_ASSUMPTION = 10;
-	private static final int LOW_STOCK_ASSUMPTION = 1;
-
 	private static SamsClubFulfillmentStockChecker instance;
+
+	private FulfillmentAccount account;
 
 	private SamsClubFulfillmentStockChecker() {
 		super();
@@ -44,9 +41,11 @@ public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker 
 	}
 
 	@Override
-	public Future<Collection<SkuInventoryEntry>> getStock(MarketplaceListing marketListing, FulfillmentListing fulfillmentListing) {
+	public Future<Collection<SkuInventoryEntry>> getStock(final FulfillmentAccount account,
+			final MarketplaceListing marketListing, final FulfillmentListing fulfillmentListing) {
 		return ThreadUtils.threadPool.submit(() -> {
 			System.out.println("Submitting getStockImpl task for market listing " + marketListing.id);
+			this.account = account;
 			return getStockImpl(marketListing, fulfillmentListing);
 		});
 	}
@@ -59,7 +58,7 @@ public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker 
 		try {
 			supplier = BrowserRepository.get().request(SamsClubDriverSupplier.class);
 			driver = supplier.get();
-			if(driver.getReady()) {
+			if(driver.getReady(account)) {
 				System.out.println("Successfully prepared SamsClubDriver");
 				parseAndAddSkuInventoryEntries(driver, marketListing, fulfillmentListing, entries);
 				return entries;
@@ -72,7 +71,7 @@ public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker 
 			e.printStackTrace();
 			DBLogging.medium(getClass(), "failed to get stock for market listing " + marketListing + " and fulfillment listing "
 					+ fulfillmentListing + ": ", e);
-			SamsClubWebDriver.clearSession(); //failed for whatever reason, we need to make sure we refresh the session amongst browsers
+			driver.clearSession(); //failed for whatever reason, we need to make sure we refresh the session amongst browsers
 		} finally {
 			if(supplier != null) {
 				BrowserRepository.get().relinquish(supplier);
@@ -100,33 +99,13 @@ public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker 
 	private int parseItemStock(final WebDriver driver) {
 		System.out.println("SamsClubFulfillmentStockChecker#parseItemStock");
 		int stock = 0;
-		try {
-			final WebElement submitButton = driver.findElement(By.cssSelector("div.sc-cart-qty-button.online > form > button"));
-
-			System.out.println("Found submit button");
-			try {
-				driver.manage().timeouts().implicitlyWait(250, TimeUnit.MILLISECONDS);
-				final WebElement stockStatus = driver.findElement(By.cssSelector("div.sc-channel.sc-channel-online div.sc-channel-stock > div"));
-				switch(stockStatus.getText().toLowerCase()) {
-					case "low in stock":
-						stock = LOW_STOCK_ASSUMPTION;
-					break;
-
-					default:
-						stock = IN_STOCK_ASSUMPTION;
-				}
-			} catch(final NoSuchElementException e) {
-				stock = IN_STOCK_ASSUMPTION;
-			}
-
-			driver.manage().timeouts().implicitlyWait(LoginWebDriver.DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
-
-		} catch(final Exception e) {
-			e.printStackTrace();
-			DBLogging.medium(getClass(), "failed to parse item stock: ", e);
+		final String pageSource = driver.getPageSource();
+		final Pattern pattern = Pattern.compile("availableToSellQuantity\":(\\d+),");
+		final Matcher matcher = pattern.matcher(pageSource);
+		if(matcher.find()) {
+			stock = Integer.parseInt(matcher.group(1));
+			System.out.println("Parsed stock: " + stock);
 		}
-
-		System.out.println("Stock: " + stock);
 		return stock;
 	}
 }

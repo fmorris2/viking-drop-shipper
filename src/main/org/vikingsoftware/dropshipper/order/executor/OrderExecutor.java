@@ -76,7 +76,7 @@ public class OrderExecutor implements CycleParticipant {
 	private void insertSuccessfulOrdersIntoDB(final Collection<ProcessedOrder> successfulOrders) {
 		//store all new orders in DB
 		final String sql = "INSERT INTO processed_orders(customer_order_id, fulfillment_listing_id, fulfillment_transaction_id,"
-				+ "sale_price, quantity, order_status) VALUES(?,?,?,?,?,?)";
+				+ "sale_price) VALUES(?,?,?,?)";
 
 		final PreparedStatement prepared = VDSDBManager.get().createPreparedStatement(sql);
 		final Statement deleteBatch = VDSDBManager.get().createStatement();
@@ -87,8 +87,6 @@ public class OrderExecutor implements CycleParticipant {
 				prepared.setInt(2, order.fulfillment_listing_id);
 				prepared.setString(3, order.fulfillment_transaction_id);
 				prepared.setDouble(4, order.sale_price);
-				prepared.setInt(5, order.quantity);
-				prepared.setString(6, order.order_status);
 				prepared.addBatch();
 
 				final String removeSql = "DELETE FROM failed_fulfillment_attempts WHERE customer_order_id="+order.customer_order_id;

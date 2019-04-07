@@ -19,35 +19,35 @@ import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
 
 public class FulfillmentManager {
-	
+
 	private static final Set<Integer> frozenFulfillmentPlatforms = new HashSet<>();
-	
+
 	private static FulfillmentManager instance;
-	
+
 	//marketplace listing id ==> fulfillment listing
 	private final Map<Integer, List<FulfillmentListing>> listings = new HashMap<>();
-	
+
 	//db primary key id ==> fulfillment platform
 	private final Map<Integer, FulfillmentPlatform> platforms = new HashMap<>();
-	
+
 	private final Map<FulfillmentPlatforms, OrderExecutionStrategy> strategies = new HashMap<>();
-	
+
 	private FulfillmentManager() {
-		
+
 	}
-	
+
 	public static FulfillmentManager get() {
 		if(instance == null) {
 			instance = new FulfillmentManager();
 		}
-		
+
 		return instance;
 	}
-	
+
 	public static final boolean isFrozen(final int fulfillmentPlatformId) {
 		return frozenFulfillmentPlatforms.contains(fulfillmentPlatformId);
 	}
-	
+
 	public static void freeze(final int fulfillmentPlatformId) {
 		frozenFulfillmentPlatforms.add(fulfillmentPlatformId);
 		try {
@@ -57,13 +57,13 @@ public class FulfillmentManager {
 			DBLogging.critical(FulfillmentManager.class, "failed to freeze fulfillment platform " + fulfillmentPlatformId, e);
 		}
 	}
-	
+
 	public void flagFulfillmentListingForExamination(final FulfillmentListing listing, final String newTitle) {
 		System.out.println("Flagging listing " + listing + " for examination");
 		for(final List<FulfillmentListing> listingsForOrder : listings.values()) {
 			listingsForOrder.remove(listing);
 		}
-		
+
 		try {
 			final Statement st = VDSDBManager.get().createStatement();
 			st.execute("INSERT INTO fulfillment_listings_to_examine(fulfillment_listing_id, current_listing_title)"
@@ -73,7 +73,7 @@ public class FulfillmentManager {
 			DBLogging.high(FulfillmentManager.class, "failed to flag listing " + listing + " for examination: " , e);
 		}
 	}
-	
+
 	public void load() {
 		frozenFulfillmentPlatforms.clear();
 		listings.clear();
@@ -81,7 +81,7 @@ public class FulfillmentManager {
 		loadValidFulfillmentListings();
 		loadFulfillmentPlatforms();
 	}
-	
+
 	public boolean prepareForFulfillment() {
 		load();
 		for(final FulfillmentPlatforms platform : FulfillmentPlatforms.values()) {
@@ -91,29 +91,30 @@ public class FulfillmentManager {
 			}
 			strategies.put(platform, strategy);
 		}
-		
+
 		return true;
 	}
-	
+
 	public ProcessedOrder fulfill(final CustomerOrder order, final FulfillmentListing listing) {
 		final FulfillmentPlatforms applicablePlatform = FulfillmentPlatforms.getById(listing.fulfillment_platform_id);
 		System.out.println("Applicable fulfillment platform for order " + order.id + ": " + applicablePlatform);
 		final OrderExecutionStrategy strategy = strategies.get(applicablePlatform);
-		return strategy.order(order, listing);
+		final FulfillmentAccount account = FulfillmentAccountManager.get().getAndRotateAccount(applicablePlatform);
+		return strategy.order(order, account, listing);
 	}
-	
+
 	public void endFulfillment() {
 		for(final OrderExecutionStrategy strategy : strategies.values()) {
 			strategy.finishExecution();
 		}
-		
+
 		strategies.clear();
 	}
-	
+
 	public boolean isLoaded() {
 		return !listings.isEmpty() && !platforms.isEmpty();
 	}
-	
+
 	public Optional<FulfillmentListing> getListingForProcessedOrder(final ProcessedOrder order) {
 		for(final List<FulfillmentListing> list : listings.values()) {
 			for(final FulfillmentListing listing : list) {
@@ -122,18 +123,18 @@ public class FulfillmentManager {
 				}
 			}
 		}
-		
+
 		return Optional.empty();
 	}
-	
+
 	public List<FulfillmentListing> getListingsForOrder(final CustomerOrder order) {
 		return listings.getOrDefault(order.marketplace_listing_id, new ArrayList<>());
 	}
-	
+
 	public List<FulfillmentListing> getListingsForMarketplaceListing(final int marketplaceListingId) {
 		return listings.getOrDefault(marketplaceListingId, new ArrayList<>());
 	}
-	
+
 	private void loadValidFulfillmentListings() {
 		final Statement st = VDSDBManager.get().createStatement();
 		try {
@@ -153,7 +154,7 @@ public class FulfillmentManager {
 					.listing_url(results.getString("listing_url"))
 					.listing_max_price(results.getDouble("listing_max_price"))
 					.build();
-				
+
 				final List<FulfillmentListing> currentListings = listings.getOrDefault(marketplace_listing_id, new ArrayList<>());
 				currentListings.add(listing);
 				listings.put(marketplace_listing_id, currentListings);
@@ -162,7 +163,7 @@ public class FulfillmentManager {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void loadFulfillmentPlatforms() {
 		final Statement st = VDSDBManager.get().createStatement();
 		try {
@@ -171,10 +172,10 @@ public class FulfillmentManager {
 				final FulfillmentPlatform platform = new FulfillmentPlatform.Builder()
 					.id(results.getInt("id"))
 					.platform_name(results.getString("platform_name"))
-					.platform_url(results.getString("platform_url"))	
+					.platform_url(results.getString("platform_url"))
 					.frozen(results.getBoolean("frozen"))
 					.build();
-				
+
 				if(platform.frozen) {
 					frozenFulfillmentPlatforms.add(platform.id);
 				}

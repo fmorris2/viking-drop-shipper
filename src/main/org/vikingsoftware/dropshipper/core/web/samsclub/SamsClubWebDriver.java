@@ -1,34 +1,37 @@
 package main.org.vikingsoftware.dropshipper.core.web.samsclub;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.UnableToSetCookieException;
 
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 
 public class SamsClubWebDriver extends LoginWebDriver {
 
-	private static Map<SamsClubWebDriver, Set<Cookie>> cookieCache = new WeakHashMap<>();
+	private static final Map<FulfillmentAccount, Set<Cookie>> sessionCookies = new HashMap<>();
+	private static final Map<SamsClubWebDriver, Set<Cookie>> cookieCache = new HashMap<>();
+	private static final Map<FulfillmentAccount, Object> loginLocks = new HashMap<>();
 
-	private static Set<Cookie> sessionCookies = new HashSet<>();
-
-	private static Object loginLock = new Object();
+	private FulfillmentAccount account;
 
 	@Override
-	public boolean getReady() {
+	public boolean getReady(final FulfillmentAccount account) {
 
+		this.account = account;
 		manage().timeouts().implicitlyWait(DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
 		manage().window().maximize();
 
+		final Object loginLock = loginLocks.computeIfAbsent(account, acc -> new Object());
 		synchronized(loginLock) {
-			if(sessionCookies.isEmpty()) {
+			if(sessionCookies.computeIfAbsent(account, acc -> new HashSet<>()).isEmpty()) {
 				System.out.println("prepareForExecution");
 				return prepareForExecutionViaLogin();
 			}
@@ -38,32 +41,26 @@ public class SamsClubWebDriver extends LoginWebDriver {
 		return prepareWithPreExistingSession();
 	}
 
-	@Override
-	protected String getCredsFilePath() {
-		return "/data/samsclub-creds-secure";
-	}
-
-	public static void clearSession() {
-		cookieCache.clear();
-		sessionCookies = new HashSet<>();
+	public void clearSession() {
+		sessionCookies.put(account, new HashSet<>());
 	}
 
 	private boolean prepareForExecutionViaLogin() {
 		try {
-			if(!sessionCookies.isEmpty()) {
+			if(!sessionCookies.computeIfAbsent(account, acc -> new HashSet<>()).isEmpty()) {
 				return prepareWithPreExistingSession();
 			}
 			get("https://www.samsclub.com/sams/account/signin/login.jsp");
 
-			findElement(By.id("txtLoginEmailID")).sendKeys(username);
-			findElement(By.id("txtLoginPwd")).sendKeys(password);
+			findElement(By.id("txtLoginEmailID")).sendKeys(account.username);
+			findElement(By.id("txtLoginPwd")).sendKeys(account.password);
 			findElement(By.id("signInButton")).click();
 
 			//verify we logged in successfully
 			findElement(By.className("sc-account-member-membership-title"));
-			sessionCookies = new HashSet<>();
-			sessionCookies.addAll(manage().getCookies());
-			cookieCache.put(this, sessionCookies);
+			final Set<Cookie> cookies = new HashSet<>();
+			cookies.addAll(manage().getCookies());
+			sessionCookies.put(account, cookies);
 			return true;
 
 		} catch(final Exception e) {
@@ -77,14 +74,15 @@ public class SamsClubWebDriver extends LoginWebDriver {
 	private boolean prepareWithPreExistingSession() {
 		try {
 			System.out.println("Checking if " + this + " already has pre existing cookies...");
-			if(cookieCache.getOrDefault(this, new HashSet<>()) != sessionCookies) {
+			final Set<Cookie> sessionCooks = sessionCookies.computeIfAbsent(account, acc -> new HashSet<>());
+			if(cookieCache.computeIfAbsent(this, driver -> new HashSet<>()) != sessionCooks) {
 
 				//web driver spec says we need to land on the page first before setting cookies
 				get("https://www.samsclub.com");
 
 				System.out.println(this + " needs to add pre existing session cookies!");
 				manage().deleteAllCookies();
-				for(final Cookie cookie : sessionCookies) {
+				for(final Cookie cookie : sessionCooks) {
 					try {
 						manage().addCookie(cookie);
 					} catch(final UnableToSetCookieException e) {
@@ -92,7 +90,7 @@ public class SamsClubWebDriver extends LoginWebDriver {
 					}
 				}
 
-				cookieCache.put(this, sessionCookies);
+				cookieCache.put(this, sessionCooks);
 				System.out.println(this + " is done adding pre existing session cookies");
 
 				get("https://www.samsclub.com/account");

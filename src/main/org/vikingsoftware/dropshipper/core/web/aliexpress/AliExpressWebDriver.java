@@ -13,6 +13,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
@@ -23,14 +24,12 @@ public class AliExpressWebDriver extends LoginWebDriver {
 
 	private final Map<String,String> cachedOrderOptions = new HashMap<>();
 
-	@Override
-	public boolean getReady() {
-		return prepareForExecution();
-	}
+	private FulfillmentAccount account;
 
 	@Override
-	protected String getCredsFilePath() {
-		return "/data/aliexpress-creds.secure";
+	public boolean getReady(final FulfillmentAccount account) {
+		this.account = account;
+		return prepareForExecution();
 	}
 
 	private boolean prepareForExecution() {
@@ -42,8 +41,8 @@ public class AliExpressWebDriver extends LoginWebDriver {
 			get("https://login.aliexpress.com/");
 			switchTo().frame(findElement(By.id("alibaba-login-box")));
 
-			findElement(By.id("fm-login-id")).sendKeys(username);
-			findElement(By.id("fm-login-password")).sendKeys(password);
+			findElement(By.id("fm-login-id")).sendKeys(account.username);
+			findElement(By.id("fm-login-password")).sendKeys(account.password);
 			findElement(By.id("fm-login-submit")).click();
 
 			try {

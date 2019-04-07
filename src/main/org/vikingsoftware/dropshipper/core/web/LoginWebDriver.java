@@ -1,11 +1,9 @@
 package main.org.vikingsoftware.dropshipper.core.web;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 
 public abstract class LoginWebDriver extends ChromeDriver {
 
@@ -16,17 +14,13 @@ public abstract class LoginWebDriver extends ChromeDriver {
 	private static final boolean HEADLESS = false;
 	private static final ChromeOptions OPTIONS = generateOptions();
 
-	protected String username;
-	protected String password;
 	protected int loginTries = 0;
 
 	public LoginWebDriver() {
 		super(OPTIONS);
-		parseCredentials();
 	}
 
-	public abstract boolean getReady();
-	protected abstract String getCredsFilePath();
+	public abstract boolean getReady(final FulfillmentAccount account);
 
 	protected static ChromeOptions generateOptions() {
 		final ChromeOptions options = new ChromeOptions();
@@ -34,18 +28,5 @@ public abstract class LoginWebDriver extends ChromeDriver {
 		options.addArguments("--no-sandbox");
 		options.addArguments("--disable-dev-shm-usage");
 		return options;
-	}
-
-	private void parseCredentials() {
-		try(
-				final InputStream inputStream = getClass().getResourceAsStream(getCredsFilePath());
-				final InputStreamReader reader = new InputStreamReader(inputStream);
-				final BufferedReader bR = new BufferedReader(reader);
-			) {
-				username = bR.readLine().trim();
-				password = bR.readLine().trim();
-		} catch (final Exception e) {
-			e.printStackTrace();
-		}
 	}
 }

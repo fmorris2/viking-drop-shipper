@@ -14,6 +14,7 @@ import org.openqa.selenium.WebElement;
 import main.org.vikingsoftware.dropshipper.VSDropShipper;
 import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
@@ -34,6 +35,7 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 
 	private DriverSupplier<SamsClubWebDriver> driverSupplier;
 	private SamsClubWebDriver driver;
+	private FulfillmentAccount account;
 
 	private String lastWebPageTitle = "";
 	private long startLoopTime;
@@ -46,7 +48,8 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 	}
 
 	@Override
-	public ProcessedOrder order(CustomerOrder order, FulfillmentListing fulfillmentListing) {
+	public ProcessedOrder order(final CustomerOrder order, final FulfillmentAccount account, final FulfillmentListing fulfillmentListing) {
+		this.account = account;
 		processedOrder = new ProcessedOrder.Builder()
 				.customer_order_id(order.id)
 				.fulfillment_listing_id(fulfillmentListing.id)
@@ -64,7 +67,7 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 	private ProcessedOrder executeOrder(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws Exception {
 		System.out.println("SamsClubOrderExecutionStrategy#executeOrder");
 		driver = driverSupplier.get();
-		if(driver.getReady()) {
+		if(driver.getReady(account)) {
 			System.out.println("\tSuccessfully prepared sams club driver");
 
 			enterAddress(order);
@@ -220,8 +223,6 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 					.fulfillment_listing_id(listing.id)
 					.fulfillment_transaction_id(orderNum)
 					.sale_price(price)
-					.quantity(order.quantity)
-					.order_status("processed")
 					.build();
 		} finally {
 			driver.manage().timeouts().implicitlyWait(LoginWebDriver.DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);

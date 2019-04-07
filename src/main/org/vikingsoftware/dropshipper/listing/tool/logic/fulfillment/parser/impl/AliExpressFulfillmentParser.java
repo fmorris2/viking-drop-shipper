@@ -21,6 +21,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.AliExpressDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
@@ -43,7 +44,7 @@ public class AliExpressFulfillmentParser implements FulfillmentParser {
 	}
 
 	@Override
-	public Listing getListingTemplate(final String url) {
+	public Listing getListingTemplate(final FulfillmentAccount account, final String url) {
 
 		DriverSupplier<AliExpressWebDriver> supplier = null;
 		AliExpressWebDriver driver = null;
@@ -52,7 +53,7 @@ public class AliExpressFulfillmentParser implements FulfillmentParser {
 			supplier = BrowserRepository.get().request(AliExpressDriverSupplier.class);
 			driver = supplier.get();
 
-			if(driver.getReady()) {
+			if(driver.getReady(account)) {
 				driver.get(url);
 				return parseListing(driver);
 			}

@@ -11,6 +11,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.FulfillmentStockChecker;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
@@ -26,6 +27,8 @@ public class AliExpressFulfillmentStockChecker implements FulfillmentStockChecke
 
 	private static AliExpressFulfillmentStockChecker instance;
 
+	private FulfillmentAccount account;
+
 	private AliExpressFulfillmentStockChecker() {
 		super();
 	}
@@ -39,8 +42,12 @@ public class AliExpressFulfillmentStockChecker implements FulfillmentStockChecke
 	}
 
 	@Override
-	public Future<Collection<SkuInventoryEntry>> getStock(final MarketplaceListing marketListing, final FulfillmentListing fulfillmentListing) {
-		return ThreadUtils.threadPool.submit(() -> getStockImpl(marketListing, fulfillmentListing));
+	public Future<Collection<SkuInventoryEntry>> getStock(final FulfillmentAccount account,
+			final MarketplaceListing marketListing, final FulfillmentListing fulfillmentListing) {
+		return ThreadUtils.threadPool.submit(() -> {
+			this.account = account;
+			return getStockImpl(marketListing, fulfillmentListing);
+		});
 	}
 
 	private Collection<SkuInventoryEntry> getStockImpl(final MarketplaceListing marketListing, final FulfillmentListing fulfillmentListing) {
@@ -51,7 +58,7 @@ public class AliExpressFulfillmentStockChecker implements FulfillmentStockChecke
 		try {
 			supplier = BrowserRepository.get().request(AliExpressDriverSupplier.class);
 			driver = supplier.get();
-			if(driver.getReady()) {
+			if(driver.getReady(account)) {
 				parseAndAddSkuInventoryEntries(driver, marketListing, fulfillmentListing, entries);
 				return entries;
 			}
