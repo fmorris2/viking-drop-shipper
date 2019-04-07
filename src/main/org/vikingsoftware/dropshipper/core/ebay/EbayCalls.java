@@ -1,7 +1,7 @@
 package main.org.vikingsoftware.dropshipper.core.ebay;
 
+import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,10 +20,12 @@ import com.ebay.soap.eBLBaseComponents.VariationsType;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrderManager;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
+import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.EbayConversionUtils;
 
@@ -40,15 +42,41 @@ public class EbayCalls {
 			call.setTimeFilter(new TimeFilter(null, null)); //will use number of days filter
 			call.setNumberOfDays(days);
 			final TransactionType[] transactions = call.getSellerTransactions();
-			return Arrays.stream(transactions)
-					.map(trans -> EbayConversionUtils.convertTransactionTypeToCustomerOrder(trans.getItem().getItemID(), trans))
-					.toArray(CustomerOrder[]::new);
+			final List<CustomerOrder> orders = new ArrayList<>();
+			final List<TransactionType> unknownTransactionMappings = new ArrayList<>();
+
+			System.out.println("Num eBay transactions in last " + days + " days: " + transactions.length);
+			for(final TransactionType trans : transactions) {
+				final CustomerOrder order = EbayConversionUtils.convertTransactionTypeToCustomerOrder(trans.getItem().getItemID(), trans);
+				if(order != null) {
+					orders.add(order);
+				} else {
+					unknownTransactionMappings.add(trans);
+				}
+			}
+
+			logUnknownTransactionMappingsInDB(unknownTransactionMappings);
+			return orders.toArray(new CustomerOrder[orders.size()]);
 
 		} catch(final Exception e) {
 			DBLogging.high(EbayCalls.class, "failed to get orders last " + days + " days: ", e);
 		}
 
 		return new CustomerOrder[0];
+	}
+
+	private static void logUnknownTransactionMappingsInDB(final List<TransactionType> transactions) {
+		try {
+			System.out.println("Logging " + transactions.size() + " unknown eBay transactions in DB");
+			final Statement st = VDSDBManager.get().createStatement();
+			for(final TransactionType trans : transactions) {
+				st.addBatch("INSERT INTO unknown_transaction_mappings(marketplace_id, listing_id) "
+						+ "VALUES("+Marketplaces.EBAY.getMarketplaceId()+", '"+trans.getItem().getItemID()+"')");
+			}
+			st.executeBatch();
+		} catch(final Exception e) {
+			DBLogging.high(EbayCalls.class, "Failed to insert unknown transaction mappings into DB", e);
+		}
 	}
 
 	public static boolean updateInventory(final String listingId, final List<SkuInventoryEntry> invEntries) {

@@ -53,7 +53,7 @@ public class Marketplace {
 	}
 
 	public int getMarketplaceListingIndex(final String listingId) {
-		return listings.get(listingId);
+		return listings.getOrDefault(listingId, -1);
 	}
 
 	private Set<MarketplaceListing> getMarketplaceListings(final boolean activeOnly) {

@@ -25,6 +25,7 @@ public class SamsClubWebDriver extends LoginWebDriver {
 	public boolean getReady() {
 
 		manage().timeouts().implicitlyWait(DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
+		manage().window().maximize();
 
 		synchronized(loginLock) {
 			if(sessionCookies.isEmpty()) {

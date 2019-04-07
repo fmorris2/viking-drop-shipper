@@ -18,6 +18,10 @@ public class EbayConversionUtils {
 
 		final int dbListingId = Marketplaces.EBAY.getMarketplace().getMarketplaceListingIndex(listingId);
 
+		if(dbListingId == -1) {
+			return null;
+		}
+
 		final UserType buyer = transaction.getBuyer();
 		final AddressType addr = buyer.getBuyerInfo().getShippingAddress();
 		final ItemType item = transaction.getItem();
@@ -36,6 +40,7 @@ public class EbayConversionUtils {
 			.buyer_state_province_region(addr.getStateOrProvince())
 			.buyer_city(addr.getCityName())
 			.buyer_zip_postal_code(addr.getPostalCode())
+			.buyer_phone_number(addr.getPhone())
 			.build();
 	}
 }

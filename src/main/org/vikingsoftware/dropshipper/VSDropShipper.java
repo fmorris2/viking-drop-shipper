@@ -9,6 +9,7 @@ import main.org.vikingsoftware.dropshipper.order.tracking.OrderTracking;
 
 public class VSDropShipper {
 
+	public static final String VS_PHONE_NUM = "4238454649";
 	private static final long CYCLE_TIME_MS = 300_000;
 
 	private static final CycleParticipant[] MODULES = {
