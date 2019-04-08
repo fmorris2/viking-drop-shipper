@@ -411,8 +411,8 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 		//verify item details
 		final String itemNumStr = itemRow.findElement(By.className("item_no")).getText();
 		final String[] itemNumStrParts = itemNumStr.split(" ");
-		if(!listing.listing_id.equals(itemNumStrParts[itemNumStrParts.length - 1])) {
-			throw new OrderExecutionException("Wrong item ID in cart: " + itemNumStrParts[itemNumStrParts.length - 1] + " != " + listing.listing_id);
+		if(!listing.item_id.equals(itemNumStrParts[itemNumStrParts.length - 1])) {
+			throw new OrderExecutionException("Wrong item ID in cart: " + itemNumStrParts[itemNumStrParts.length - 1] + " != " + listing.item_id);
 		}
 
 		//verify "ship it" option is picked

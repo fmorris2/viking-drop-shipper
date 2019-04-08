@@ -1,5 +1,7 @@
 package main.org.vikingsoftware.dropshipper.core.data.customer.order;
 
+import java.text.DecimalFormat;
+
 public class CustomerOrder {
 
 	/*
@@ -49,7 +51,9 @@ public class CustomerOrder {
 	}
 
 	public double getProfit(final double totalFulfillmentPrice) {
-		return (sell_total * .87) - totalFulfillmentPrice;
+		final double profit = (sell_total * .87) - totalFulfillmentPrice;
+		final DecimalFormat format = new DecimalFormat("###.##");
+		return Double.parseDouble(format.format(profit));
 	}
 
 	public static class Builder {

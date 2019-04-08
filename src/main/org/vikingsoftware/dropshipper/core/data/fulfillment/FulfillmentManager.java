@@ -149,7 +149,7 @@ public class FulfillmentManager {
 				final FulfillmentListing listing = new FulfillmentListing.Builder()
 					.id(results.getInt("fulfillment_listing.id"))
 					.fulfillment_platform_id(results.getInt("fulfillment_platform_id"))
-					.listing_id(results.getString("listing_id"))
+					.item_id(results.getString("item_id"))
 					.listing_title(results.getString("listing_title"))
 					.listing_url(results.getString("listing_url"))
 					.build();

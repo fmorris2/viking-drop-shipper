@@ -18,6 +18,10 @@ public class WebDriverQueue<T extends WebDriver> {
 		this.driverSupplier = driverSupplier;
 		webDrivers = new LinkedBlockingDeque<>(ThreadUtils.NUM_THREADS);
 
+		populateWebDrivers();
+	}
+
+	private void populateWebDrivers() {
 		for(int i = 0; i < /*ThreadUtils.NUM_THREADS*/2; i++) {
 			try {
 				webDrivers.put(driverSupplier.get());
@@ -57,5 +61,10 @@ public class WebDriverQueue<T extends WebDriver> {
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void replaceAll() {
+		webDrivers.clear();
+		populateWebDrivers();
 	}
 }

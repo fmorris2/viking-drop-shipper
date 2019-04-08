@@ -1,6 +1,7 @@
 package main.org.vikingsoftware.dropshipper;
 
 import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
+import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
 import main.org.vikingsoftware.dropshipper.inventory.InventoryUpdater;
 import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
@@ -29,16 +30,21 @@ public class VSDropShipper {
 				System.out.println("Executing module: " + module);
 				try {
 					module.cycle();
-//					Runtime.getRuntime().exec("TASKKILL /IM chrome.exe /F");
-//					Runtime.getRuntime().exec("TASKKILL /IM chromedriver.exe /F");
-//					Runtime.getRuntime().exec("TASKKILL /IM conhost.exe /F");
 				} catch(final Exception e) {
 					e.printStackTrace();
 					System.out.println("Failed to execute module: " + module);
 				}
 			}
 
-			SkuMappingManager.clear();
+			try {
+				Runtime.getRuntime().exec("TASKKILL /IM chrome.exe /F");
+				Runtime.getRuntime().exec("TASKKILL /IM chromedriver.exe /F");
+				Runtime.getRuntime().exec("TASKKILL /IM conhost.exe /F");
+				SkuMappingManager.clear();
+				BrowserRepository.get().replaceAll();
+			} catch(final Exception e) {
+				e.printStackTrace();
+			}
 			Thread.sleep(CYCLE_TIME_MS);
 		}
 	}

@@ -57,4 +57,10 @@ public final class BrowserRepository {
 		}
 	}
 
+	public void replaceAll() {
+		for(final WebDriverQueue<? extends WebDriver> queue : queueCache.values()) {
+			queue.replaceAll();
+		}
+	}
+
 }

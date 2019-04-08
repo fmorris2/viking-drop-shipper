@@ -74,7 +74,8 @@ public class SamsClubOrderTrackingHandler implements OrderTrackingHandler {
 		final WebElement trackingNumEl = driver.findElements(By.tagName("a")).stream().filter(el -> {
 			final String href = el.getAttribute("href");
 			if(href != null) {
-				return href.contains("tracking/tracking.htm?trackingId=");
+				return href.contains("tracking/tracking.htm?trackingId=")
+						|| href.contains("fedex?tracking_numbers=");
 			}
 
 			return false;
@@ -84,7 +85,7 @@ public class SamsClubOrderTrackingHandler implements OrderTrackingHandler {
 		if(trackingNumEl != null) {
 			trackingNum = trackingNumEl.getText();
 		} else {
-			throw new RuntimeException("Could not parse tracking number from page");
+			throw new RuntimeException("Could not parse tracking number from page for order " + order.id);
 		}
 
 		final TrackingNumber carrierDetails = TrackingNumber.parse(trackingNum);

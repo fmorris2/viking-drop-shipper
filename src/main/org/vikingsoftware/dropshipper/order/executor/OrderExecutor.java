@@ -75,8 +75,9 @@ public class OrderExecutor implements CycleParticipant {
 
 	private void insertSuccessfulOrdersIntoDB(final Collection<ProcessedOrder> successfulOrders) {
 		//store all new orders in DB
-		final String sql = "INSERT INTO processed_orders(customer_order_id, fulfillment_listing_id, fulfillment_transaction_id,"
-				+ "buy_subtotal, buy_sales_tax, buy_shipping, buy_product_fees, buy_total) VALUES(?,?,?,?,?,?,?,?)";
+		final String sql = "INSERT INTO processed_orders(customer_order_id, fulfillment_listing_id, "
+				+ "fulfillment_account_id, fulfillment_transaction_id,"
+				+ "buy_subtotal, buy_sales_tax, buy_shipping, buy_product_fees, buy_total, profit) VALUES(?,?,?,?,?,?,?,?,?,?)";
 
 		final PreparedStatement prepared = VDSDBManager.get().createPreparedStatement(sql);
 		final Statement deleteBatch = VDSDBManager.get().createStatement();
@@ -85,12 +86,14 @@ public class OrderExecutor implements CycleParticipant {
 			for(final ProcessedOrder order : successfulOrders) {
 				prepared.setInt(1, order.customer_order_id);
 				prepared.setInt(2, order.fulfillment_listing_id);
-				prepared.setString(3, order.fulfillment_transaction_id);
-				prepared.setDouble(4, order.buy_subtotal);
-				prepared.setDouble(5, order.buy_sales_tax);
-				prepared.setDouble(6, order.buy_shipping);
-				prepared.setDouble(7, order.buy_product_fees);
-				prepared.setDouble(8, order.buy_total);
+				prepared.setInt(3, order.fulfillment_account_id);
+				prepared.setString(4, order.fulfillment_transaction_id);
+				prepared.setDouble(5, order.buy_subtotal);
+				prepared.setDouble(6, order.buy_sales_tax);
+				prepared.setDouble(7, order.buy_shipping);
+				prepared.setDouble(8, order.buy_product_fees);
+				prepared.setDouble(9, order.buy_total);
+				prepared.setDouble(10, order.profit);
 				prepared.addBatch();
 
 				final String removeSql = "DELETE FROM failed_fulfillment_attempts WHERE customer_order_id="+order.customer_order_id;
