@@ -176,7 +176,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 
 		System.out.println("verifying final order price...");
 		final double finalOrderPrice = parseFinalOrderPrice();
-		if(finalOrderPrice > fulfillmentListing.listing_max_price * order.quantity) {
+		if(order.getProfit(finalOrderPrice) < 0) {
 			return processedOrder;
 		}
 
@@ -200,7 +200,8 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 				.customer_order_id(order.id)
 				.fulfillment_listing_id(fulfillmentListing.id)
 				.fulfillment_transaction_id("test_trans_id")
-				.sale_price(finalOrderPrice)
+				.buy_total(finalOrderPrice)
+				.profit(order.getProfit(finalOrderPrice))
 				.build()
 			   : finalizeOrder(order, fulfillmentListing, finalOrderPrice);
 	}
@@ -242,7 +243,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 			.customer_order_id(order.id)
 			.fulfillment_listing_id(listing.id)
 			.fulfillment_transaction_id("unknown")
-			.sale_price(finalOrderPrice);
+			.buy_total(finalOrderPrice);
 
 		try {
 			final WebElement feedbackHeader = browser.findElement(By.className("ui-feedback-success"));
@@ -499,7 +500,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 			}
 
 			quantityInput.sendKeys(Keys.BACK_SPACE);
-			quantityInput.sendKeys(Integer.toString(order.quantity));
+			quantityInput.sendKeys(Integer.toString(order.fulfillment_purchase_quantity));
 		}
 
 		return true;

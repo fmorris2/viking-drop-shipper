@@ -152,7 +152,6 @@ public class FulfillmentManager {
 					.listing_id(results.getString("listing_id"))
 					.listing_title(results.getString("listing_title"))
 					.listing_url(results.getString("listing_url"))
-					.listing_max_price(results.getDouble("listing_max_price"))
 					.build();
 
 				final List<FulfillmentListing> currentListings = listings.getOrDefault(marketplace_listing_id, new ArrayList<>());

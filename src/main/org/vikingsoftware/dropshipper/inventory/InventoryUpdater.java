@@ -81,7 +81,7 @@ public class InventoryUpdater implements CycleParticipant {
 			if(successfulUpdate) {
 				System.out.println("Successfully updated inventory for listing " + activeListings.get(i));
 			} else {
-				DBLogging.medium(getClass(), "Failed to update inventory for listing " + activeListings.get(i), null);
+				System.out.println("Failed to update inventory for listing " + activeListings.get(i));
 			}
 		}
 	}

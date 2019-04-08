@@ -64,12 +64,7 @@ public class AliExpressOrderTrackingHandler implements OrderTrackingHandler {
 			final WebElement mostRecentDetails = shippingDetailBlocks.get(shippingDetailBlocks.size() - 1);
 			final String shippingCompany = mostRecentDetails.findElement(By.className("logistics-name")).getText();
 			final String trackingNum = mostRecentDetails.findElement(By.className("no")).getText();
-			final WebElement specificDetails = mostRecentDetails.findElements(By.className("tracks-list")).get(0);
-			final List<WebElement> details = specificDetails.findElements(By.tagName("li"));
-			final String mostRecentRemark = details.isEmpty() ? "" : details.get(details.size() - 1).getText();
-			final String status = statusCode == ShipmentDeliveryStatusCodeType.DELIVERED ? "complete" : "shipped";
-			return new TrackingEntry(shippingCompany, trackingNum, status, mostRecentRemark,
-					statusCode);
+			return new TrackingEntry(shippingCompany, trackingNum, statusCode);
 		}
 		return null;
 	}

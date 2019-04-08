@@ -126,10 +126,9 @@ public class EbayCalls {
 					final ShipmentType shipmentDetails = new ShipmentType();
 					shipmentDetails.setDeliveryStatus(entry.shipmentStatus);
 					System.out.println("Shipment status: " + entry.shipmentStatus);
-					shipmentDetails.setNotes(entry.deliveryRemark);
-					System.out.println("Delivery Remark: " + entry.deliveryRemark);
 					final ShipmentTrackingDetailsType trackingDetails = new ShipmentTrackingDetailsType();
 					trackingDetails.setShipmentTrackingNumber(entry.trackingNumber);
+					System.out.println("Shipping service: " + entry.shippingService);
 					trackingDetails.setShippingCarrierUsed(entry.shippingService);
 					shipmentDetails.setShipmentTrackingDetails(new ShipmentTrackingDetailsType[]{trackingDetails});
 					call.setShipment(shipmentDetails);
@@ -139,7 +138,9 @@ public class EbayCalls {
 				}
 			}
 		} catch(final Exception e) {
-			DBLogging.high(EbayCalls.class, "failed to set shipment tracking info for order " + order + " and tracking entry " + entry + ": ", e);
+			if(entry != null) {
+				DBLogging.high(EbayCalls.class, "failed to set shipment tracking info for order " + order + " and tracking entry " + entry + ": ", e);
+			}
 		}
 
 		return false;

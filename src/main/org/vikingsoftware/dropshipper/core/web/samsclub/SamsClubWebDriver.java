@@ -1,24 +1,24 @@
 package main.org.vikingsoftware.dropshipper.core.web.samsclub;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
+import org.openqa.selenium.NoSuchSessionException;
 import org.openqa.selenium.UnableToSetCookieException;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
-import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 
 public class SamsClubWebDriver extends LoginWebDriver {
 
-	private static final Map<FulfillmentAccount, Set<Cookie>> sessionCookies = new HashMap<>();
-	private static final Map<SamsClubWebDriver, Set<Cookie>> cookieCache = new HashMap<>();
-	private static final Map<FulfillmentAccount, Object> loginLocks = new HashMap<>();
+	private static final Map<FulfillmentAccount, Set<Cookie>> sessionCookies = new ConcurrentHashMap<>();
+	private static final Map<SamsClubWebDriver, Set<Cookie>> cookieCache = new ConcurrentHashMap<>();
+	private static final Map<FulfillmentAccount, Object> loginLocks = new ConcurrentHashMap<>();
 
 	private FulfillmentAccount account;
 
@@ -26,19 +26,25 @@ public class SamsClubWebDriver extends LoginWebDriver {
 	public boolean getReady(final FulfillmentAccount account) {
 
 		this.account = account;
-		manage().timeouts().implicitlyWait(DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
-		manage().window().maximize();
+		try {
+			manage().timeouts().implicitlyWait(DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
+			manage().window().maximize();
 
-		final Object loginLock = loginLocks.computeIfAbsent(account, acc -> new Object());
-		synchronized(loginLock) {
-			if(sessionCookies.computeIfAbsent(account, acc -> new HashSet<>()).isEmpty()) {
-				System.out.println("prepareForExecution");
-				return prepareForExecutionViaLogin();
+			final Object loginLock = loginLocks.computeIfAbsent(account, acc -> new Object());
+			synchronized(loginLock) {
+				if(sessionCookies.computeIfAbsent(account, acc -> new HashSet<>()).isEmpty()) {
+					System.out.println("prepareForExecution");
+					return prepareForExecutionViaLogin();
+				}
 			}
+
+			System.out.println("prepareWithPreExistingSession");
+			return prepareWithPreExistingSession();
+		} catch(final NoSuchSessionException e) {
+			e.printStackTrace();
 		}
 
-		System.out.println("prepareWithPreExistingSession");
-		return prepareWithPreExistingSession();
+		return false;
 	}
 
 	public void clearSession() {
@@ -50,8 +56,10 @@ public class SamsClubWebDriver extends LoginWebDriver {
 			if(!sessionCookies.computeIfAbsent(account, acc -> new HashSet<>()).isEmpty()) {
 				return prepareWithPreExistingSession();
 			}
+			manage().deleteAllCookies();
 			get("https://www.samsclub.com/sams/account/signin/login.jsp");
 
+			System.out.println("Logging in with account: " + account.username);
 			findElement(By.id("txtLoginEmailID")).sendKeys(account.username);
 			findElement(By.id("txtLoginPwd")).sendKeys(account.password);
 			findElement(By.id("signInButton")).click();
@@ -65,7 +73,6 @@ public class SamsClubWebDriver extends LoginWebDriver {
 
 		} catch(final Exception e) {
 			e.printStackTrace();
-			DBLogging.high(getClass(), "failed to prepare for execution: ", e);
 		}
 
 		return false;
@@ -105,7 +112,6 @@ public class SamsClubWebDriver extends LoginWebDriver {
 			return true;
 		} catch(final Exception e) {
 			e.printStackTrace();
-			DBLogging.high(getClass(), "failed to prepare for execution using pre existing session: ", e);
 		}
 
 		return false;

@@ -57,7 +57,6 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 
 			if(skuStocks.isEmpty()) {
 				System.out.println("Failed to grab stock for marketplace listing " + listing.id);
-				DBLogging.medium(getClass(), "Failed to grab stock for marketplace listing " + listing.id, null);
 				return false;
 			}
 			System.out.println("Attempting to send inventory update to eBay for listing " + listing.id);

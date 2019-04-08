@@ -8,8 +8,12 @@ public class CustomerOrder {
 	public final int id;
 	public final int marketplace_listing_id;
 	public final String sku;
-	public final double sale_price;
+	public final double sell_listing_price;
+	public final double sell_shipping;
+	public final double sell_percentage_cut;
+	public final double sell_total;
 	public final int quantity;
+	public final int fulfillment_purchase_quantity;
 
 	public final String marketplace_order_id;
 	public final String buyer_username;
@@ -26,8 +30,12 @@ public class CustomerOrder {
 		this.id = builder.id;
 		this.marketplace_listing_id = builder.marketplace_listing_id;
 		this.sku = builder.sku;
-		this.sale_price = builder.sale_price;
+		this.sell_listing_price = builder.sell_listing_price;
+		this.sell_shipping = builder.sell_shipping;
+		this.sell_percentage_cut = builder.sell_percentage_cut;
+		this.sell_total = builder.sell_total;
 		this.quantity = builder.quantity;
+		this.fulfillment_purchase_quantity = builder.fulfillment_purchase_quantity;
 		this.marketplace_order_id = builder.marketplace_order_id;
 		this.buyer_username = builder.buyer_username;
 		this.buyer_name = builder.buyer_name;
@@ -41,15 +49,19 @@ public class CustomerOrder {
 	}
 
 	public double getProfit(final double totalFulfillmentPrice) {
-		return (sale_price * .87) - totalFulfillmentPrice;
+		return (sell_total * .87) - totalFulfillmentPrice;
 	}
 
 	public static class Builder {
 		private int id;
 		private int marketplace_listing_id;
 		private String sku;
-		private double sale_price;
+		private double sell_listing_price;
+		private double sell_shipping;
+		private double sell_percentage_cut;
+		private double sell_total;
 		private int quantity;
+		private int fulfillment_purchase_quantity;
 
 		private String marketplace_order_id;
 		private String buyer_username;
@@ -77,13 +89,33 @@ public class CustomerOrder {
 			return this;
 		}
 
-		public Builder sale_price(final double price) {
-			this.sale_price = price;
+		public Builder sell_shipping(final double val) {
+			this.sell_shipping = val;
+			return this;
+		}
+
+		public Builder sell_percentage_cut(final double val) {
+			this.sell_percentage_cut = val;
+			return this;
+		}
+
+		public Builder sell_total(final double val) {
+			this.sell_total = val;
+			return this;
+		}
+
+		public Builder sell_listing_price(final double val) {
+			this.sell_listing_price = val;
 			return this;
 		}
 
 		public Builder quantity(final int qty) {
 			this.quantity = qty;
+			return this;
+		}
+
+		public Builder fulfillment_purchase_quantity(final int qty) {
+			this.fulfillment_purchase_quantity = qty;
 			return this;
 		}
 

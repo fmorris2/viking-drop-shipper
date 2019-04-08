@@ -66,6 +66,7 @@ public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker 
 				System.out.println("failed to get sams club driver ready!");
 				driver.quit();
 				BrowserRepository.get().replace(supplier);
+				supplier = null;
 			}
 		} catch(final Exception e) {
 			e.printStackTrace();

@@ -40,22 +40,30 @@ public class DBLogging {
 	}
 
 	public static void low(final Class<?> clazz, final String msg, final Exception exception) {
-		exception.printStackTrace();
+		if(exception != null) {
+			exception.printStackTrace();
+		}
 		messageQueue.add(new LogMessage(clazz, LogLevel.LOW, exception, msg));
 	}
 
 	public static void medium(final Class<?> clazz, final String msg, final Exception exception) {
-		exception.printStackTrace();
+		if(exception != null) {
+			exception.printStackTrace();
+		}
 		messageQueue.add(new LogMessage(clazz, LogLevel.MEDIUM, exception, msg));
 	}
 
 	public static void high(final Class<?> clazz, final String msg, final Exception exception) {
-		exception.printStackTrace();
+		if(exception != null) {
+			exception.printStackTrace();
+		}
 		messageQueue.add(new LogMessage(clazz, LogLevel.HIGH, exception, msg));
 	}
 
 	public static void critical(final Class<?> clazz, final String msg, final Exception exception) {
-		exception.printStackTrace();
+		if(exception != null) {
+			exception.printStackTrace();
+		}
 		messageQueue.add(new LogMessage(clazz, LogLevel.CRITICAL, exception, msg));
 	}
 

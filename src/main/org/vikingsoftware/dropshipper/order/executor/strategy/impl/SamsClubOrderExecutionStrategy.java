@@ -196,6 +196,51 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 
 		final WebElement placeOrderButton = driver.findElement(By.cssSelector(".placeorderbottom > .cxo-a-green"));
 
+		final WebElement paymentDetailsEl = driver.findElements(By.className("thirdCol"))
+				.stream().filter(el -> el.getAttribute("class").contains("orderConfirmation")).findFirst().orElse(null);
+
+		if(paymentDetailsEl == null) {
+			throw new OrderExecutionException("Could not parse payment details on confirmation screen...");
+		}
+
+		double subtotal = 0, shipping = 0, salesTax = 0, fees = 0;
+
+		final List<WebElement> paymentDetails = paymentDetailsEl.findElements(By.tagName("dd"));
+
+		for(final WebElement detailGroup : paymentDetails) {
+			final List<WebElement> individualDetails = detailGroup.findElements(By.tagName("span"));
+			for(final WebElement detail : individualDetails) {
+				final String txt = detail.getText().trim().toLowerCase();
+				System.out.println("txt: " + txt);
+				if(txt == null || txt.isEmpty()) {
+					continue;
+				} else if(subtotal == -1) {
+					subtotal = Double.parseDouble(txt.substring(1));
+				} else if(shipping == -1) {
+					shipping = txt.contains("free") ? 0 : Double.parseDouble(txt.substring(1));
+				} else if(salesTax == -1) {
+					salesTax = Double.parseDouble(txt.substring(1));
+				} else if(fees == -1) {
+					fees = Double.parseDouble(txt.substring(1));
+				} else if(txt.contains("subtotal")) {
+					subtotal = -1;
+				} else if(txt.contains("shipping")) {
+					shipping = -1;
+				} else if(txt.contains("sales tax")) {
+					salesTax = -1;
+				} else if(txt.contains("product fee")) {
+					fees = -1;
+				}
+			}
+		}
+
+		System.out.println("Payment details:");
+		System.out.println("\tSubtotal: " + subtotal);
+		System.out.println("\tShipping: " + shipping);
+		System.out.println("\tSales Tax: " + salesTax);
+		System.out.println("\tProduct Fees: " + fees);
+		System.out.println("\tGrand total: " + price);
+
 		System.out.println("Clicking place order button...");
 		placeOrderButton.click();
 
@@ -221,8 +266,14 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 			return new ProcessedOrder.Builder()
 					.customer_order_id(order.id)
 					.fulfillment_listing_id(listing.id)
+					.fulfillment_account_id(account.id)
 					.fulfillment_transaction_id(orderNum)
-					.sale_price(price)
+					.buy_subtotal(subtotal)
+					.buy_sales_tax(salesTax)
+					.buy_shipping(shipping)
+					.buy_product_fees(fees)
+					.buy_total(price)
+					.profit(order.getProfit(price))
 					.build();
 		} finally {
 			driver.manage().timeouts().implicitlyWait(LoginWebDriver.DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
@@ -330,7 +381,7 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 
 	private void enterQuantity(final CustomerOrder order, final WebElement orderOnlineBox) {
 		final WebElement input = orderOnlineBox.findElement(By.id("inputbox2"));
-		input.sendKeys(Integer.toString(order.quantity));
+		input.sendKeys(Integer.toString(order.fulfillment_purchase_quantity));
 	}
 
 	private void clickShipThisItem(final WebElement orderOnlineBox) {
@@ -344,8 +395,8 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 	private void verifyCart(final CustomerOrder order, final FulfillmentListing listing) {
 		//verify expected item quantity in cart
 		final int numCartItems = Integer.parseInt(driver.findElement(By.cssSelector("#orderCount")).getText());
-		if(numCartItems != order.quantity) {
-			throw new OrderExecutionException("cart items != order quantity: " + numCartItems + " != " + order.quantity);
+		if(numCartItems != order.fulfillment_purchase_quantity) {
+			throw new OrderExecutionException("cart items != order fulfillment quantity: " + numCartItems + " != " + order.fulfillment_purchase_quantity);
 		}
 
 		//verify cart items

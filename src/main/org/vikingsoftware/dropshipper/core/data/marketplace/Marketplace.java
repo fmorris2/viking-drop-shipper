@@ -87,6 +87,7 @@ public class Marketplace {
 			.listingUrl(results.getString("listing_url"))
 			.listingPrice(results.getDouble("listing_price"))
 			.shippingPrice(results.getDouble("listing_shipping_price"))
+			.fulfillmentQuantityMultiplier(results.getInt("fulfillment_quantity_multiplier"))
 		.build();
 	}
 

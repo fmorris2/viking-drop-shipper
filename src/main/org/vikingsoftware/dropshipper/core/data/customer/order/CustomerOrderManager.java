@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
@@ -67,8 +68,12 @@ public class CustomerOrderManager {
 			.id(results.getInt("id"))
 			.marketplace_listing_id(results.getInt("marketplace_listing_id"))
 			.sku(results.getString("sku"))
-			.sale_price(results.getDouble("sale_price"))
+			.sell_listing_price(results.getDouble("sell_listing_price"))
+			.sell_shipping(results.getDouble("sell_shipping"))
+			.sell_percentage_cut(results.getDouble("sell_percentage_cut"))
+			.sell_total(results.getDouble("sell_total"))
 			.quantity(results.getInt("quantity"))
+			.fulfillment_purchase_quantity(results.getInt("quantity") * MarketplaceLoader.loadMarketplaceListingById(results.getInt("marketplace_listing_id")).fulfillment_quantity_multiplier)
 			.marketplace_order_id(results.getString("marketplace_order_id"))
 			.buyer_username(results.getString("buyer_username"))
 			.buyer_name(results.getString("buyer_name"))

@@ -9,6 +9,8 @@ public class MarketplaceListing {
 	public final String listingUrl;
 	public final double listingPrice;
 	public final double shippingPrice;
+	public final double percentageCut;
+	public final int fulfillment_quantity_multiplier;
 
 	private MarketplaceListing(final Builder builder) {
 		this.id = builder.id;
@@ -18,6 +20,8 @@ public class MarketplaceListing {
 		this.listingUrl = builder.listingUrl;
 		this.listingPrice = builder.listingPrice;
 		this.shippingPrice = builder.shippingPrice;
+		this.percentageCut = builder.percentageCut;
+		this.fulfillment_quantity_multiplier = builder.fulfillment_quantity_multiplier;
 	}
 
 	public static class Builder {
@@ -28,6 +32,8 @@ public class MarketplaceListing {
 		private String listingUrl;
 		private double listingPrice;
 		private double shippingPrice;
+		private double percentageCut;
+		private int fulfillment_quantity_multiplier;
 
 		public Builder id(final int id) {
 			this.id = id;
@@ -61,6 +67,16 @@ public class MarketplaceListing {
 
 		public Builder shippingPrice(final double shippingPrice) {
 			this.shippingPrice = shippingPrice;
+			return this;
+		}
+
+		public Builder percentageCut(final double percentageCut) {
+			this.percentageCut = percentageCut;
+			return this;
+		}
+
+		public Builder fulfillmentQuantityMultiplier(final int mult) {
+			this.fulfillment_quantity_multiplier = mult;
 			return this;
 		}
 

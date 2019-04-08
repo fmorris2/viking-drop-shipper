@@ -1,8 +1,5 @@
 package main.org.vikingsoftware.dropshipper.order.tracking.handler.impl;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.RunnableFuture;
 
@@ -10,13 +7,18 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
+import com.ebay.soap.eBLBaseComponents.ShipmentDeliveryStatusCodeType;
+
+import main.mysterytracking.TrackingNumber;
 import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
+import main.org.vikingsoftware.dropshipper.order.tracking.error.UnknownTrackingIdException;
 import main.org.vikingsoftware.dropshipper.order.tracking.handler.OrderTrackingHandler;
 
 public class SamsClubOrderTrackingHandler implements OrderTrackingHandler {
@@ -47,6 +49,8 @@ public class SamsClubOrderTrackingHandler implements OrderTrackingHandler {
 			} else {
 				return restart(order, supplier);
 			}
+		} catch(final UnknownTrackingIdException e) {
+			DBLogging.high(getClass(), "Unknown courier for tracking number!", e);
 		} catch(final Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -67,23 +71,31 @@ public class SamsClubOrderTrackingHandler implements OrderTrackingHandler {
 		driver.get(BASE_ORDER_DETAILS_URL + order.fulfillment_transaction_id + EXTRA_PARAM);
 		System.out.println("Navigating to page: " + BASE_ORDER_DETAILS_URL + order.fulfillment_transaction_id + EXTRA_PARAM);
 
-		final String trackingNum = driver.findElement(By.cssSelector(".content-of-page > .brdrB > table td:first-child a[href*=\"tracking_numbers\"]")).getText();
-		System.out.println("Tracking #: " + trackingNum);
+		final WebElement trackingNumEl = driver.findElements(By.tagName("a")).stream().filter(el -> {
+			final String href = el.getAttribute("href");
+			if(href != null) {
+				return href.contains("tracking/tracking.htm?trackingId=");
+			}
 
-		final Map<String, Integer> columnMappings = new HashMap<>();
-		final List<WebElement> columns = driver.findElements(By.cssSelector(".content-of-page > .brdrB > table tr:first-child td"));
-		for(int i = 0; i < columns.size(); i++) {
-			columnMappings.put(columns.get(i).getText(), i+1);
+			return false;
+		}).findFirst().orElse(null);
+
+		String trackingNum = null;
+		if(trackingNumEl != null) {
+			trackingNum = trackingNumEl.getText();
+		} else {
+			throw new RuntimeException("Could not parse tracking number from page");
 		}
 
-		final String orderStatus = driver.findElement(By
-				.cssSelector(".content-of-page > .brdrB > table td:nth-child("+columnMappings.get("Status")+")"))
-				.getText().trim();
+		final TrackingNumber carrierDetails = TrackingNumber.parse(trackingNum);
+		if(!carrierDetails.isCourierRecognized()) {
+			throw new UnknownTrackingIdException("Unknown courier for tracking number: " + trackingNum);
+		}
 
-		System.out.println("Order Status: " + orderStatus);
-
-
-		return null;
+		final String courierName = carrierDetails.getCourierName().replaceAll("[^a-zA-Z0-9\\-\\s]", "");
+		System.out.println("Tracking #: " + trackingNum);
+		System.out.println("Carrier: " + courierName);
+		return new TrackingEntry(courierName, trackingNum, ShipmentDeliveryStatusCodeType.IN_TRANSIT);
 	}
 
 	@Override

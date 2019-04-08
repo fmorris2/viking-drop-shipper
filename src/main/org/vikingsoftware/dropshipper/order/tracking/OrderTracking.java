@@ -56,12 +56,13 @@ public class OrderTracking implements CycleParticipant {
 			try {
 				System.out.println("Checking status of inventory update task #" + i + "...");
 				final TrackingEntry entry = futures.get(i).get();
-				final String updateSql = getUpdateTrackingNumberInDBQuery(untrackedOrders.get(i), entry);
-				if(updateSql != null) {
-					st.addBatch(updateSql);
+				if(EbayCalls.setShipmentTrackingInfo(untrackedOrders.get(i), entry)) {
+					System.out.println("Successfully executed tracking update task for processed order " + untrackedOrders.get(i).id);
+					final String updateSql = getUpdateTrackingNumberInDBQuery(untrackedOrders.get(i), entry);
+					if(updateSql != null) {
+						st.addBatch(updateSql);
+					}
 				}
-				EbayCalls.setShipmentTrackingInfo(untrackedOrders.get(i), entry);
-				System.out.println("Successfully executed tracking update task for processed order " + untrackedOrders.get(i).id);
 			} catch(final Exception e) {
 				DBLogging.high(getClass(), "failed to update order tracking for processed order " + untrackedOrders.get(i).id, e);
 				System.out.println("Failed to execute tracking update task for processed order " + untrackedOrders.get(i).id);
@@ -87,9 +88,8 @@ public class OrderTracking implements CycleParticipant {
 					.id(res.getInt("id"))
 					.customer_order_id(res.getInt("customer_order_id"))
 					.fulfillment_listing_id(res.getInt("fulfillment_listing_id"))
+					.fulfillment_account_id(res.getInt("fulfillment_account_id"))
 					.fulfillment_transaction_id(res.getString("fulfillment_transaction_id"))
-					.tracking_number(res.getString("tracking_number"))
-					.sale_price(res.getDouble("sale_price"))
 					.build();
 
 				orders.add(order);
@@ -102,9 +102,8 @@ public class OrderTracking implements CycleParticipant {
 	}
 
 	private String getUpdateTrackingNumberInDBQuery(final ProcessedOrder order, final TrackingEntry entry) {
-		if(order.tracking_number == null || !order.tracking_number.equals(entry.trackingNumber)) {
-			return "UPDATE processed_orders SET tracking_number='"+entry.trackingNumber+"',order_status='"+entry.status
-					+ "' WHERE id="+order.id;
+		if(entry !=  null && (order.tracking_number == null || !order.tracking_number.equals(entry.trackingNumber))) {
+			return "UPDATE processed_orders SET tracking_number='"+entry.trackingNumber+"' WHERE id="+order.id;
 		}
 
 		return null;
