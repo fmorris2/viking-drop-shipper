@@ -10,10 +10,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
@@ -24,15 +22,8 @@ public class AliExpressWebDriver extends LoginWebDriver {
 
 	private final Map<String,String> cachedOrderOptions = new HashMap<>();
 
-	private FulfillmentAccount account;
-
 	@Override
-	public boolean getReady(final FulfillmentAccount account) {
-		this.account = account;
-		return prepareForExecution();
-	}
-
-	private boolean prepareForExecution() {
+	public boolean prepareForExecutionViaLoginImpl() {
 		try {
 			manage().window().maximize();
 			manage().timeouts().implicitlyWait(DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
@@ -44,26 +35,28 @@ public class AliExpressWebDriver extends LoginWebDriver {
 			findElement(By.id("fm-login-id")).sendKeys(account.username);
 			findElement(By.id("fm-login-password")).sendKeys(account.password);
 			findElement(By.id("fm-login-submit")).click();
-
-			try {
-				//wait for home page to appear
-				findElement(By.className("nav-user-account"));
-			} catch(final NoSuchElementException e) {
-				if(loginTries < MAX_LOGIN_TRIES) {
-					System.out.println("encountered verification element... retrying.");
-					loginTries++;
-					get("http://www.google.com");
-					return prepareForExecution();
-				} else {
-					return false;
-				}
-			}
-
 			return true;
 		} catch(final Exception e) {
 			DBLogging.high(getClass(), "failed to prepare for execution: ", e);
 		}
 
+		return false;
+	}
+
+	@Override
+	protected String getLandingPageURL() {
+		return "https://www.aliexpress.com";
+	}
+
+	@Override
+	protected boolean verifyLoggedIn() {
+		try {
+			//wait for home page to appear
+			findElement(By.className("nav-user-account"));
+			return true;
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
 		return false;
 	}
 
@@ -151,5 +144,4 @@ public class AliExpressWebDriver extends LoginWebDriver {
 			e.printStackTrace();
 		}
 	}
-
 }

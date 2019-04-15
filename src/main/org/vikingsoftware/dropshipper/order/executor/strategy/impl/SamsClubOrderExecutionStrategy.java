@@ -30,6 +30,7 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutio
 
 public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 	private static final long LOOP_THRESHOLD = 60_000; //60 seconds
+	private static final int RESTART_THRESHOLD = 5;
 
 	private ProcessedOrder processedOrder;
 
@@ -39,6 +40,7 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 
 	private String lastWebPageTitle = "";
 	private long startLoopTime;
+	private int timesRestarted;
 
 	@Override
 	public boolean prepareForExecution() {
@@ -74,9 +76,12 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 
 			return orderItem(order, fulfillmentListing);
 
-		} else {
+		} else if(timesRestarted < RESTART_THRESHOLD) {
 			System.out.println("\tFailed to prepare sams club driver! Attempting to restart.");
+			timesRestarted++;
 			return restart(order, fulfillmentListing);
+		} else {
+			return processedOrder;
 		}
 	}
 
@@ -457,6 +462,7 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 			int currentNumCartItems = numCartItemsSupp.get();
 			List<WebElement> currentEls;
 			startLoop();
+			System.out.println("Cart items to remove: " + removeEls.get().size());
 			while(!(currentEls = removeEls.get()).isEmpty() && !hasExceededThreshold()) {
 				final WebElement el = currentEls.get(0);
 				System.out.println("removing cart item: " + el);

@@ -7,6 +7,8 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.SamsClub
 public enum FulfillmentPlatforms {
 	ALI_EXPRESS(AliExpressOrderExecutionStrategy.class),
 	SAMS_CLUB(SamsClubOrderExecutionStrategy.class),
+	AMAZON(null),
+	COSTCO(null)
 
 	;
 

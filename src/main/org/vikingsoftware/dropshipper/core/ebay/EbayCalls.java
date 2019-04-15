@@ -31,7 +31,8 @@ import main.org.vikingsoftware.dropshipper.core.utils.EbayConversionUtils;
 
 public class EbayCalls {
 
-	private static final int FAKE_MAX_QUANTITY = 1;
+	private static final int FAKE_MAX_QUANTITY = 0;
+	private static final int MIN_AVAILABLE_FULFILLMENT_QTY = 50;
 
 	private EbayCalls() {}
 
@@ -86,7 +87,11 @@ public class EbayCalls {
 			final ItemType itemToRevise = new ItemType();
 			itemToRevise.setItemID(listingId);
 			if(invEntries.size() == 1 && invEntries.get(0).sku == null) {
-				itemToRevise.setQuantity(Math.min(FAKE_MAX_QUANTITY, invEntries.get(0).stock));
+				if(invEntries.get(0).stock < MIN_AVAILABLE_FULFILLMENT_QTY) {
+					itemToRevise.setQuantity(0);
+				} else {
+					itemToRevise.setQuantity(Math.min(FAKE_MAX_QUANTITY, invEntries.get(0).stock));
+				}
 			} else {
 				final VariationsType variations = new VariationsType();
 				final List<VariationType> entries = new ArrayList<>();
