@@ -76,7 +76,7 @@ public abstract class LoginWebDriver extends ChromeDriver {
 				final Set<Cookie> cookies = new HashSet<>();
 				cookies.addAll(manage().getCookies());
 				sessionCookies.put(account, cookies);
-				return true;
+				return verifyLoggedIn();
 			}
 
 		} catch(final Exception e) {
@@ -94,13 +94,12 @@ public abstract class LoginWebDriver extends ChromeDriver {
 
 				//web driver spec says we need to land on the page first before setting cookies
 				get(getLandingPageURL());
-
-				System.out.println(this + " needs to add pre existing session cookies!");
 				manage().deleteAllCookies();
 				for(final Cookie cookie : sessionCooks) {
 					try {
 						manage().addCookie(cookie);
 					} catch(final UnableToSetCookieException e) {
+						e.printStackTrace();
 						System.out.println("Unable to set cookie: " + cookie);
 					}
 				}
