@@ -107,6 +107,7 @@ public abstract class LoginWebDriver extends ChromeDriver {
 
 				cookieCache.put(this, sessionCooks);
 				System.out.println(this + " is done adding pre existing session cookies");
+				get(getLandingPageURL());
 
 				if(!verifyLoggedIn()) {
 					System.out.println("Failed to verify login for " + this);
