@@ -9,17 +9,18 @@ import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
 import main.org.vikingsoftware.dropshipper.order.parser.strategy.OrderParsingStrategy;
 
 public class EbayOrderParsingStrategy implements OrderParsingStrategy {
-	
+
 	@Override
 	public Collection<CustomerOrder> parseNewOrders() {
 		final CustomerOrder[] allOrders = EbayCalls.getOrdersLastXDays(30);
 		final Collection<CustomerOrder> newOrders = new ArrayList<>();
 		for(final CustomerOrder order : allOrders) {
 			if(!Marketplaces.EBAY.getMarketplace().isOrderIdKnown(order.marketplace_order_id)) {
+				System.out.println("New eBay order found: " + order.marketplace_order_id);
 				newOrders.add(order);
 			}
 		}
-		
+
 		return newOrders;
 	}
 }

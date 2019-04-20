@@ -5,20 +5,20 @@ public class SkuMapping {
 	public final int id;
 	public final int marketplace_listing_id;
 	public final String item_sku;
-	public final String ali_express_options;
+	public final String options;
 	
 	private SkuMapping(final Builder builder) {
 		this.id = builder.id;
 		this.marketplace_listing_id = builder.marketplace_listing_id;
 		this.item_sku = builder.item_sku;
-		this.ali_express_options = builder.ali_express_options;
+		this.options = builder.options;
 	}
 	
 	public static class Builder {
 		public int id;
 		public int marketplace_listing_id;
 		public String item_sku;
-		public String ali_express_options;
+		public String options;
 		
 		public Builder id(final int id) {
 			this.id = id;
@@ -35,8 +35,8 @@ public class SkuMapping {
 			return this;
 		}
 		
-		public Builder ali_express_options(final String options) {
-			this.ali_express_options = options;
+		public Builder options(final String options) {
+			this.options = options;
 			return this;
 		}
 		

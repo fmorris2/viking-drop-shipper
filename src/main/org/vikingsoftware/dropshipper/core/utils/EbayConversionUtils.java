@@ -1,28 +1,37 @@
 package main.org.vikingsoftware.dropshipper.core.utils;
 
-import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
-
 import com.ebay.soap.eBLBaseComponents.AddressType;
 import com.ebay.soap.eBLBaseComponents.ItemType;
 import com.ebay.soap.eBLBaseComponents.TransactionType;
 import com.ebay.soap.eBLBaseComponents.UserType;
 
+import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
+
 public class EbayConversionUtils {
 	private EbayConversionUtils(){}
-	
-	public static CustomerOrder convertTransactionTypeToCustomerOrder(final int marketplaceListingId, final TransactionType transaction) {
+
+	public static CustomerOrder convertTransactionTypeToCustomerOrder(final String listingId, final TransactionType transaction) {
 		if(transaction == null) {
 			return null;
 		}
-		
+
+		final int dbListingId = Marketplaces.EBAY.getMarketplace().getMarketplaceListingIndex(listingId);
+
+		if(dbListingId == -1) {
+			return null;
+		}
+
 		final UserType buyer = transaction.getBuyer();
 		final AddressType addr = buyer.getBuyerInfo().getShippingAddress();
 		final ItemType item = transaction.getItem();
-		
+
 		return new CustomerOrder.Builder()
-			.marketplace_listing_id(marketplaceListingId)
+			.marketplace_listing_id(dbListingId)
 			.sku(item.getSKU())
-			.sale_price(transaction.getAmountPaid().getValue())
+			.sell_listing_price(transaction.getAmountPaid().getValue() - transaction.getActualShippingCost().getValue())
+			.sell_shipping(transaction.getActualShippingCost().getValue())
+			.sell_total(transaction.getAmountPaid().getValue())
 			.quantity(transaction.getQuantityPurchased())
 			.marketplace_order_id(transaction.getTransactionID())
 			.buyer_username(buyer.getUserID())
@@ -33,6 +42,7 @@ public class EbayConversionUtils {
 			.buyer_state_province_region(addr.getStateOrProvince())
 			.buyer_city(addr.getCityName())
 			.buyer_zip_postal_code(addr.getPostalCode())
+			.buyer_phone_number(addr.getPhone())
 			.build();
 	}
 }

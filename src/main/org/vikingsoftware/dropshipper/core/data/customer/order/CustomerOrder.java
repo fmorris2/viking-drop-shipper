@@ -1,16 +1,22 @@
 package main.org.vikingsoftware.dropshipper.core.data.customer.order;
 
+import java.text.DecimalFormat;
+
 public class CustomerOrder {
-	
+
 	/*
 	 * SNAKE CASE for easy POJO --> MySQL DB recognition
 	 */
 	public final int id;
 	public final int marketplace_listing_id;
 	public final String sku;
-	public final double sale_price;
+	public final double sell_listing_price;
+	public final double sell_shipping;
+	public final double sell_percentage_cut;
+	public final double sell_total;
 	public final int quantity;
-	
+	public final int fulfillment_purchase_quantity;
+
 	public final String marketplace_order_id;
 	public final String buyer_username;
 	public final String buyer_name;
@@ -20,13 +26,18 @@ public class CustomerOrder {
 	public final String buyer_state_province_region;
 	public final String buyer_city;
 	public final String buyer_zip_postal_code;
-	
+	public final String buyer_phone_number;
+
 	private CustomerOrder(final Builder builder) {
 		this.id = builder.id;
 		this.marketplace_listing_id = builder.marketplace_listing_id;
 		this.sku = builder.sku;
-		this.sale_price = builder.sale_price;
+		this.sell_listing_price = builder.sell_listing_price;
+		this.sell_shipping = builder.sell_shipping;
+		this.sell_percentage_cut = builder.sell_percentage_cut;
+		this.sell_total = builder.sell_total;
 		this.quantity = builder.quantity;
+		this.fulfillment_purchase_quantity = builder.fulfillment_purchase_quantity;
 		this.marketplace_order_id = builder.marketplace_order_id;
 		this.buyer_username = builder.buyer_username;
 		this.buyer_name = builder.buyer_name;
@@ -36,15 +47,26 @@ public class CustomerOrder {
 		this.buyer_state_province_region = builder.buyer_state_province_region;
 		this.buyer_city = builder.buyer_city;
 		this.buyer_zip_postal_code = builder.buyer_zip_postal_code;
-	}	
-	
+		this.buyer_phone_number = builder.buyer_phone_number;
+	}
+
+	public double getProfit(final double totalFulfillmentPrice) {
+		final double profit = (sell_total * .87) - totalFulfillmentPrice;
+		final DecimalFormat format = new DecimalFormat("###.##");
+		return Double.parseDouble(format.format(profit));
+	}
+
 	public static class Builder {
 		private int id;
 		private int marketplace_listing_id;
 		private String sku;
-		private double sale_price;
+		private double sell_listing_price;
+		private double sell_shipping;
+		private double sell_percentage_cut;
+		private double sell_total;
 		private int quantity;
-		
+		private int fulfillment_purchase_quantity;
+
 		private String marketplace_order_id;
 		private String buyer_username;
 		private String buyer_name;
@@ -54,77 +76,103 @@ public class CustomerOrder {
 		private String buyer_state_province_region;
 		private String buyer_city;
 		private String buyer_zip_postal_code;
-		
+		private String buyer_phone_number;
+
 		public Builder id(final int id) {
 			this.id = id;
 			return this;
 		}
-		
+
 		public Builder marketplace_listing_id(final int id) {
 			this.marketplace_listing_id = id;
 			return this;
 		}
-		
+
 		public Builder sku(final String sku) {
 			this.sku = sku;
 			return this;
 		}
-		
-		public Builder sale_price(final double price) {
-			this.sale_price = price;
+
+		public Builder sell_shipping(final double val) {
+			this.sell_shipping = val;
 			return this;
 		}
-		
+
+		public Builder sell_percentage_cut(final double val) {
+			this.sell_percentage_cut = val;
+			return this;
+		}
+
+		public Builder sell_total(final double val) {
+			this.sell_total = val;
+			return this;
+		}
+
+		public Builder sell_listing_price(final double val) {
+			this.sell_listing_price = val;
+			return this;
+		}
+
 		public Builder quantity(final int qty) {
 			this.quantity = qty;
 			return this;
 		}
-		
+
+		public Builder fulfillment_purchase_quantity(final int qty) {
+			this.fulfillment_purchase_quantity = qty;
+			return this;
+		}
+
 		public Builder marketplace_order_id(final String id) {
 			this.marketplace_order_id = id;
 			return this;
 		}
-		
+
 		public Builder buyer_username(final String username) {
 			this.buyer_username = username;
 			return this;
 		}
-		
+
 		public Builder buyer_name(final String name) {
 			this.buyer_name = name;
 			return this;
 		}
-		
+
 		public Builder buyer_country(final String country) {
 			this.buyer_country = country;
 			return this;
 		}
-		
+
 		public Builder buyer_street_address(final String address) {
 			this.buyer_street_address = address;
 			return this;
 		}
-		
+
 		public Builder buyer_apt_suite_unit_etc(final String apt) {
 			this.buyer_apt_suite_unit_etc = apt;
 			return this;
 		}
-		
+
 		public Builder buyer_state_province_region(final String state) {
 			this.buyer_state_province_region = state;
 			return this;
 		}
-		
+
 		public Builder buyer_city(final String city) {
 			this.buyer_city = city;
 			return this;
 		}
-		
+
 		public Builder buyer_zip_postal_code(final String zip) {
 			this.buyer_zip_postal_code = zip;
 			return this;
 		}
-		
+
+		public Builder buyer_phone_number(final String num) {
+			this.buyer_phone_number = num;
+			return this;
+		}
+
 		public CustomerOrder build() {
 			return new CustomerOrder(this);
 		}

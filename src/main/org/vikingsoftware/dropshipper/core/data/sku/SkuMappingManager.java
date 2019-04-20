@@ -13,10 +13,10 @@ import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 public class SkuMappingManager {
-	
+
 	private static Map<SkuMappingKey, SkuMapping> mappings = new HashMap<>();
 	private static Map<Integer, List<SkuMapping>> marketplaceToMappings = new HashMap<>();
-	
+
 	public static boolean load() {
 		clear();
 		final Statement st = VDSDBManager.get().createStatement();
@@ -27,37 +27,37 @@ public class SkuMappingManager {
 					.id(results.getInt("id"))
 					.marketplace_listing_id(results.getInt("marketplace_listing_id"))
 					.item_sku(results.getString("item_sku"))
-					.ali_express_options(results.getString("ali_express_options"))
+					.options(results.getString("options"))
 					.build();
-				
+
 				mappings.put(new SkuMappingKey(mapping.marketplace_listing_id, mapping.item_sku), mapping);
-				
+
 				final List<SkuMapping> marketplaceMappings = marketplaceToMappings
 						.getOrDefault(mapping.marketplace_listing_id, new ArrayList<>());
-				
+
 				marketplaceMappings.add(mapping);
 				marketplaceToMappings.put(mapping.marketplace_listing_id, marketplaceMappings);
 			}
 		} catch (final SQLException e) {
 			DBLogging.high(SkuMappingManager.class, "failed to load sku mappings: ", e);
 		}
-		
+
 		return !mappings.isEmpty();
 	}
-	
+
 	public static void clear() {
 		mappings.clear();
 		marketplaceToMappings.clear();
 	}
-	
+
 	public static Optional<SkuMapping> getMapping(final int marketplaceListingId, final String sku) {
 		if(mappings.isEmpty()) {
 			load();
 		}
-		
+
 		return Optional.ofNullable(mappings.get(new SkuMappingKey(marketplaceListingId, sku)));
 	}
-	
+
 	public static List<SkuMapping> getMappingsForMarketplaceListing(final int marketplaceListingId) {
 		return marketplaceToMappings.getOrDefault(marketplaceListingId, new ArrayList<>());
 	}
