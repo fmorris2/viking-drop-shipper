@@ -10,6 +10,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAcco
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.AliExpressFulfillmentStockChecker;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.CostcoFulfillmentStockChecker;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubFulfillmentStockChecker;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
@@ -27,6 +28,13 @@ public class FulfillmentStockManager {
 			case SAMS_CLUB:
 				account = FulfillmentAccountManager.get().peekAccount(FulfillmentPlatforms.SAMS_CLUB);
 				return SamsClubFulfillmentStockChecker.get().getStock(account, marketListing, fulfillmentListing);
+			case COSTCO:
+				account = FulfillmentAccountManager.get().peekAccount(FulfillmentPlatforms.COSTCO);
+				return CostcoFulfillmentStockChecker.get().getStock(account, marketListing, fulfillmentListing);
+			case AMAZON:
+				break;
+			default:
+				break;
 		}
 
 		return new FutureTask<>(() -> Collections.emptyList());
