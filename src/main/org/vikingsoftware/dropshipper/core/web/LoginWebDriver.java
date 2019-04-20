@@ -1,5 +1,6 @@
 package main.org.vikingsoftware.dropshipper.core.web;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -13,6 +14,8 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
+import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
 
 public abstract class LoginWebDriver extends ChromeDriver {
 
@@ -27,12 +30,16 @@ public abstract class LoginWebDriver extends ChromeDriver {
 	private static final Map<LoginWebDriver, Set<Cookie>> cookieCache = new ConcurrentHashMap<>();
 	private static final Map<FulfillmentAccount, Object> loginLocks = new ConcurrentHashMap<>();
 
+	protected final Map<String,String> cachedOrderOptions = new HashMap<>();
+
 	protected int loginTries = 0;
 	protected FulfillmentAccount account;
 
 	public LoginWebDriver() {
 		super(OPTIONS);
 	}
+
+	public abstract boolean selectOrderOptions(final SkuMapping skuMapping, final FulfillmentListing listing);
 
 	protected abstract boolean prepareForExecutionViaLoginImpl();
 	protected abstract String getLandingPageURL();
@@ -63,6 +70,10 @@ public abstract class LoginWebDriver extends ChromeDriver {
 
 	public void clearSession() {
 		sessionCookies.put(account, new HashSet<>());
+	}
+
+	public void clearCachedSelectedOrderOptions() {
+		cachedOrderOptions.clear();
 	}
 
 	private boolean prepareForExecutionViaLogin() {
