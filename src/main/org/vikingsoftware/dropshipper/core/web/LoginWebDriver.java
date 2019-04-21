@@ -68,6 +68,14 @@ public abstract class LoginWebDriver extends ChromeDriver {
 		return false;
 	}
 
+	public void resetImplicitWait() {
+		manage().timeouts().implicitlyWait(DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
+	}
+
+	public void setImplicitWait(final int seconds) {
+		manage().timeouts().implicitlyWait(seconds, TimeUnit.SECONDS);
+	}
+
 	public void clearSession() {
 		sessionCookies.put(account, new HashSet<>());
 	}
@@ -83,11 +91,11 @@ public abstract class LoginWebDriver extends ChromeDriver {
 			}
 			manage().deleteAllCookies();
 			final boolean prepared = prepareForExecutionViaLoginImpl();
-			if(prepared) {
+			if(prepared && verifyLoggedIn()) {
 				final Set<Cookie> cookies = new HashSet<>();
 				cookies.addAll(manage().getCookies());
 				sessionCookies.put(account, cookies);
-				return verifyLoggedIn();
+				return true;
 			}
 
 		} catch(final Exception e) {
@@ -121,6 +129,7 @@ public abstract class LoginWebDriver extends ChromeDriver {
 
 				if(!verifyLoggedIn()) {
 					System.out.println("Failed to verify login for " + this);
+					sessionCookies.remove(account);
 					return false;
 				}
 
@@ -131,6 +140,7 @@ public abstract class LoginWebDriver extends ChromeDriver {
 			return true;
 		} catch(final Exception e) {
 			e.printStackTrace();
+			sessionCookies.remove(account);
 		}
 
 		return false;

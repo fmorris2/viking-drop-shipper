@@ -6,6 +6,7 @@ import java.util.Map;
 import org.openqa.selenium.WebDriver;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.AliExpressDriverSupplier;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.CostcoDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.WebDriverQueue;
@@ -19,6 +20,7 @@ public final class BrowserRepository {
 	private BrowserRepository() {
 		queueCache.put(AliExpressDriverSupplier.class, new WebDriverQueue<>(() -> new AliExpressDriverSupplier()));
 		queueCache.put(SamsClubDriverSupplier.class, new WebDriverQueue<>(() -> new SamsClubDriverSupplier()));
+		queueCache.put(CostcoDriverSupplier.class, new WebDriverQueue<>(() -> new CostcoDriverSupplier()));
 	}
 
 	public synchronized static BrowserRepository get() {
