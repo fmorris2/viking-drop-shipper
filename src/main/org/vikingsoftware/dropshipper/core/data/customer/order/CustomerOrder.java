@@ -50,6 +50,14 @@ public class CustomerOrder {
 		this.buyer_phone_number = builder.buyer_phone_number;
 	}
 
+	public String getFirstName() {
+		return buyer_name.split(" ")[0];
+	}
+
+	public String getLastName() {
+		return buyer_name.substring(getFirstName().length() + 1);
+	}
+
 	public double getProfit(final double totalFulfillmentPrice) {
 		final double profit = (sell_total * .87) - totalFulfillmentPrice;
 		final DecimalFormat format = new DecimalFormat("###.##");
