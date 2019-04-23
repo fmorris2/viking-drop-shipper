@@ -28,14 +28,20 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 	@Override
 	protected ProcessedOrder executeOrderImpl(CustomerOrder order, FulfillmentListing fulfillmentListing)
 			throws Exception {
+
 		driver.get(fulfillmentListing.listing_url);
+
 		enterQuantity(order);
 		addToCart();
 		waitForAddedToCartModal();
+
 		goToCart();
 		verifyCart(order, fulfillmentListing);
 		clickCheckout();
+
 		enterShippingDetails(order, fulfillmentListing);
+		verifyPriceOnShippingPage(order, fulfillmentListing);
+		clickContinueToPayment();
 		return null;
 	}
 
@@ -145,7 +151,7 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		final String phoneNum = order.buyer_phone_number == null ? null : order.buyer_phone_number.replaceAll("\\D", "");
 		if(phoneNum != null) {
 			System.out.println("Entering buyer phone number: " + phoneNum);
-			driver.executeScript("document.getElementById('phoneId').setAttribute('value', '"+order.buyer_phone_number+"')");
+			driver.executeScript("document.getElementById('phoneId').setAttribute('value', '"+phoneNum+"')");
 		}
 
 		System.out.println("Entering email: " + EMAIL);
@@ -154,6 +160,23 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		System.out.println("Unchecking save address box");
 		driver.executeScript("document.getElementById('save-address-inline').checked = false");
 		driver.executeScript("document.getElementById('set-default-inline').checked = false");
+	}
+
+	private void verifyPriceOnShippingPage(final CustomerOrder order, final FulfillmentListing fulfillmentListing) {
+		System.out.println("Verifying price on shipping page...");
+		final WebElement priceEl = driver.findElement(By.id("outstandingPrincipal"));
+		final double price = Double.parseDouble(priceEl.getAttribute("value"));
+
+		if(order.getProfit(price) < 0) {
+			throw new OrderExecutionException("WARNING: POTENTIAL FULFILLMENT AT LOSS for fulfillment listing " + fulfillmentListing.id
+					+ "! PROFIT: $" + order.getProfit(price));
+		}
+		System.out.println("\tVerified.");
+	}
+
+	private void clickContinueToPayment() {
+		System.out.println("Continuing to payment...");
+		driver.findElement(By.cssSelector(".big-green[name=\"place-order\"]")).click();
 	}
 
 	private WebElement narrowCartToTargetItem(final FulfillmentListing fulfillmentListing, final Supplier<List<WebElement>> orderItems) throws Exception {
