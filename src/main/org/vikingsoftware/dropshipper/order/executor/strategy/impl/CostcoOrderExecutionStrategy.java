@@ -47,9 +47,13 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		useSelectedAddress();
 		verifyPriceOnShippingPage(order, fulfillmentListing);
 		clickContinueToPayment();
-		enterCVV();
+		try {
+			enterCVV();
+		} catch(final Exception e) {
+			System.out.println("No need to enter CVV");
+		}
 		clickContinueToReviewOrder();
-		return null;
+		return verifyAndPlaceOrder(order, fulfillmentListing);
 	}
 
 	private void enterQuantity(final CustomerOrder order) {
@@ -157,31 +161,66 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		driver.findElement(By.cssSelector(".address-choose-header a")).click();
 
 		System.out.println("Entering buyer first name: " + order.getFirstName());
-		driver.findElement(By.id("firstId")).sendKeys(order.getFirstName());
+		final WebElement firstNameEl = driver.findElement(By.id("firstId")); //wait for modal to appear
+		firstNameEl.clear();
+		Thread.sleep(250);
+		driver.sendKeysSlowly(firstNameEl, order.getFirstName());
+		Thread.sleep(250);
 
 		System.out.println("Entering buyer last name: " + order.getLastName());
-		driver.findElement(By.id("lastId")).sendKeys(order.getLastName());
+		final WebElement lastNameEl = driver.findElement(By.id("lastId"));
+		lastNameEl.clear();
+		Thread.sleep(250);
+		driver.sendKeysSlowly(lastNameEl, order.getLastName());
+		Thread.sleep(250);
 
 		System.out.println("Entering buyer street address: " + order.buyer_street_address);
-		driver.findElement(By.id("address1Id")).sendKeys(order.buyer_street_address);
+		final WebElement streetEl = driver.findElement(By.id("address1Id"));
+		streetEl.clear();
+		Thread.sleep(250);
+		driver.sendKeysSlowly(streetEl, order.buyer_street_address);
+		Thread.sleep(250);
 
-		System.out.println("Entering buyer apt / suite / unit / etc: " + order.buyer_apt_suite_unit_etc);
-		driver.findElement(By.id("address2Id")).sendKeys(order.buyer_apt_suite_unit_etc == null ? "" : order.buyer_apt_suite_unit_etc);
+		final WebElement address2 = driver.findElement(By.id("address2Id"));
+		address2.clear();
+		Thread.sleep(250);
+		if(order.buyer_apt_suite_unit_etc != null && !order.buyer_apt_suite_unit_etc.isEmpty()) {
+			System.out.println("Entering buyer apt / suite / unit / etc: " + order.buyer_apt_suite_unit_etc);
+			driver.sendKeysSlowly(address2, order.buyer_apt_suite_unit_etc);
+			Thread.sleep(250);
+		}
 
 		System.out.println("Entering buyer zip code: " + order.buyer_zip_postal_code.substring(0, 5));
-		driver.executeScript("document.getElementById('postalId').setAttribute('value', '"+order.buyer_zip_postal_code.subSequence(0, 5)+"')");
-		driver.findElement(By.id("postalId")).sendKeys(Keys.SPACE, Keys.BACK_SPACE);
+		final WebElement zipEl = driver.findElement(By.id("postalId"));
+		zipEl.clear();
+		Thread.sleep(250);
+		driver.sendKeysSlowly(zipEl, order.buyer_zip_postal_code.substring(0, 5));
+		Thread.sleep(250);
 
 		Thread.sleep(15000);
 
 		final String phoneNum = order.buyer_phone_number == null ? null : order.buyer_phone_number.replaceAll("\\D", "");
 		if(phoneNum != null) {
 			System.out.println("Entering buyer phone number: " + phoneNum);
-			driver.executeScript("document.getElementById('phoneId').setAttribute('value', '"+phoneNum+"')");
+			final WebElement phoneNumEl = driver.findElement(By.id("phoneId"));
+			phoneNumEl.clear();
+			Thread.sleep(250);
+			driver.sendKeysSlowly(phoneNumEl, phoneNum);
+			Thread.sleep(250);
 		}
 
+		System.out.println("Entering city: " + order.buyer_city);
+		final WebElement cityEl = driver.findElement(By.id("cityId"));
+		cityEl.clear();
+		Thread.sleep(250);
+		driver.sendKeysSlowly(cityEl, order.buyer_city);
+		Thread.sleep(250);
+
 		System.out.println("Entering email: " + EMAIL);
-		driver.findElement(By.id("emailId")).sendKeys(EMAIL);
+		final WebElement emailEl = driver.findElement(By.id("emailId"));
+		emailEl.clear();
+		Thread.sleep(250);
+		driver.sendKeysSlowly(emailEl, EMAIL);
 
 		System.out.println("Unchecking save address box");
 		driver.executeScript("document.getElementById('save-address-modal').checked = false");
@@ -220,7 +259,6 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		try {
 			driver.findElement(By.cssSelector("#entered-address input")).click();
 			driver.findElement(By.id("costcoModalBtn2")).click();
-			clickContinueToPayment();
 		} finally {
 			driver.resetImplicitWait();
 		}
@@ -234,6 +272,107 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 	private void clickContinueToReviewOrder() {
 		System.out.println("Clicking continue to review order...");
 		driver.findElement(By.cssSelector("#order-summary-body input[name=\"place-order\"]")).click();
+	}
+
+	private ProcessedOrder verifyAndPlaceOrder(final CustomerOrder order, final FulfillmentListing fulfillmentListing) {
+		driver.setImplicitWait(30);
+		final ProcessedOrder.Builder builder = new ProcessedOrder.Builder()
+				.customer_order_id(order.id)
+				.fulfillment_account_id(account.id)
+				.fulfillment_listing_id(fulfillmentListing.id);
+
+		verifyShippingInfo(order);
+		System.out.println("Shipping info has been verified...");
+
+		verifyFinancials(order, fulfillmentListing, builder);
+		System.out.println("Financials have been verified...");
+
+		System.out.println("Verifications have been completed - Placing order...");
+		return null;//placeOrder(builder);
+	}
+
+	private void verifyShippingInfo(final CustomerOrder order) {
+		List<WebElement> addressElements = driver.findElements(By.cssSelector("#address-block-shipping > .address-display .ctHidden"));
+
+		this.startLoop();
+		while(addressElements.isEmpty() && !this.hasExceededThreshold()) {
+			addressElements = driver.findElements(By.cssSelector("#address-block-shipping > .address-display .ctHidden"));
+		}
+
+		String shippingInfo = "";
+		for(final WebElement el : addressElements) {
+			shippingInfo += el.getText().toLowerCase().trim() + " ";
+		}
+
+		if(!shippingInfo.contains(order.getFirstName().toLowerCase())) {
+			throw new OrderExecutionException("Shipping info does not contain first name: " + order.getFirstName() + " is not in (" + shippingInfo + ")");
+		}
+
+		if(!shippingInfo.contains(order.getLastName().toLowerCase())) {
+			throw new OrderExecutionException("Shipping info does not contain last name: " + order.getLastName() + " is not in (" + shippingInfo + ")");
+		}
+
+		if(!shippingInfo.contains(order.buyer_street_address.toLowerCase())) {
+			throw new OrderExecutionException("Shipping info does not contain buyer street address: " + order.buyer_street_address + " is not in (" + shippingInfo + ")");
+		}
+
+		if(!shippingInfo.contains(order.buyer_city.toLowerCase())) {
+			throw new OrderExecutionException("Shipping info does not contain buyer city: " + order.buyer_city + " is not in (" + shippingInfo + ")");
+		}
+
+		if(!shippingInfo.contains(order.buyer_state_province_region.toLowerCase())) {
+			throw new OrderExecutionException("Shipping info does not contain buyer state: " + order.buyer_state_province_region + " is not in (" + shippingInfo + ")");
+		}
+
+		if(!shippingInfo.contains(order.buyer_zip_postal_code.toLowerCase())) {
+			throw new OrderExecutionException("Shipping info does not contain buyer zip: " + order.buyer_zip_postal_code + " is not in (" + shippingInfo + ")");
+		}
+	}
+
+	private void verifyFinancials(final CustomerOrder order, final FulfillmentListing listing, final ProcessedOrder.Builder builder) {
+		final double totalPrice = Double.parseDouble(driver.findElement(By.id("outstandingPrincipal")).getAttribute("value"));
+		System.out.println("total price: " + totalPrice);
+		final double profit = order.getProfit(totalPrice);
+		System.out.println("profit: " + profit);
+
+		if(profit < 0) {
+			throw new OrderExecutionException("WARNING: POTENTIAL FULFILLMENT AT LOSS for fulfillment listing " + listing.id
+					+ "! PROFIT: $" + order.getProfit(profit));
+		}
+
+		final WebElement orderSummaryEl = driver.findElement(By.id("order-summary-body"));
+		final WebElement detailsBlock = orderSummaryEl.findElement(By.className("dl-horizontal"));
+		final List<WebElement> dtEls = detailsBlock.findElements(By.tagName("dt"));
+		final List<WebElement> ddEls = detailsBlock.findElements(By.tagName("dd"));
+		for(int i = 0; i < dtEls.size(); i++) {
+			final String title = dtEls.get(i).getText().toLowerCase();
+			if(title.contains("subtotal")) {
+				final double subtotal = Double.parseDouble(ddEls.get(i).getText().substring(1));
+				System.out.println("subtotal: " + subtotal);
+				builder.buy_subtotal(subtotal);
+			} else if(title.contains("shipping")) {
+				final double shipping = Double.parseDouble(ddEls.get(i).getText().substring(1));
+				System.out.println("shipping: " + shipping);
+				builder.buy_shipping(shipping);
+			} else if(title.contains("tax")) {
+				final double tax = Double.parseDouble(ddEls.get(i).getText().substring(1));
+				System.out.println("tax: " + tax);
+				builder.buy_sales_tax(tax);
+			}
+		}
+
+		builder
+			.buy_total(totalPrice)
+			.profit(profit);
+	}
+
+	private ProcessedOrder placeOrder(final ProcessedOrder.Builder builder) {
+		driver.findElement(By.cssSelector("input[name=\"place-order\"]")).click();
+		driver.setImplicitWait(60);
+
+		//parse transaction id....
+
+		return builder.build();
 	}
 
 	private WebElement narrowCartToTargetItem(final FulfillmentListing fulfillmentListing, final Supplier<List<WebElement>> orderItems) throws Exception {

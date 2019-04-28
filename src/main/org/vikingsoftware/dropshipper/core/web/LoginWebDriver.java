@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.NoSuchSessionException;
 import org.openqa.selenium.UnableToSetCookieException;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 
@@ -82,6 +83,14 @@ public abstract class LoginWebDriver extends ChromeDriver {
 
 	public void clearCachedSelectedOrderOptions() {
 		cachedOrderOptions.clear();
+	}
+
+	public void sendKeysSlowly(final WebElement el, final String keys) throws InterruptedException {
+		final char[] chars = keys.toCharArray();
+		for(final char character : chars) {
+			el.sendKeys(""+character);
+			Thread.sleep(150);
+		}
 	}
 
 	private boolean prepareForExecutionViaLogin() {
