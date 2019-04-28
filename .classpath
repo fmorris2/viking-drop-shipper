@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" output="target/classes" path="src">
+		<attributes>
+			<attribute name="optional" value="true"/>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="lib" path="lib/com.DeathByCaptcha.jar"/>
+	<classpathentry kind="lib" path="lib/org.base64.jar"/>
+	<classpathentry kind="lib" path="lib/org.json.jar"/>
+	<classpathentry kind="lib" path="lib/ebaycalls.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="file:/C:/Users/Freddy/Documents/eBaySDKJava1085/docs/LibRef/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="lib/ebaysdkcore.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="file:/C:/Users/Freddy/Documents/eBaySDKJava1085/docs/LibRef/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="lib/helper.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="file:/C:/Users/Freddy/Documents/eBaySDKJava1085/docs/LibRef/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="lib/externalLib/activation.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/FastInfoset.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/http.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/jakarta-oro-2.0.8.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/jaxb-api.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/jaxb-impl.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/jaxb-xjc.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/jaxws-api.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/jaxws-rt.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/jaxws-tools.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/jsr173_api.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/jsr181-api.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/jsr250-api.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/mimepull.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/resolver.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/saaj-api.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/saaj-impl.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/serializer.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/sjsxp.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/slf4j-api-1.6.1.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/slf4j-log4j12-1.6.1.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/stax-ex.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/streambuffer.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/xalan.jar"/>
+	<classpathentry kind="lib" path="lib/externalLib/log4j-1.2.16.jar"/>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>

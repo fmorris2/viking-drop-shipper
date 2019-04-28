@@ -4,8 +4,11 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.InvalidElementStateException;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
@@ -19,6 +22,7 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.AbstractOrder
 public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy<CostcoWebDriver> {
 
 	private static final String EMAIL = "wholesale@vikingsoftware.org";
+	private static final String TOKEN_CVV = "983";
 
 	@Override
 	protected Class<CostcoDriverSupplier> getDriverSupplierClass() {
@@ -40,8 +44,11 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		clickCheckout();
 
 		enterShippingDetails(order, fulfillmentListing);
+		useSelectedAddress();
 		verifyPriceOnShippingPage(order, fulfillmentListing);
 		clickContinueToPayment();
+		enterCVV();
+		clickContinueToReviewOrder();
 		return null;
 	}
 
@@ -91,7 +98,14 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		final WebElement qty = targetOrderItem.findElement(By.id("quantity_1"));
 		if(!qty.getAttribute("value").equals(Integer.toString(order.fulfillment_purchase_quantity))) {
 			System.out.println("Cart quantity for " + fulfillmentListing.item_id + " is not correct. Editing...");
-			qty.clear();
+			try {
+				qty.clear();
+			} catch(final InvalidElementStateException e) {
+				System.out.println("Qty clear button is not interactable. Retrying...");
+				Thread.sleep(1000);
+				adjustAndVerifyQty(order, fulfillmentListing, targetOrderItem);
+				return;
+			}
 			qty.sendKeys(Integer.toString(order.fulfillment_purchase_quantity));
 			final int oldQty = getNumCartItems();
 			qty.sendKeys(Keys.TAB);
@@ -127,8 +141,20 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 	}
 
 	private void enterShippingDetails(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws InterruptedException {
-		System.out.println("Slight delay before entering shipping info...");
-		Thread.sleep(15000);
+		System.out.println("Clicking change address...");
+		driver.setImplicitWait(30);
+		try {
+			driver.findElement(By.cssSelector("#address-block-shipping > .right > a")).click();
+		} catch(final WebDriverException e) {
+			if(!(e instanceof NoSuchElementException)) {
+				Thread.sleep(1000);
+				System.out.println("Could not click change address... retrying.");
+				enterShippingDetails(order, fulfillmentListing);
+				return;
+			}
+		}
+		System.out.println("Clicking add new address");
+		driver.findElement(By.cssSelector(".address-choose-header a")).click();
 
 		System.out.println("Entering buyer first name: " + order.getFirstName());
 		driver.findElement(By.id("firstId")).sendKeys(order.getFirstName());
@@ -158,8 +184,10 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		driver.findElement(By.id("emailId")).sendKeys(EMAIL);
 
 		System.out.println("Unchecking save address box");
-		driver.executeScript("document.getElementById('save-address-inline').checked = false");
-		driver.executeScript("document.getElementById('set-default-inline').checked = false");
+		driver.executeScript("document.getElementById('save-address-modal').checked = false");
+		driver.executeScript("document.getElementById('set-default-modal').checked = false");
+
+		driver.findElement(By.id("costcoModalBtn2")).click();
 	}
 
 	private void verifyPriceOnShippingPage(final CustomerOrder order, final FulfillmentListing fulfillmentListing) {
@@ -174,9 +202,38 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		System.out.println("\tVerified.");
 	}
 
-	private void clickContinueToPayment() {
+	private void clickContinueToPayment() throws InterruptedException {
 		System.out.println("Continuing to payment...");
-		driver.findElement(By.cssSelector(".big-green[name=\"place-order\"]")).click();
+		try {
+			driver.findElement(By.cssSelector(".big-green[name=\"place-order\"]")).click();
+		} catch(final WebDriverException e) {
+			if(!(e instanceof NoSuchElementException)) {
+				Thread.sleep(1000);
+				System.out.println("Could not click continue to payment. Retrying...");
+				clickContinueToPayment();
+			}
+		}
+	}
+
+	private void useSelectedAddress() throws InterruptedException {
+		driver.setImplicitWait(30);
+		try {
+			driver.findElement(By.cssSelector("#entered-address input")).click();
+			driver.findElement(By.id("costcoModalBtn2")).click();
+			clickContinueToPayment();
+		} finally {
+			driver.resetImplicitWait();
+		}
+	}
+
+	private void enterCVV() {
+		System.out.println("Entering CVV...");
+		driver.findElement(By.cssSelector("#cc_cvv_div iframe")).sendKeys(TOKEN_CVV);
+	}
+
+	private void clickContinueToReviewOrder() {
+		System.out.println("Clicking continue to review order...");
+		driver.findElement(By.cssSelector("#order-summary-body input[name=\"place-order\"]")).click();
 	}
 
 	private WebElement narrowCartToTargetItem(final FulfillmentListing fulfillmentListing, final Supplier<List<WebElement>> orderItems) throws Exception {
@@ -185,7 +242,16 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 			if(!fulfillmentListing.item_id.equalsIgnoreCase(itemNum)) {
 				System.out.println("Removing invalid item from cart: " + itemNum);
 				final int oldNumCartItems = getNumCartItems();
-				item.findElement(By.className("remove-link")).click();
+				try {
+					item.findElement(By.className("remove-link")).click();
+				} catch(final WebDriverException e) {
+					if(!(e instanceof NoSuchElementException)) {
+						Thread.sleep(1000);
+						System.out.println("Failed to click remove link... Retrying");
+						return narrowCartToTargetItem(fulfillmentListing, orderItems);
+					}
+
+				}
 				waitForCartUpdate(oldNumCartItems);
 			}
 		}
