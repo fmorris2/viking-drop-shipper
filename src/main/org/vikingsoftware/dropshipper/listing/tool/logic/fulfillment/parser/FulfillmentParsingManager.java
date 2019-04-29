@@ -5,10 +5,12 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAcco
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.impl.AliExpressFulfillmentParser;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.impl.CostcoFulfillmentParser;
 
 public class FulfillmentParsingManager {
 
-	private static FulfillmentAccount aliExpressAccount = FulfillmentAccountManager.get().peekAccount(FulfillmentPlatforms.ALI_EXPRESS);
+	private static final FulfillmentAccount aliExpressAccount = FulfillmentAccountManager.get().peekAccount(FulfillmentPlatforms.ALI_EXPRESS);
+	private static final FulfillmentAccount costcoAccount = FulfillmentAccountManager.get().peekAccount(FulfillmentPlatforms.COSTCO);
 
 	private FulfillmentParsingManager() {
 
@@ -18,6 +20,10 @@ public class FulfillmentParsingManager {
 		if(url != null) {
 			if(url.contains("aliexpress.com")) {
 				return AliExpressFulfillmentParser.get().getListingTemplate(aliExpressAccount, url);
+			}
+
+			if(url.contains("costco.com")) {
+				return CostcoFulfillmentParser.get().getListingTemplate(costcoAccount, url);
 			}
 		}
 

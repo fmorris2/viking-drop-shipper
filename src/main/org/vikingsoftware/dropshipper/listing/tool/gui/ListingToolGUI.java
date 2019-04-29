@@ -13,11 +13,24 @@ public class ListingToolGUI extends javax.swing.JFrame {
 
 	private static final long serialVersionUID = 7954579463528571026L;
 
+	private static ListingToolGUI instance;
+	private static ListingToolController controller;
+
 	/**
      * Creates new form GUI
      */
-    public ListingToolGUI() {
+    private ListingToolGUI() {
         initComponents();
+    }
+
+    public static synchronized ListingToolGUI get() {
+    	if(instance == null) {
+    		instance = new ListingToolGUI();
+    		controller = new ListingToolController();
+    		controller.addListeners();
+    	}
+
+    	return instance;
     }
 
     /**
@@ -201,7 +214,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
         queueSizeValue.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
         queueSizeValue.setForeground(new java.awt.Color(0, 0, 255));
         queueSizeValue.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        queueSizeValue.setText("372");
+        queueSizeValue.setText("0");
         getContentPane().add(queueSizeValue);
         queueSizeValue.setBounds(342, 45, 30, 14);
 
@@ -298,30 +311,30 @@ public class ListingToolGUI extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel addFullfillmentHeaderText;
-    private javax.swing.JComboBox categoryBox;
-    private javax.swing.JLabel categoryTitleHeaderText;
-    private javax.swing.JLabel descriptionTitleHeaderText;
-    private javax.swing.JTextField fulfillmentUrlInput;
-    private javax.swing.JButton fullfillmentFileBtn;
-    private javax.swing.JLabel fullfillmentsTitleHeaderText;
-    private javax.swing.JLabel generalInformationHeaderText1;
-    private javax.swing.JLabel imagesHeaderText;
-    private javax.swing.JPanel imagesPanel;
-    private javax.swing.JScrollPane imagesScrollPane;
-    private javax.swing.JLabel listingTitleHeaderText;
-    private javax.swing.JTextField listingTitleInput;
-    private javax.swing.JButton publishListingBtn;
-    private javax.swing.JLabel queueSizeLabelText;
-    private javax.swing.JLabel queueSizeValue;
-    private javax.swing.JTextArea rawDescInput;
-    private javax.swing.JScrollPane rawDescScrollPane;
-    private javax.swing.JEditorPane renderedDescPane;
-    private javax.swing.JScrollPane renderedDescScrollPane;
-    private javax.swing.JButton skipListingBtn;
-    private javax.swing.JLabel statusText;
-    private javax.swing.JLabel variationsHeaderText;
-    private javax.swing.JScrollPane variationsScrollPane;
-    private javax.swing.JTable variationsTable;
+    public javax.swing.JLabel addFullfillmentHeaderText;
+    public javax.swing.JComboBox categoryBox;
+    public javax.swing.JLabel categoryTitleHeaderText;
+    public javax.swing.JLabel descriptionTitleHeaderText;
+    public javax.swing.JTextField fulfillmentUrlInput;
+    public javax.swing.JButton fullfillmentFileBtn;
+    public javax.swing.JLabel fullfillmentsTitleHeaderText;
+    public javax.swing.JLabel generalInformationHeaderText1;
+    public javax.swing.JLabel imagesHeaderText;
+    public javax.swing.JPanel imagesPanel;
+    public javax.swing.JScrollPane imagesScrollPane;
+    public javax.swing.JLabel listingTitleHeaderText;
+    public javax.swing.JTextField listingTitleInput;
+    public javax.swing.JButton publishListingBtn;
+    public javax.swing.JLabel queueSizeLabelText;
+    public javax.swing.JLabel queueSizeValue;
+    public javax.swing.JTextArea rawDescInput;
+    public javax.swing.JScrollPane rawDescScrollPane;
+    public javax.swing.JEditorPane renderedDescPane;
+    public javax.swing.JScrollPane renderedDescScrollPane;
+    public javax.swing.JButton skipListingBtn;
+    public javax.swing.JLabel statusText;
+    public javax.swing.JLabel variationsHeaderText;
+    public javax.swing.JScrollPane variationsScrollPane;
+    public javax.swing.JTable variationsTable;
     // End of variables declaration//GEN-END:variables
 }
