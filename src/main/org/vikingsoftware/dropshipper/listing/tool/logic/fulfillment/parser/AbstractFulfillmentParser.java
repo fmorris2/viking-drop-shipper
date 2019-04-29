@@ -18,7 +18,6 @@ public abstract class AbstractFulfillmentParser<T extends LoginWebDriver> implem
 	@Override
 	public Listing getListingTemplate(final FulfillmentAccount account, final String url) {
 		DriverSupplier<T> supplier = null;
-		T driver = null;
 
 		try {
 			supplier = BrowserRepository.get().request(getDriverSupplierClass());

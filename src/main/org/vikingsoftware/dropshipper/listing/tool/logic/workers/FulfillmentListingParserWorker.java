@@ -8,6 +8,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
 import main.org.vikingsoftware.dropshipper.listing.tool.gui.ListingToolGUI;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.FulfillmentParsingManager;
 
 public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
@@ -51,8 +52,10 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 	protected Void doInBackground() throws Exception {
 		while(true) {
 			if(!urlQueue.isEmpty()) {
-				FulfillmentParsingManager.parseListing(urlQueue.peek());
-				urlQueue.poll();
+				final Listing listing = FulfillmentParsingManager.parseListing(urlQueue.peek());
+				if(listing != null) {
+					urlQueue.poll();
+				}
 				updateQueueSizeLabel();
 			}
 			Thread.sleep(CYCLE_TIME);

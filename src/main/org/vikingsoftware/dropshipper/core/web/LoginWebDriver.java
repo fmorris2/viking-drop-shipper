@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.NoSuchSessionException;
@@ -83,6 +84,18 @@ public abstract class LoginWebDriver extends ChromeDriver {
 
 	public void clearCachedSelectedOrderOptions() {
 		cachedOrderOptions.clear();
+	}
+
+	public String waitForTextToAppear(final Supplier<WebElement> element, final long ms) {
+		final long start = System.currentTimeMillis();
+		while(System.currentTimeMillis() - start < ms) {
+			final String txt = element.get().getText();
+			if(txt != null && !txt.isEmpty()) {
+				return txt;
+			}
+		}
+
+		return null;
 	}
 
 	public void sendKeysSlowly(final WebElement el, final String keys) throws InterruptedException {
