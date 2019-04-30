@@ -26,7 +26,7 @@ public class CostcoFulfillmentStockChecker extends AbstractFulfillmentStockCheck
 	protected int parseItemStock(CostcoWebDriver driver) {
 		int stock = 0;
 		final String pageSource = driver.getPageSource();
-		final Pattern pattern = Pattern.compile("\"ordinal\" : \"(.+)\",)");
+		final Pattern pattern = Pattern.compile("\"ordinal\" : \"(.+)\",");
 		final Matcher matcher = pattern.matcher(pageSource);
 		if(matcher.find()) {
 			stock = (int)Double.parseDouble(matcher.group(1));

@@ -9,6 +9,7 @@ import javax.swing.SwingWorker;
 
 import main.org.vikingsoftware.dropshipper.listing.tool.gui.ListingToolGUI;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingQueue;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.FulfillmentParsingManager;
 
 public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
@@ -33,7 +34,6 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 
 	public void addUrlToQueue(final String url) {
 		urlQueue.add(url);
-		updateQueueSizeLabel();
 	}
 
 	public void updateStatus(final String status) {
@@ -54,16 +54,15 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 			if(!urlQueue.isEmpty()) {
 				final Listing listing = FulfillmentParsingManager.parseListing(urlQueue.peek());
 				if(listing != null) {
+					final boolean shouldDisplayListing = ListingQueue.isEmpty();
+					ListingQueue.add(listing);
+					if(shouldDisplayListing) {
+						ListingToolGUI.getController().displayNextListing();
+					}
 					urlQueue.poll();
 				}
-				updateQueueSizeLabel();
 			}
 			Thread.sleep(CYCLE_TIME);
 		}
 	}
-
-	private void updateQueueSizeLabel() {
-		SwingUtilities.invokeLater(() -> ListingToolGUI.get().queueSizeValue.setText(Integer.toString(urlQueue.size())));
-	}
-
 }

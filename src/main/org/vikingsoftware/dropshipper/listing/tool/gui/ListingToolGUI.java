@@ -5,6 +5,20 @@
  */
 package main.org.vikingsoftware.dropshipper.listing.tool.gui;
 
+import java.awt.Font;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import javax.swing.JLabel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingUtilities;
+
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingQueue;
+
 /**
  *
  * @author Bren
@@ -15,6 +29,10 @@ public class ListingToolGUI extends javax.swing.JFrame {
 
 	private static ListingToolGUI instance;
 	private static ListingToolController controller;
+
+	private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
+	public double originalListingPrice;
 
 	/**
      * Creates new form GUI
@@ -31,6 +49,11 @@ public class ListingToolGUI extends javax.swing.JFrame {
     	}
 
     	return instance;
+    }
+
+    public void updateListingPriceWithMargin() {
+    	final double priceWithMargin = originalListingPrice * (1.00 + ((double)targetMarginSpinner.getValue() / 100));
+    	priceSpinner.setValue(priceWithMargin);
     }
 
     /**
@@ -53,13 +76,30 @@ public class ListingToolGUI extends javax.swing.JFrame {
         generalInformationHeaderText1 = new javax.swing.JLabel();
         listingTitleInput = new javax.swing.JTextField();
         listingTitleHeaderText = new javax.swing.JLabel();
-        categoryTitleHeaderText = new javax.swing.JLabel();
-        categoryBox = new javax.swing.JComboBox();
+        priceHeaderText = new javax.swing.JLabel();
+        priceSpinner = new JSpinner();
+        targetMarginSpinner = new JSpinner();
+        targetMarginSpinner.addChangeListener(e -> updateListingPriceWithMargin());
+        targetMarginText = new JLabel();
         descriptionTitleHeaderText = new javax.swing.JLabel();
         renderedDescScrollPane = new javax.swing.JScrollPane();
         renderedDescPane = new javax.swing.JEditorPane();
+        renderedDescPane.setEditable(false);
         rawDescScrollPane = new javax.swing.JScrollPane();
         rawDescInput = new javax.swing.JTextArea();
+        rawDescInput.addKeyListener(new KeyAdapter() {
+        	@Override
+        	public void keyTyped(KeyEvent e) {
+        		executor.submit(() -> {
+        			try {
+						Thread.sleep(200);
+					} catch (final InterruptedException e1) {
+						e1.printStackTrace();
+					}
+        			SwingUtilities.invokeLater(() -> renderedDescPane.setText(rawDescInput.getText()));
+        		});
+        	}
+        });
         addFullfillmentHeaderText = new javax.swing.JLabel();
         fullfillmentsTitleHeaderText = new javax.swing.JLabel();
         queueSizeValue = new javax.swing.JLabel();
@@ -120,6 +160,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
         variationsHeaderText.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
         getContentPane().add(variationsHeaderText);
         variationsHeaderText.setBounds(820, 10, 110, 24);
+        variationsHeaderText.setVisible(false);
 
         variationsScrollPane.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(51, 51, 51), 2));
 
@@ -138,6 +179,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
 
         getContentPane().add(variationsScrollPane);
         variationsScrollPane.setBounds(820, 40, 370, 160);
+        variationsScrollPane.setVisible(false);
 
         imagesHeaderText.setFont(new java.awt.Font("SansSerif", 0, 18)); // NOI18N
         imagesHeaderText.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
@@ -162,16 +204,27 @@ public class ListingToolGUI extends javax.swing.JFrame {
         getContentPane().add(listingTitleHeaderText);
         listingTitleHeaderText.setBounds(390, 45, 34, 14);
 
-        categoryTitleHeaderText.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
-        categoryTitleHeaderText.setText("CATEGORY");
-        getContentPane().add(categoryTitleHeaderText);
-        categoryTitleHeaderText.setBounds(390, 122, 70, 14);
+        priceHeaderText.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
+        priceHeaderText.setText("PRICE");
+        getContentPane().add(priceHeaderText);
+        priceHeaderText.setBounds(390, 122, 70, 14);
 
-        categoryBox.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
-        categoryBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        categoryBox.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(51, 51, 51), 2));
-        getContentPane().add(categoryBox);
-        categoryBox.setBounds(390, 140, 420, 30);
+        priceSpinner.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        priceSpinner.setModel(new SpinnerNumberModel(0.00, 0.00, Double.MAX_VALUE, 1D));
+        priceSpinner.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(51, 51, 51), 2));
+        getContentPane().add(priceSpinner);
+        priceSpinner.setBounds(390, 140, 420, 30);
+
+        targetMarginText.setFont(new Font("SansSerif", 1, 11));
+        targetMarginText.setText("TARGET MARGIN (%)");
+        getContentPane().add(targetMarginText);
+        targetMarginText.setBounds(820, 122, 150, 14);
+
+        targetMarginSpinner.setFont(new Font("SansSerif", 0, 14));
+        targetMarginSpinner.setModel(new SpinnerNumberModel(25.00, 14.00, Double.MAX_VALUE, 1D));
+        targetMarginSpinner.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(51, 51, 51), 2));
+        getContentPane().add(targetMarginSpinner);
+        targetMarginSpinner.setBounds(820, 140, 350, 30);
 
         descriptionTitleHeaderText.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
         descriptionTitleHeaderText.setText("DESCRIPTION");
@@ -250,7 +303,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
         publishListingBtn.setBounds(240, 140, 135, 40);
 
         statusText.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
-        statusText.setText("AliExpressParser: Scraping images (2/6)");
+        statusText.setText("Ready");
         statusText.setVerticalAlignment(javax.swing.SwingConstants.TOP);
         getContentPane().add(statusText);
         statusText.setBounds(10, 95, 360, 40);
@@ -267,53 +320,27 @@ public class ListingToolGUI extends javax.swing.JFrame {
     }//GEN-LAST:event_fulfillmentUrlInputActionPerformed
 
     private void skipListingBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_skipListingBtnActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_skipListingBtnActionPerformed
+    	System.out.println("Skip Listing!");
+    	ListingQueue.poll();
+        controller.displayNextListing();
+    }
 
     private void publishListingBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_publishListingBtnActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_publishListingBtnActionPerformed
+    	System.out.println("Publish listing!");
+    	final Listing listing = ListingQueue.poll();
+    	controller.displayNextListing();
+    }
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
-         */
-        try {
-            for (final javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (final ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(ListingToolGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (final InstantiationException ex) {
-            java.util.logging.Logger.getLogger(ListingToolGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (final IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(ListingToolGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (final javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(ListingToolGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            @Override
-			public void run() {
-                new ListingToolGUI().setVisible(true);
-            }
-        });
+    public static ListingToolController getController() {
+    	return controller;
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     public javax.swing.JLabel addFullfillmentHeaderText;
-    public javax.swing.JComboBox categoryBox;
-    public javax.swing.JLabel categoryTitleHeaderText;
+    public javax.swing.JSpinner priceSpinner;
+    public javax.swing.JLabel priceHeaderText;
+    public JSpinner targetMarginSpinner;
+    public JLabel targetMarginText;
     public javax.swing.JLabel descriptionTitleHeaderText;
     public javax.swing.JTextField fulfillmentUrlInput;
     public javax.swing.JButton fullfillmentFileBtn;

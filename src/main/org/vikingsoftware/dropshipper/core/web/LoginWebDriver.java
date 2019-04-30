@@ -90,6 +90,7 @@ public abstract class LoginWebDriver extends ChromeDriver {
 		final long start = System.currentTimeMillis();
 		while(System.currentTimeMillis() - start < ms) {
 			final String txt = element.get().getText();
+			System.out.println("txt: " + txt);
 			if(txt != null && !txt.isEmpty()) {
 				return txt;
 			}

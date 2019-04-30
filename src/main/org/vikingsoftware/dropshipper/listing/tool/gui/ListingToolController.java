@@ -5,6 +5,8 @@ import java.awt.event.KeyEvent;
 
 import javax.swing.SwingUtilities;
 
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingQueue;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.workers.FulfillmentListingParserWorker;
 
 public class ListingToolController {
@@ -13,6 +15,29 @@ public class ListingToolController {
 
 	public void addListeners() {
 		gui.fulfillmentUrlInput.addKeyListener(createFulfillmentUrlKeyAdapter());
+	}
+
+	public void displayNextListing() {
+		final Listing listing = ListingQueue.peek();
+		if(listing != null) {
+			SwingUtilities.invokeLater(() -> {
+				gui.listingTitleInput.setText(listing.title);
+				gui.rawDescInput.setText(listing.description);
+				gui.renderedDescPane.setText(listing.description);
+
+				gui.originalListingPrice = listing.price;
+				gui.updateListingPriceWithMargin();
+			});
+		} else {
+			SwingUtilities.invokeLater(() -> {
+				gui.listingTitleInput.setText("");
+				gui.rawDescInput.setText("");
+				gui.renderedDescPane.setText("");
+
+				gui.originalListingPrice = 0;
+				gui.updateListingPriceWithMargin();
+			});
+		}
 	}
 
 	private KeyAdapter createFulfillmentUrlKeyAdapter() {
