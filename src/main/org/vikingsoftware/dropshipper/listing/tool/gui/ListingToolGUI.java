@@ -6,18 +6,10 @@
 package main.org.vikingsoftware.dropshipper.listing.tool.gui;
 
 import java.awt.Font;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.swing.JLabel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingUtilities;
-
-import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
-import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingQueue;
 
 /**
  *
@@ -29,10 +21,6 @@ public class ListingToolGUI extends javax.swing.JFrame {
 
 	private static ListingToolGUI instance;
 	private static ListingToolController controller;
-
-	private final ExecutorService executor = Executors.newSingleThreadExecutor();
-
-	public double originalListingPrice;
 
 	/**
      * Creates new form GUI
@@ -51,11 +39,6 @@ public class ListingToolGUI extends javax.swing.JFrame {
     	return instance;
     }
 
-    public void updateListingPriceWithMargin() {
-    	final double priceWithMargin = originalListingPrice * (1.00 + ((double)targetMarginSpinner.getValue() / 100));
-    	priceSpinner.setValue(priceWithMargin);
-    }
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -69,9 +52,6 @@ public class ListingToolGUI extends javax.swing.JFrame {
         imagesPanel = new javax.swing.JPanel();
         fulfillmentUrlInput = new javax.swing.JTextField();
         fullfillmentFileBtn = new javax.swing.JButton();
-        variationsHeaderText = new javax.swing.JLabel();
-        variationsScrollPane = new javax.swing.JScrollPane();
-        variationsTable = new javax.swing.JTable();
         imagesHeaderText = new javax.swing.JLabel();
         generalInformationHeaderText1 = new javax.swing.JLabel();
         listingTitleInput = new javax.swing.JTextField();
@@ -79,7 +59,6 @@ public class ListingToolGUI extends javax.swing.JFrame {
         priceHeaderText = new javax.swing.JLabel();
         priceSpinner = new JSpinner();
         targetMarginSpinner = new JSpinner();
-        targetMarginSpinner.addChangeListener(e -> updateListingPriceWithMargin());
         targetMarginText = new JLabel();
         descriptionTitleHeaderText = new javax.swing.JLabel();
         renderedDescScrollPane = new javax.swing.JScrollPane();
@@ -87,19 +66,6 @@ public class ListingToolGUI extends javax.swing.JFrame {
         renderedDescPane.setEditable(false);
         rawDescScrollPane = new javax.swing.JScrollPane();
         rawDescInput = new javax.swing.JTextArea();
-        rawDescInput.addKeyListener(new KeyAdapter() {
-        	@Override
-        	public void keyTyped(KeyEvent e) {
-        		executor.submit(() -> {
-        			try {
-						Thread.sleep(200);
-					} catch (final InterruptedException e1) {
-						e1.printStackTrace();
-					}
-        			SwingUtilities.invokeLater(() -> renderedDescPane.setText(rawDescInput.getText()));
-        		});
-        	}
-        });
         addFullfillmentHeaderText = new javax.swing.JLabel();
         fullfillmentsTitleHeaderText = new javax.swing.JLabel();
         queueSizeValue = new javax.swing.JLabel();
@@ -132,12 +98,6 @@ public class ListingToolGUI extends javax.swing.JFrame {
 
         fulfillmentUrlInput.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         fulfillmentUrlInput.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(51, 51, 51), 2));
-        fulfillmentUrlInput.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-                fulfillmentUrlInputActionPerformed(evt);
-            }
-        });
         getContentPane().add(fulfillmentUrlInput);
         fulfillmentUrlInput.setBounds(10, 62, 310, 30);
 
@@ -145,41 +105,8 @@ public class ListingToolGUI extends javax.swing.JFrame {
         fullfillmentFileBtn.setText("file");
         fullfillmentFileBtn.setBorder(null);
         fullfillmentFileBtn.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        fullfillmentFileBtn.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-                fullfillmentFileBtnActionPerformed(evt);
-            }
-        });
         getContentPane().add(fullfillmentFileBtn);
         fullfillmentFileBtn.setBounds(322, 62, 50, 30);
-
-        variationsHeaderText.setFont(new java.awt.Font("SansSerif", 0, 18)); // NOI18N
-        variationsHeaderText.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        variationsHeaderText.setText("Variations");
-        variationsHeaderText.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
-        getContentPane().add(variationsHeaderText);
-        variationsHeaderText.setBounds(820, 10, 110, 24);
-        variationsHeaderText.setVisible(false);
-
-        variationsScrollPane.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(51, 51, 51), 2));
-
-        variationsTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null}
-            },
-            new String [] {
-                "Price", "Color", "Length"
-            }
-        ));
-        variationsScrollPane.setViewportView(variationsTable);
-
-        getContentPane().add(variationsScrollPane);
-        variationsScrollPane.setBounds(820, 40, 370, 160);
-        variationsScrollPane.setVisible(false);
 
         imagesHeaderText.setFont(new java.awt.Font("SansSerif", 0, 18)); // NOI18N
         imagesHeaderText.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
@@ -221,7 +148,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
         targetMarginText.setBounds(820, 122, 150, 14);
 
         targetMarginSpinner.setFont(new Font("SansSerif", 0, 14));
-        targetMarginSpinner.setModel(new SpinnerNumberModel(25.00, 14.00, Double.MAX_VALUE, 1D));
+        targetMarginSpinner.setModel(new SpinnerNumberModel(25.00, 1.00, Double.MAX_VALUE, 1D));
         targetMarginSpinner.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(51, 51, 51), 2));
         getContentPane().add(targetMarginSpinner);
         targetMarginSpinner.setBounds(820, 140, 350, 30);
@@ -280,12 +207,6 @@ public class ListingToolGUI extends javax.swing.JFrame {
         skipListingBtn.setForeground(new java.awt.Color(255, 0, 0));
         skipListingBtn.setText("Skip Listing");
         skipListingBtn.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 0, 0)));
-        skipListingBtn.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-                skipListingBtnActionPerformed(evt);
-            }
-        });
         getContentPane().add(skipListingBtn);
         skipListingBtn.setBounds(165, 143, 70, 34);
 
@@ -293,12 +214,6 @@ public class ListingToolGUI extends javax.swing.JFrame {
         publishListingBtn.setForeground(new java.awt.Color(0, 153, 0));
         publishListingBtn.setText("Publish Listing");
         publishListingBtn.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 153, 0)));
-        publishListingBtn.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-                publishListingBtnActionPerformed(evt);
-            }
-        });
         getContentPane().add(publishListingBtn);
         publishListingBtn.setBounds(240, 140, 135, 40);
 
@@ -310,26 +225,6 @@ public class ListingToolGUI extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
-    private void fullfillmentFileBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fullfillmentFileBtnActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_fullfillmentFileBtnActionPerformed
-
-    private void fulfillmentUrlInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fulfillmentUrlInputActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_fulfillmentUrlInputActionPerformed
-
-    private void skipListingBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_skipListingBtnActionPerformed
-    	System.out.println("Skip Listing!");
-    	ListingQueue.poll();
-        controller.displayNextListing();
-    }
-
-    private void publishListingBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_publishListingBtnActionPerformed
-    	System.out.println("Publish listing!");
-    	final Listing listing = ListingQueue.poll();
-    	controller.displayNextListing();
-    }
 
     public static ListingToolController getController() {
     	return controller;
@@ -360,8 +255,5 @@ public class ListingToolGUI extends javax.swing.JFrame {
     public javax.swing.JScrollPane renderedDescScrollPane;
     public javax.swing.JButton skipListingBtn;
     public javax.swing.JLabel statusText;
-    public javax.swing.JLabel variationsHeaderText;
-    public javax.swing.JScrollPane variationsScrollPane;
-    public javax.swing.JTable variationsTable;
     // End of variables declaration//GEN-END:variables
 }

@@ -15,10 +15,13 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser
 public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 
 	private static final long CYCLE_TIME = 50;
+	private static final int LISTING_ATTEMPT_THRESHOLD = 3;
 
 	private static FulfillmentListingParserWorker instance;
 
 	private final Queue<String> urlQueue = new LinkedList<>();
+
+	private int attempts;
 
 	private FulfillmentListingParserWorker() {
 		execute();
@@ -60,6 +63,12 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 						ListingToolGUI.getController().displayNextListing();
 					}
 					urlQueue.poll();
+					attempts = 0;
+				} else if(attempts > LISTING_ATTEMPT_THRESHOLD) {
+					System.out.println("Failed to parse URL: " + urlQueue.poll());
+					attempts = 0;
+				} else {
+					attempts++;
 				}
 			}
 			Thread.sleep(CYCLE_TIME);

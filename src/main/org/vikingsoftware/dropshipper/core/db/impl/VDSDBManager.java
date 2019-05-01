@@ -4,19 +4,20 @@ import main.org.vikingsoftware.dropshipper.core.db.DBCredentialManager;
 import main.org.vikingsoftware.dropshipper.core.db.DBManager;
 
 public class VDSDBManager extends DBManager {
-	
+
 	private static VDSDBManager manager;
-	
+
 	public static VDSDBManager get() {
-		if(manager == null)
+		if(manager == null) {
 			manager = new VDSDBManager();
-		
+		}
+
 		return manager;
 	}
 
 	@Override
 	protected String getDBHost() {
-		return "vikingsoftware.org";
+		return "149.56.140.7";
 	}
 
 	@Override
