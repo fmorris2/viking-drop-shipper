@@ -85,7 +85,11 @@ public class FulfillmentManager {
 	public boolean prepareForFulfillment() {
 		load();
 		for(final FulfillmentPlatforms platform : FulfillmentPlatforms.values()) {
+			System.out.println("Generating strategy for " + platform);
 			final OrderExecutionStrategy strategy = platform.generateStrategy();
+			if(strategy == null) {
+				continue;
+			}
 			if(!strategy.prepareForExecution()) {
 				return false;
 			}

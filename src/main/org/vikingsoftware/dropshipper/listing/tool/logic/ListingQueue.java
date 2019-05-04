@@ -35,6 +35,6 @@ public final class ListingQueue {
 	}
 
 	private static void updateQueueSizeLabel() {
-		SwingUtilities.invokeLater(() -> ListingToolGUI.get().queueSizeValue.setText(Integer.toString(queue.size())));
+		SwingUtilities.invokeLater(() -> ListingToolGUI.get().parsedQueueSizeLabel.setText(Integer.toString(queue.size())));
 	}
 }

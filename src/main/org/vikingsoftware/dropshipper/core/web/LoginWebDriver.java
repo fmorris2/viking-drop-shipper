@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import org.openqa.selenium.Cookie;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchSessionException;
 import org.openqa.selenium.UnableToSetCookieException;
 import org.openqa.selenium.WebElement;
@@ -86,11 +87,15 @@ public abstract class LoginWebDriver extends ChromeDriver {
 		cachedOrderOptions.clear();
 	}
 
+	public void scrollIntoView(final WebElement el) {
+		final JavascriptExecutor jse = this;
+		jse.executeScript("arguments[0].scrollIntoView()", el);
+	}
+
 	public String waitForTextToAppear(final Supplier<WebElement> element, final long ms) {
 		final long start = System.currentTimeMillis();
 		while(System.currentTimeMillis() - start < ms) {
 			final String txt = element.get().getText();
-			System.out.println("txt: " + txt);
 			if(txt != null && !txt.isEmpty()) {
 				return txt;
 			}

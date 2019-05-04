@@ -289,7 +289,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 		System.out.println("Clicking save...");
 		final WebElement saveButton = driver.findElement(By.cssSelector(".sc-edit-tile-edit-form-actions > .sc-btn-primary"));
-		scrollIntoView(saveButton);
+		driver.scrollIntoView(saveButton);
 		saveButton.click();
 		Thread.sleep(2500); // wait for save
 		System.out.println("\tAddress has been saved.");
@@ -298,11 +298,6 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	private void scrollToTopOfPage() {
 		final JavascriptExecutor jse = driver;
 		jse.executeScript("window.scrollTo(0, 0)");
-	}
-
-	private void scrollIntoView(final WebElement el) {
-		final JavascriptExecutor jse = driver;
-		jse.executeScript("arguments[0].scrollIntoView()", el);
 	}
 
 	private void clearAndSendKeys(final WebElement el, final String str) throws InterruptedException {

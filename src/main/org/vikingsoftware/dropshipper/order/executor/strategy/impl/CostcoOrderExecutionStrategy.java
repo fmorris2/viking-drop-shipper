@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.ElementClickInterceptedException;
 import org.openqa.selenium.InvalidElementStateException;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
@@ -12,9 +13,12 @@ import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.CostcoDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.web.costco.CostcoWebDriver;
 import main.org.vikingsoftware.dropshipper.order.executor.error.OrderExecutionException;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.AbstractOrderExecutionStrategy;
@@ -133,8 +137,15 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		System.out.println("Estimated order total has been verified in the cart.");
 	}
 
-	private void clickCheckout() {
-		driver.findElement(By.id("shopCartCheckoutSubmitButton")).click();
+	private void clickCheckout() throws InterruptedException {
+		try {
+			driver.findElement(By.id("shopCartCheckoutSubmitButton")).click();
+		} catch(final ElementClickInterceptedException e) {
+			e.printStackTrace();
+			Thread.sleep(1000);
+			clickCheckout();
+			return;
+		}
 		driver.setImplicitWait(30);
 		try {
 			System.out.println("Waiting for checkout shipping screen to appear");
@@ -264,7 +275,8 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		}
 	}
 
-	private void enterCVV() {
+	private void enterCVV() throws InterruptedException {
+		Thread.sleep(3000);
 		System.out.println("Entering CVV...");
 		driver.findElement(By.cssSelector("#cc_cvv_div iframe")).sendKeys(TOKEN_CVV);
 	}
@@ -274,7 +286,7 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		driver.findElement(By.cssSelector("#order-summary-body input[name=\"place-order\"]")).click();
 	}
 
-	private ProcessedOrder verifyAndPlaceOrder(final CustomerOrder order, final FulfillmentListing fulfillmentListing) {
+	private ProcessedOrder verifyAndPlaceOrder(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws InterruptedException {
 		driver.setImplicitWait(30);
 		final ProcessedOrder.Builder builder = new ProcessedOrder.Builder()
 				.customer_order_id(order.id)
@@ -288,7 +300,7 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		System.out.println("Financials have been verified...");
 
 		System.out.println("Verifications have been completed - Placing order...");
-		return null;//placeOrder(builder);
+		return placeOrder(builder);
 	}
 
 	private void verifyShippingInfo(final CustomerOrder order) {
@@ -324,7 +336,7 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 			throw new OrderExecutionException("Shipping info does not contain buyer state: " + order.buyer_state_province_region + " is not in (" + shippingInfo + ")");
 		}
 
-		if(!shippingInfo.contains(order.buyer_zip_postal_code.toLowerCase())) {
+		if(!shippingInfo.contains(order.buyer_zip_postal_code.substring(0, 5).toLowerCase())) {
 			throw new OrderExecutionException("Shipping info does not contain buyer zip: " + order.buyer_zip_postal_code + " is not in (" + shippingInfo + ")");
 		}
 	}
@@ -354,6 +366,10 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 				final double shipping = Double.parseDouble(ddEls.get(i).getText().substring(1));
 				System.out.println("shipping: " + shipping);
 				builder.buy_shipping(shipping);
+			} else if(title.contains("fee")) {
+				final double fee = Double.parseDouble(ddEls.get(i).getText().substring(1));
+				System.out.println("fee: " + fee);
+				builder.buy_product_fees(fee);
 			} else if(title.contains("tax")) {
 				final double tax = Double.parseDouble(ddEls.get(i).getText().substring(1));
 				System.out.println("tax: " + tax);
@@ -366,11 +382,32 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 			.profit(profit);
 	}
 
-	private ProcessedOrder placeOrder(final ProcessedOrder.Builder builder) {
-		driver.findElement(By.cssSelector("input[name=\"place-order\"]")).click();
-		driver.setImplicitWait(60);
+	private ProcessedOrder placeOrder(final ProcessedOrder.Builder builder) throws InterruptedException {
+		final WebElement placeOrderButton = driver.findElement(By.cssSelector("input[name=\"place-order\"]"));
+		driver.scrollIntoView(placeOrderButton);
+		try {
+			placeOrderButton.click();
+		} catch(final WebDriverException e) {
+			e.printStackTrace();
+			Thread.sleep(1500);
+			return placeOrder(builder);
+		}
+		driver.setImplicitWait(90);
 
 		//parse transaction id....
+		try {
+			final String transactionId = driver.findElement(
+				By.cssSelector("#order-confirmation-body > div:nth-child(2) > div > div:nth-child(2) > p:nth-child(2)")).getText();
+			System.out.println("transactionId: " + transactionId);
+			builder.fulfillment_transaction_id(transactionId);
+		} catch(final Exception e) {
+			e.printStackTrace();
+			DBLogging.critical(getClass(), "failed to submit order: " + builder.build(), e);
+			//THIS IS VERY VERY BAD!!! COSTCO MIGHT HAVE CHANGED THEIR FRONT END? WE SHOULD NO LONGER PROCESS ORDERS
+			//AND WE SHOULD NOTIFY DEVELOPERS IMMEDIATELY
+			FulfillmentManager.freeze(FulfillmentPlatforms.COSTCO.getId());
+			System.out.println("Submitted an order, but we failed to parse whether it was a success or not. Freezing orders...");
+		}
 
 		return builder.build();
 	}
@@ -410,7 +447,7 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		final Supplier<List<WebElement>> pullLeftEls = () -> subtotalBlock.get().findElements(By.className("pull-left"));
 		try {
 			for(final WebElement el : pullLeftEls.get()) {
-				if(el.getText().contains("Items")) {
+				if(el.getText().contains("Item")) {
 					return Integer.parseInt(el.getText().substring(1).split(" ")[0]);
 				}
 			}

@@ -5,12 +5,6 @@
  */
 package main.org.vikingsoftware.dropshipper.listing.tool.gui;
 
-import java.awt.Font;
-
-import javax.swing.JLabel;
-import javax.swing.JSpinner;
-import javax.swing.SpinnerNumberModel;
-
 /**
  *
  * @author Bren
@@ -33,10 +27,14 @@ public class ListingToolGUI extends javax.swing.JFrame {
     	if(instance == null) {
     		instance = new ListingToolGUI();
     		controller = new ListingToolController();
-    		controller.addListeners();
+    		controller.setup();
     	}
 
     	return instance;
+    }
+
+    public static ListingToolController getController() {
+    	return controller;
     }
 
     /**
@@ -48,212 +46,412 @@ public class ListingToolGUI extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        imagesScrollPane = new javax.swing.JScrollPane();
-        imagesPanel = new javax.swing.JPanel();
-        fulfillmentUrlInput = new javax.swing.JTextField();
-        fullfillmentFileBtn = new javax.swing.JButton();
-        imagesHeaderText = new javax.swing.JLabel();
-        generalInformationHeaderText1 = new javax.swing.JLabel();
+        fulfillmentsPanel = new javax.swing.JPanel();
+        fulfillmentsPanelHeaderText = new javax.swing.JLabel();
+        fulfillmentsPanelAddLabelText = new javax.swing.JLabel();
+        listingURLInput = new javax.swing.JTextField();
+        fullfillmentsPanelFileBtn = new javax.swing.JButton();
+        queuePanel = new javax.swing.JPanel();
+        urlQueueLabel = new javax.swing.JLabel();
+        urlQueueSizeLabel = new javax.swing.JLabel();
+        parsedQueueLabel = new javax.swing.JLabel();
+        parsedQueueSizeLabel = new javax.swing.JLabel();
+        generalInfoPanel = new javax.swing.JPanel();
+        generalInfoPanelHeaderText = new javax.swing.JLabel();
+        fulfillmentsPanelAddLabelText1 = new javax.swing.JLabel();
+        listingPriceInput = new javax.swing.JTextField();
         listingTitleInput = new javax.swing.JTextField();
-        listingTitleHeaderText = new javax.swing.JLabel();
-        priceHeaderText = new javax.swing.JLabel();
-        priceSpinner = new JSpinner();
-        targetMarginSpinner = new JSpinner();
-        targetMarginText = new JLabel();
-        descriptionTitleHeaderText = new javax.swing.JLabel();
-        renderedDescScrollPane = new javax.swing.JScrollPane();
-        renderedDescPane = new javax.swing.JEditorPane();
-        renderedDescPane.setEditable(false);
-        rawDescScrollPane = new javax.swing.JScrollPane();
-        rawDescInput = new javax.swing.JTextArea();
-        addFullfillmentHeaderText = new javax.swing.JLabel();
-        fullfillmentsTitleHeaderText = new javax.swing.JLabel();
-        queueSizeValue = new javax.swing.JLabel();
-        queueSizeLabelText = new javax.swing.JLabel();
+        listingMarginInput = new javax.swing.JTextField();
+        listingPriceLabel = new javax.swing.JLabel();
+        marginPriceLabel = new javax.swing.JLabel();
+        categoryLabel = new javax.swing.JLabel();
+        categoryDropdown = new javax.swing.JComboBox();
+        descriptionLabel = new javax.swing.JLabel();
+        descRawScrollPane = new javax.swing.JScrollPane();
+        descRawInput = new javax.swing.JEditorPane();
+        descHtmlScrollPane = new javax.swing.JScrollPane();
+        descHtmlView = new javax.swing.JEditorPane();
+        statusAreaPanel = new javax.swing.JPanel();
+        statusTextLabel = new javax.swing.JLabel();
         skipListingBtn = new javax.swing.JButton();
         publishListingBtn = new javax.swing.JButton();
-        statusText = new javax.swing.JLabel();
+        platformDropdown = new javax.swing.JComboBox();
+        platformLabel = new javax.swing.JLabel();
+        recentSalesPanel = new javax.swing.JPanel();
+        recentSalesHeaderText = new javax.swing.JLabel();
+        recentSalesScrollPane = new javax.swing.JScrollPane();
+        recentSalesHtmlView = new javax.swing.JEditorPane();
+        imagesPanel = new javax.swing.JPanel();
+        imagesPanelHeaderText = new javax.swing.JLabel();
+        imagesPanelScrollPane = new javax.swing.JScrollPane();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setPreferredSize(new java.awt.Dimension(1225, 825));
-        getContentPane().setLayout(null);
+        setPreferredSize(new java.awt.Dimension(1500, 800));
 
-        imagesScrollPane.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(51, 51, 51), 2));
+        fulfillmentsPanelHeaderText.setFont(new java.awt.Font("SansSerif", 0, 18)); // NOI18N
+        fulfillmentsPanelHeaderText.setText("Fulfillments");
+
+        fulfillmentsPanelAddLabelText.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
+        fulfillmentsPanelAddLabelText.setText("ADD FULFILLMENT URL TO QUEUE");
+
+        listingURLInput.setBackground(new java.awt.Color(252, 247, 233));
+
+        fullfillmentsPanelFileBtn.setBackground(new java.awt.Color(236, 206, 138));
+        fullfillmentsPanelFileBtn.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
+        fullfillmentsPanelFileBtn.setForeground(new java.awt.Color(255, 255, 255));
+        fullfillmentsPanelFileBtn.setText("FILE");
+
+        urlQueueLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
+        urlQueueLabel.setText("URLs to parse:");
+
+        urlQueueSizeLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
+        urlQueueSizeLabel.setForeground(new java.awt.Color(0, 0, 255));
+        urlQueueSizeLabel.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        urlQueueSizeLabel.setText("0");
+
+        parsedQueueLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
+        parsedQueueLabel.setText("Parsed queue:");
+
+        parsedQueueSizeLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
+        parsedQueueSizeLabel.setForeground(new java.awt.Color(0, 0, 255));
+        parsedQueueSizeLabel.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        parsedQueueSizeLabel.setText("0");
+
+        final javax.swing.GroupLayout queuePanelLayout = new javax.swing.GroupLayout(queuePanel);
+        queuePanel.setLayout(queuePanelLayout);
+        queuePanelLayout.setHorizontalGroup(
+            queuePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(queuePanelLayout.createSequentialGroup()
+                .addComponent(urlQueueLabel)
+                .addGap(0, 0, 0)
+                .addComponent(urlQueueSizeLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGroup(queuePanelLayout.createSequentialGroup()
+                .addComponent(parsedQueueLabel)
+                .addGap(0, 0, 0)
+                .addComponent(parsedQueueSizeLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+        queuePanelLayout.setVerticalGroup(
+            queuePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(queuePanelLayout.createSequentialGroup()
+                .addGroup(queuePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(urlQueueLabel)
+                    .addComponent(urlQueueSizeLabel))
+                .addGap(0, 0, 0)
+                .addGroup(queuePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(parsedQueueLabel)
+                    .addComponent(parsedQueueSizeLabel))
+                .addGap(0, 0, Short.MAX_VALUE))
+        );
+
+        final javax.swing.GroupLayout fulfillmentsPanelLayout = new javax.swing.GroupLayout(fulfillmentsPanel);
+        fulfillmentsPanel.setLayout(fulfillmentsPanelLayout);
+        fulfillmentsPanelLayout.setHorizontalGroup(
+            fulfillmentsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(fulfillmentsPanelLayout.createSequentialGroup()
+                .addGroup(fulfillmentsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(fulfillmentsPanelLayout.createSequentialGroup()
+                        .addGroup(fulfillmentsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(fulfillmentsPanelHeaderText)
+                            .addComponent(fulfillmentsPanelAddLabelText))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(queuePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(fulfillmentsPanelLayout.createSequentialGroup()
+                        .addComponent(listingURLInput)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(fullfillmentsPanelFileBtn)))
+                .addGap(0, 0, 0))
+        );
+        fulfillmentsPanelLayout.setVerticalGroup(
+            fulfillmentsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(fulfillmentsPanelLayout.createSequentialGroup()
+                .addGroup(fulfillmentsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(fulfillmentsPanelLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(queuePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(fulfillmentsPanelLayout.createSequentialGroup()
+                        .addComponent(fulfillmentsPanelHeaderText)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(fulfillmentsPanelAddLabelText)))
+                .addGap(7, 7, 7)
+                .addGroup(fulfillmentsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(fullfillmentsPanelFileBtn, javax.swing.GroupLayout.DEFAULT_SIZE, 29, Short.MAX_VALUE)
+                    .addComponent(listingURLInput))
+                .addGap(0, 0, Short.MAX_VALUE))
+        );
+
+        generalInfoPanelHeaderText.setFont(new java.awt.Font("SansSerif", 0, 18)); // NOI18N
+        generalInfoPanelHeaderText.setText("General Information");
+
+        fulfillmentsPanelAddLabelText1.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
+        fulfillmentsPanelAddLabelText1.setText("TITLE");
+
+        listingPriceInput.setBackground(new java.awt.Color(252, 247, 233));
+        listingPriceInput.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
+        listingPriceInput.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+
+        listingTitleInput.setBackground(new java.awt.Color(252, 247, 233));
+        listingTitleInput.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+
+        listingMarginInput.setBackground(new java.awt.Color(252, 247, 233));
+        listingMarginInput.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
+        listingMarginInput.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+
+        listingPriceLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
+        listingPriceLabel.setText("PRICE");
+
+        marginPriceLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
+        marginPriceLabel.setText("MARGIN");
+
+        categoryLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
+        categoryLabel.setText("CATEGORY");
+
+        categoryDropdown.setBackground(new java.awt.Color(214, 223, 233));
+        categoryDropdown.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        categoryDropdown.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Home & Garden > Food & Beverages > Coffee > Coffee Pods & K-Cups", "Home & Garden > Food & Beverages > Coffee > Ground Coffee", "Home & Garden > Food & Beverages > Coffee > Coffee Beans", "Business & Industrial > Restaurant & Food Service > Wholesale Lots > Bulk Food" }));
+        categoryDropdown.setFocusable(false);
+
+        descriptionLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
+        descriptionLabel.setText("DESCRIPTION");
+
+        descRawInput.setFont(new java.awt.Font("Consolas", 0, 11)); // NOI18N
+        descRawScrollPane.setViewportView(descRawInput);
+
+        descHtmlView.setContentType("text/html"); // NOI18N
+        descHtmlScrollPane.setViewportView(descHtmlView);
+
+        final javax.swing.GroupLayout generalInfoPanelLayout = new javax.swing.GroupLayout(generalInfoPanel);
+        generalInfoPanel.setLayout(generalInfoPanelLayout);
+        generalInfoPanelLayout.setHorizontalGroup(
+            generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(descRawScrollPane)
+            .addComponent(descHtmlScrollPane)
+            .addComponent(listingTitleInput)
+            .addComponent(generalInfoPanelHeaderText)
+            .addComponent(descriptionLabel)
+            .addGroup(generalInfoPanelLayout.createSequentialGroup()
+                .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(categoryLabel)
+                    .addComponent(fulfillmentsPanelAddLabelText1)
+                    .addComponent(categoryDropdown, javax.swing.GroupLayout.PREFERRED_SIZE, 594, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(listingPriceInput, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(listingPriceLabel))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(marginPriceLabel)
+                    .addComponent(listingMarginInput, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)))
+        );
+        generalInfoPanelLayout.setVerticalGroup(
+            generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(generalInfoPanelLayout.createSequentialGroup()
+                .addComponent(generalInfoPanelHeaderText)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(fulfillmentsPanelAddLabelText1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(listingTitleInput, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(generalInfoPanelLayout.createSequentialGroup()
+                        .addComponent(categoryLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(categoryDropdown, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(generalInfoPanelLayout.createSequentialGroup()
+                        .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(listingPriceLabel)
+                            .addComponent(marginPriceLabel))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(listingPriceInput, javax.swing.GroupLayout.DEFAULT_SIZE, 30, Short.MAX_VALUE)
+                            .addComponent(listingMarginInput))))
+                .addGap(13, 13, 13)
+                .addComponent(descriptionLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(descRawScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE)
+                .addGap(0, 0, 0)
+                .addComponent(descHtmlScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE))
+        );
+
+        statusTextLabel.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
+        statusTextLabel.setText("Parsing listing description");
+        statusTextLabel.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+
+        skipListingBtn.setBackground(new java.awt.Color(255, 51, 51));
+        skipListingBtn.setFont(new java.awt.Font("SansSerif", 1, 12)); // NOI18N
+        skipListingBtn.setForeground(new java.awt.Color(255, 255, 255));
+        skipListingBtn.setText("Skip Listing");
+        skipListingBtn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        skipListingBtn.setFocusPainted(false);
+        skipListingBtn.setFocusable(false);
+
+        publishListingBtn.setBackground(new java.awt.Color(0, 204, 51));
+        publishListingBtn.setFont(new java.awt.Font("SansSerif", 1, 12)); // NOI18N
+        publishListingBtn.setForeground(new java.awt.Color(255, 255, 255));
+        publishListingBtn.setText("Publish Listing");
+        publishListingBtn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        publishListingBtn.setFocusPainted(false);
+        publishListingBtn.setFocusable(false);
+        publishListingBtn.setMaximumSize(new java.awt.Dimension(115, 20));
+        publishListingBtn.setMinimumSize(new java.awt.Dimension(115, 20));
+        publishListingBtn.setPreferredSize(new java.awt.Dimension(115, 20));
+
+        platformDropdown.setBackground(new java.awt.Color(214, 223, 233));
+        platformDropdown.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        platformDropdown.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "eBay", "Amazon", "Wish" }));
+        platformDropdown.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        platformDropdown.setFocusable(false);
+
+        platformLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
+        platformLabel.setText("PLATFORM");
+
+        final javax.swing.GroupLayout statusAreaPanelLayout = new javax.swing.GroupLayout(statusAreaPanel);
+        statusAreaPanel.setLayout(statusAreaPanelLayout);
+        statusAreaPanelLayout.setHorizontalGroup(
+            statusAreaPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(statusAreaPanelLayout.createSequentialGroup()
+                .addGroup(statusAreaPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(statusAreaPanelLayout.createSequentialGroup()
+                        .addComponent(platformLabel)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, statusAreaPanelLayout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(platformDropdown, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(18, 18, 18)
+                .addComponent(skipListingBtn)
+                .addGap(0, 0, 0)
+                .addComponent(publishListingBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addComponent(statusTextLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+        statusAreaPanelLayout.setVerticalGroup(
+            statusAreaPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(statusAreaPanelLayout.createSequentialGroup()
+                .addComponent(statusTextLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 11, Short.MAX_VALUE)
+                .addGroup(statusAreaPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(skipListingBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(statusAreaPanelLayout.createSequentialGroup()
+                        .addComponent(platformLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(platformDropdown, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(publishListingBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+        );
+
+        recentSalesHeaderText.setFont(new java.awt.Font("SansSerif", 0, 18)); // NOI18N
+        recentSalesHeaderText.setText("Recent sales");
+
+        recentSalesScrollPane.setName(""); // NOI18N
+        recentSalesScrollPane.setViewportView(recentSalesHtmlView);
+
+        final javax.swing.GroupLayout recentSalesPanelLayout = new javax.swing.GroupLayout(recentSalesPanel);
+        recentSalesPanel.setLayout(recentSalesPanelLayout);
+        recentSalesPanelLayout.setHorizontalGroup(
+            recentSalesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(recentSalesPanelLayout.createSequentialGroup()
+                .addComponent(recentSalesHeaderText)
+                .addContainerGap(203, Short.MAX_VALUE))
+            .addComponent(recentSalesScrollPane)
+        );
+        recentSalesPanelLayout.setVerticalGroup(
+            recentSalesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(recentSalesPanelLayout.createSequentialGroup()
+                .addComponent(recentSalesHeaderText)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(recentSalesScrollPane))
+        );
+
+        imagesPanelHeaderText.setFont(new java.awt.Font("SansSerif", 0, 18)); // NOI18N
+        imagesPanelHeaderText.setText("Images");
+
+        imagesPanelScrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         final javax.swing.GroupLayout imagesPanelLayout = new javax.swing.GroupLayout(imagesPanel);
         imagesPanel.setLayout(imagesPanelLayout);
         imagesPanelLayout.setHorizontalGroup(
             imagesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 418, Short.MAX_VALUE)
+            .addGroup(imagesPanelLayout.createSequentialGroup()
+                .addComponent(imagesPanelHeaderText)
+                .addGap(0, 0, Short.MAX_VALUE))
+            .addComponent(imagesPanelScrollPane)
         );
         imagesPanelLayout.setVerticalGroup(
             imagesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 566, Short.MAX_VALUE)
+            .addGroup(imagesPanelLayout.createSequentialGroup()
+                .addComponent(imagesPanelHeaderText)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(imagesPanelScrollPane))
         );
 
-        imagesScrollPane.setViewportView(imagesPanel);
-
-        getContentPane().add(imagesScrollPane);
-        imagesScrollPane.setBounds(10, 210, 382, 570);
-
-        fulfillmentUrlInput.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        fulfillmentUrlInput.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(51, 51, 51), 2));
-        getContentPane().add(fulfillmentUrlInput);
-        fulfillmentUrlInput.setBounds(10, 62, 310, 30);
-
-        fullfillmentFileBtn.setBackground(new java.awt.Color(51, 51, 51));
-        fullfillmentFileBtn.setText("file");
-        fullfillmentFileBtn.setBorder(null);
-        fullfillmentFileBtn.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        getContentPane().add(fullfillmentFileBtn);
-        fullfillmentFileBtn.setBounds(322, 62, 50, 30);
-
-        imagesHeaderText.setFont(new java.awt.Font("SansSerif", 0, 18)); // NOI18N
-        imagesHeaderText.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        imagesHeaderText.setText("Images");
-        imagesHeaderText.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
-        getContentPane().add(imagesHeaderText);
-        imagesHeaderText.setBounds(10, 180, 70, 24);
-
-        generalInformationHeaderText1.setFont(new java.awt.Font("SansSerif", 0, 18)); // NOI18N
-        generalInformationHeaderText1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        generalInformationHeaderText1.setText("General information");
-        generalInformationHeaderText1.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
-        getContentPane().add(generalInformationHeaderText1);
-        generalInformationHeaderText1.setBounds(390, 10, 170, 24);
-
-        listingTitleInput.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(51, 51, 51), 2));
-        getContentPane().add(listingTitleInput);
-        listingTitleInput.setBounds(390, 62, 420, 40);
-
-        listingTitleHeaderText.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
-        listingTitleHeaderText.setText("TITLE");
-        getContentPane().add(listingTitleHeaderText);
-        listingTitleHeaderText.setBounds(390, 45, 34, 14);
-
-        priceHeaderText.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
-        priceHeaderText.setText("PRICE");
-        getContentPane().add(priceHeaderText);
-        priceHeaderText.setBounds(390, 122, 70, 14);
-
-        priceSpinner.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
-        priceSpinner.setModel(new SpinnerNumberModel(0.00, 0.00, Double.MAX_VALUE, 1D));
-        priceSpinner.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(51, 51, 51), 2));
-        getContentPane().add(priceSpinner);
-        priceSpinner.setBounds(390, 140, 420, 30);
-
-        targetMarginText.setFont(new Font("SansSerif", 1, 11));
-        targetMarginText.setText("TARGET MARGIN (%)");
-        getContentPane().add(targetMarginText);
-        targetMarginText.setBounds(820, 122, 150, 14);
-
-        targetMarginSpinner.setFont(new Font("SansSerif", 0, 14));
-        targetMarginSpinner.setModel(new SpinnerNumberModel(25.00, 1.00, Double.MAX_VALUE, 1D));
-        targetMarginSpinner.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(51, 51, 51), 2));
-        getContentPane().add(targetMarginSpinner);
-        targetMarginSpinner.setBounds(820, 140, 350, 30);
-
-        descriptionTitleHeaderText.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
-        descriptionTitleHeaderText.setText("DESCRIPTION");
-        getContentPane().add(descriptionTitleHeaderText);
-        descriptionTitleHeaderText.setBounds(390, 190, 80, 14);
-
-        renderedDescScrollPane.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(51, 51, 51), 2));
-
-        renderedDescPane.setBorder(null);
-        renderedDescPane.setContentType("text/html"); // NOI18N
-        renderedDescPane.setText("<p>Lorem ipsum dolor sit amet.</p>");
-        renderedDescScrollPane.setViewportView(renderedDescPane);
-
-        getContentPane().add(renderedDescScrollPane);
-        renderedDescScrollPane.setBounds(390, 390, 810, 390);
-
-        rawDescScrollPane.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(51, 51, 51), 2));
-
-        rawDescInput.setColumns(20);
-        rawDescInput.setFont(new java.awt.Font("Consolas", 0, 12)); // NOI18N
-        rawDescInput.setRows(5);
-        rawDescInput.setText("<p>Lorem ipsum dolor sit amet.</p>");
-        rawDescScrollPane.setViewportView(rawDescInput);
-
-        getContentPane().add(rawDescScrollPane);
-        rawDescScrollPane.setBounds(390, 210, 810, 182);
-
-        addFullfillmentHeaderText.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
-        addFullfillmentHeaderText.setText("ADD FULLFILLMENT URL TO QUEUE");
-        getContentPane().add(addFullfillmentHeaderText);
-        addFullfillmentHeaderText.setBounds(10, 45, 200, 14);
-
-        fullfillmentsTitleHeaderText.setFont(new java.awt.Font("SansSerif", 0, 18)); // NOI18N
-        fullfillmentsTitleHeaderText.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        fullfillmentsTitleHeaderText.setText("Fullfillments");
-        fullfillmentsTitleHeaderText.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
-        getContentPane().add(fullfillmentsTitleHeaderText);
-        fullfillmentsTitleHeaderText.setBounds(10, 10, 170, 24);
-
-        queueSizeValue.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
-        queueSizeValue.setForeground(new java.awt.Color(0, 0, 255));
-        queueSizeValue.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        queueSizeValue.setText("0");
-        getContentPane().add(queueSizeValue);
-        queueSizeValue.setBounds(342, 45, 30, 14);
-
-        queueSizeLabelText.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
-        queueSizeLabelText.setText("Queue size:");
-        getContentPane().add(queueSizeLabelText);
-        queueSizeLabelText.setBounds(278, 45, 70, 14);
-
-        skipListingBtn.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
-        skipListingBtn.setForeground(new java.awt.Color(255, 0, 0));
-        skipListingBtn.setText("Skip Listing");
-        skipListingBtn.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 0, 0)));
-        getContentPane().add(skipListingBtn);
-        skipListingBtn.setBounds(165, 143, 70, 34);
-
-        publishListingBtn.setFont(new java.awt.Font("SansSerif", 1, 14)); // NOI18N
-        publishListingBtn.setForeground(new java.awt.Color(0, 153, 0));
-        publishListingBtn.setText("Publish Listing");
-        publishListingBtn.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 153, 0)));
-        getContentPane().add(publishListingBtn);
-        publishListingBtn.setBounds(240, 140, 135, 40);
-
-        statusText.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
-        statusText.setText("Ready");
-        statusText.setVerticalAlignment(javax.swing.SwingConstants.TOP);
-        getContentPane().add(statusText);
-        statusText.setBounds(10, 95, 360, 40);
+        final javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(fulfillmentsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(imagesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(statusAreaPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(generalInfoPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(recentSalesPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(recentSalesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(fulfillmentsPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(statusAreaPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(imagesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(generalInfoPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+        );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    public static ListingToolController getController() {
-    	return controller;
-    }
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    public javax.swing.JLabel addFullfillmentHeaderText;
-    public javax.swing.JSpinner priceSpinner;
-    public javax.swing.JLabel priceHeaderText;
-    public JSpinner targetMarginSpinner;
-    public JLabel targetMarginText;
-    public javax.swing.JLabel descriptionTitleHeaderText;
-    public javax.swing.JTextField fulfillmentUrlInput;
-    public javax.swing.JButton fullfillmentFileBtn;
-    public javax.swing.JLabel fullfillmentsTitleHeaderText;
-    public javax.swing.JLabel generalInformationHeaderText1;
-    public javax.swing.JLabel imagesHeaderText;
-    public javax.swing.JPanel imagesPanel;
-    public javax.swing.JScrollPane imagesScrollPane;
-    public javax.swing.JLabel listingTitleHeaderText;
+    public javax.swing.JComboBox categoryDropdown;
+    public javax.swing.JLabel categoryLabel;
+    public javax.swing.JScrollPane descHtmlScrollPane;
+    public javax.swing.JEditorPane descHtmlView;
+    public javax.swing.JEditorPane descRawInput;
+    public javax.swing.JScrollPane descRawScrollPane;
+    public javax.swing.JLabel descriptionLabel;
+    public javax.swing.JPanel fulfillmentsPanel;
+    public javax.swing.JLabel fulfillmentsPanelAddLabelText;
+    public javax.swing.JLabel fulfillmentsPanelAddLabelText1;
+    public javax.swing.JLabel fulfillmentsPanelHeaderText;
+    public javax.swing.JTextField listingURLInput;
     public javax.swing.JTextField listingTitleInput;
+    public javax.swing.JLabel urlQueueLabel;
+    public javax.swing.JLabel urlQueueSizeLabel;
+    public javax.swing.JLabel parsedQueueLabel;
+    public javax.swing.JLabel parsedQueueSizeLabel;
+    public javax.swing.JButton fullfillmentsPanelFileBtn;
+    public javax.swing.JPanel generalInfoPanel;
+    public javax.swing.JLabel generalInfoPanelHeaderText;
+    public javax.swing.JPanel imagesPanel;
+    public javax.swing.JLabel imagesPanelHeaderText;
+    public javax.swing.JScrollPane imagesPanelScrollPane;
+    public javax.swing.JTextField listingMarginInput;
+    public javax.swing.JTextField listingPriceInput;
+    public javax.swing.JLabel listingPriceLabel;
+    public javax.swing.JLabel marginPriceLabel;
+    public javax.swing.JComboBox platformDropdown;
+    public javax.swing.JLabel platformLabel;
     public javax.swing.JButton publishListingBtn;
-    public javax.swing.JLabel queueSizeLabelText;
-    public javax.swing.JLabel queueSizeValue;
-    public javax.swing.JTextArea rawDescInput;
-    public javax.swing.JScrollPane rawDescScrollPane;
-    public javax.swing.JEditorPane renderedDescPane;
-    public javax.swing.JScrollPane renderedDescScrollPane;
+    public javax.swing.JPanel queuePanel;
+    public javax.swing.JLabel recentSalesHeaderText;
+    public javax.swing.JEditorPane recentSalesHtmlView;
+    public javax.swing.JPanel recentSalesPanel;
+    public javax.swing.JScrollPane recentSalesScrollPane;
     public javax.swing.JButton skipListingBtn;
-    public javax.swing.JLabel statusText;
+    public javax.swing.JPanel statusAreaPanel;
+    public javax.swing.JLabel statusTextLabel;
     // End of variables declaration//GEN-END:variables
 }
