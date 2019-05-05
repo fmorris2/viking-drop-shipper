@@ -17,9 +17,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.swing.ImageIcon;
+import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.SwingUtilities;
 
@@ -34,12 +33,14 @@ public class ListingToolController {
 	private final ListingToolGUI gui = ListingToolGUI.get();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-	private JList<JLabel> imageList;
+	private DefaultListModel<BufferedImage> imagesModel;
 	private double originalListingPrice;
 
 	public void setup() {
-		addListeners();
-		addImageList();
+		SwingUtilities.invokeLater(() -> {
+			addListeners();
+			addImageList();
+		});
 	}
 
 	private void addListeners() {
@@ -65,7 +66,7 @@ public class ListingToolController {
         });
         gui.publishListingBtn.addActionListener(e -> publishListing());
 
-        gui.listingMarginInput.addKeyListener(new KeyAdapter() {
+        gui.profitMarginInput.addKeyListener(new KeyAdapter() {
         	@Override
         	public void keyTyped(KeyEvent e) {
             	updateListingPriceWithMargin();
@@ -78,27 +79,38 @@ public class ListingToolController {
         	}
         });
 
+        gui.shippingPriceInput.addKeyListener(new KeyAdapter() {
+        	@Override
+        	public void keyTyped(KeyEvent e) {
+        		updateMarginWithPrice();
+        	}
+        });
+
         gui.fullfillmentsPanelFileBtn.addActionListener(e -> importFile());
 
 	}
 
 	private void addImageList() {
-		imageList = new JList<>();
+		System.out.println("addImageList from EDT: " + SwingUtilities.isEventDispatchThread());
+		imagesModel = new DefaultListModel<>();
+		final JList<BufferedImage> imageList = new JList<>(imagesModel);
 		imageList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+		imageList.setCellRenderer(new IconCellRenderer());
 		gui.imagesPanel.add(imageList);
+		gui.imagesPanel.revalidate();
 	}
 
 	public void displayNextListing() {
 		final Listing listing = ListingQueue.peek();
-		imageList.removeAll();
+		imagesModel.removeAllElements();
 		if(listing != null) {
 			SwingUtilities.invokeLater(() -> {
 				gui.listingTitleInput.setText(listing.title);
 				gui.descRawInput.setText(listing.description);
 				gui.descHtmlView.setText(listing.description);
 				gui.listingPriceInput.setText("$" + listing.price);
-				if(gui.listingMarginInput.getText().isEmpty()) {
-					gui.listingMarginInput.setText("-20%");
+				if(gui.profitMarginInput.getText().isEmpty()) {
+					gui.profitMarginInput.setText("-20%");
 				}
 
 				addImages(listing.pictures);
@@ -111,7 +123,7 @@ public class ListingToolController {
 				gui.descRawInput.setText("");
 				gui.descHtmlView.setText("");
 				gui.listingPriceInput.setText("");
-				gui.listingMarginInput.setText("");
+				gui.profitMarginInput.setText("");
 
 				originalListingPrice = 0;
 				updateListingPriceWithMargin();
@@ -120,21 +132,19 @@ public class ListingToolController {
 	}
 
 	private void addImages(final Map<String, BufferedImage> images) {
-		System.out.println("Adding " + images.size() + " images to the imageList");
 		for(final BufferedImage image : images.values()) {
-			final JLabel label = new JLabel();
-			final BufferedImage resizedImage = resize(image, 250);
-			label.setIcon(new ImageIcon(resizedImage));
-			imageList.add(label);
+			final BufferedImage resizedImage = resize(image, 300);
+			imagesModel.addElement(resizedImage);
 		}
 	}
 
 	private void updateMarginWithPrice() {
 		try {
 			final String listingPriceTxt = gui.listingPriceInput.getText().replace("$", "");
-			final double currentPrice = Double.parseDouble(listingPriceTxt);
+			final String shippingPriceTxt = gui.shippingPriceInput.getText().replace("$", "");
+			final double currentPrice = Double.parseDouble(listingPriceTxt) + Double.parseDouble(shippingPriceTxt);
 			final String margin = decimalFormat.format(((currentPrice - (originalListingPrice * 1.20)) / currentPrice) * 100);
-			gui.listingMarginInput.setText(margin + "%");
+			gui.profitMarginInput.setText(margin + "%");
 		} catch(final Exception e) {
 			//swallow exception
 		}
@@ -142,8 +152,11 @@ public class ListingToolController {
 
     private void updateListingPriceWithMargin() {
     	try {
-    		final String marginText = gui.listingMarginInput.getText().replace("%", "");
-	    	final String priceWithMargin = decimalFormat.format(originalListingPrice * (1.20 + (Double.parseDouble(marginText) / 100)));
+    		final String marginText = gui.profitMarginInput.getText().replace("%", "");
+	    	final String shippingPriceTxt = gui.shippingPriceInput.getText().replace("$", "");
+	    	final double price = originalListingPrice * (1.20 + (Double.parseDouble(marginText) / 100))
+	    			- (!shippingPriceTxt.isEmpty() ? Double.parseDouble(shippingPriceTxt) : 0);
+	    	final String priceWithMargin = decimalFormat.format(price);
 	    	gui.listingPriceInput.setText("$" + priceWithMargin);
     	} catch(final Exception e) {
     		//swallow exception

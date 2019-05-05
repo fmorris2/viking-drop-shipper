@@ -1,7 +1,10 @@
 package main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.impl;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
@@ -15,6 +18,8 @@ import javax.swing.SwingUtilities;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import org.w3c.dom.Document;
+import org.w3c.tidy.Tidy;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.CostcoDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.costco.CostcoWebDriver;
@@ -60,7 +65,8 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 			} catch(final Exception e) {
 				//swallow
 			}
-			System.out.println("Listing Description: " + listing.description);
+
+			makeDescriptionPretty(listing);
 
 			final double price = Double.parseDouble(driver.findElement(By.cssSelector("#math-table > div.your-price.row.no-gutter > div > span.value")).getText());
 			listing.price = price;
@@ -105,5 +111,18 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 		return pics;
 	}
 
+	private void makeDescriptionPretty(final Listing listing) {
+		final Tidy tidy = new Tidy();
+		tidy.setXHTML(true);
+		tidy.setIndentContent(true);
+		tidy.setPrintBodyOnly(true);
+		tidy.setTidyMark(false);
+
+		final Document htmlDom = tidy.parseDOM(new ByteArrayInputStream(listing.description.getBytes()), null);
+		final OutputStream out = new ByteArrayOutputStream();
+		tidy.pprint(htmlDom, out);
+
+		listing.description = out.toString();
+	}
 
 }

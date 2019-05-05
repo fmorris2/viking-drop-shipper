@@ -5,6 +5,8 @@
  */
 package main.org.vikingsoftware.dropshipper.listing.tool.gui;
 
+import java.awt.Dimension;
+
 /**
  *
  * @author Bren
@@ -51,19 +53,21 @@ public class ListingToolGUI extends javax.swing.JFrame {
         fulfillmentsPanelAddLabelText = new javax.swing.JLabel();
         listingURLInput = new javax.swing.JTextField();
         fullfillmentsPanelFileBtn = new javax.swing.JButton();
-        queuePanel = new javax.swing.JPanel();
-        urlQueueLabel = new javax.swing.JLabel();
+        queuePanelContainer = new javax.swing.JPanel();
+        urlsToParseLabel = new javax.swing.JLabel();
         urlQueueSizeLabel = new javax.swing.JLabel();
         parsedQueueLabel = new javax.swing.JLabel();
         parsedQueueSizeLabel = new javax.swing.JLabel();
         generalInfoPanel = new javax.swing.JPanel();
         generalInfoPanelHeaderText = new javax.swing.JLabel();
-        fulfillmentsPanelAddLabelText1 = new javax.swing.JLabel();
-        listingPriceInput = new javax.swing.JTextField();
+        listingTitleLabel = new javax.swing.JLabel();
         listingTitleInput = new javax.swing.JTextField();
-        listingMarginInput = new javax.swing.JTextField();
+        listingPriceInput = new javax.swing.JTextField();
+        shippingPriceInput = new javax.swing.JTextField();
+        profitMarginInput = new javax.swing.JTextField();
         listingPriceLabel = new javax.swing.JLabel();
-        marginPriceLabel = new javax.swing.JLabel();
+        shippingPriceLabel = new javax.swing.JLabel();
+        profitMarginLabel = new javax.swing.JLabel();
         categoryLabel = new javax.swing.JLabel();
         categoryDropdown = new javax.swing.JComboBox();
         descriptionLabel = new javax.swing.JLabel();
@@ -77,13 +81,14 @@ public class ListingToolGUI extends javax.swing.JFrame {
         publishListingBtn = new javax.swing.JButton();
         platformDropdown = new javax.swing.JComboBox();
         platformLabel = new javax.swing.JLabel();
-        recentSalesPanel = new javax.swing.JPanel();
+        recentSalesPanelContainer = new javax.swing.JPanel();
         recentSalesHeaderText = new javax.swing.JLabel();
         recentSalesScrollPane = new javax.swing.JScrollPane();
-        recentSalesHtmlView = new javax.swing.JEditorPane();
-        imagesPanel = new javax.swing.JPanel();
+        recentSalesPanel = new javax.swing.JPanel();
+        imagesPanelContainer = new javax.swing.JPanel();
         imagesPanelHeaderText = new javax.swing.JLabel();
         imagesPanelScrollPane = new javax.swing.JScrollPane();
+        imagesPanel = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setPreferredSize(new java.awt.Dimension(1500, 800));
@@ -101,8 +106,8 @@ public class ListingToolGUI extends javax.swing.JFrame {
         fullfillmentsPanelFileBtn.setForeground(new java.awt.Color(255, 255, 255));
         fullfillmentsPanelFileBtn.setText("FILE");
 
-        urlQueueLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
-        urlQueueLabel.setText("URLs to parse:");
+        urlsToParseLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
+        urlsToParseLabel.setText("URLs to parse:");
 
         urlQueueSizeLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
         urlQueueSizeLabel.setForeground(new java.awt.Color(0, 0, 255));
@@ -117,27 +122,27 @@ public class ListingToolGUI extends javax.swing.JFrame {
         parsedQueueSizeLabel.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         parsedQueueSizeLabel.setText("0");
 
-        final javax.swing.GroupLayout queuePanelLayout = new javax.swing.GroupLayout(queuePanel);
-        queuePanel.setLayout(queuePanelLayout);
-        queuePanelLayout.setHorizontalGroup(
-            queuePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(queuePanelLayout.createSequentialGroup()
-                .addComponent(urlQueueLabel)
+        final javax.swing.GroupLayout queuePanelContainerLayout = new javax.swing.GroupLayout(queuePanelContainer);
+        queuePanelContainer.setLayout(queuePanelContainerLayout);
+        queuePanelContainerLayout.setHorizontalGroup(
+            queuePanelContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(queuePanelContainerLayout.createSequentialGroup()
+                .addComponent(urlsToParseLabel)
                 .addGap(0, 0, 0)
                 .addComponent(urlQueueSizeLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addGroup(queuePanelLayout.createSequentialGroup()
+            .addGroup(queuePanelContainerLayout.createSequentialGroup()
                 .addComponent(parsedQueueLabel)
                 .addGap(0, 0, 0)
                 .addComponent(parsedQueueSizeLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
-        queuePanelLayout.setVerticalGroup(
-            queuePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(queuePanelLayout.createSequentialGroup()
-                .addGroup(queuePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(urlQueueLabel)
+        queuePanelContainerLayout.setVerticalGroup(
+            queuePanelContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(queuePanelContainerLayout.createSequentialGroup()
+                .addGroup(queuePanelContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(urlsToParseLabel)
                     .addComponent(urlQueueSizeLabel))
                 .addGap(0, 0, 0)
-                .addGroup(queuePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(queuePanelContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(parsedQueueLabel)
                     .addComponent(parsedQueueSizeLabel))
                 .addGap(0, 0, Short.MAX_VALUE))
@@ -154,7 +159,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
                             .addComponent(fulfillmentsPanelHeaderText)
                             .addComponent(fulfillmentsPanelAddLabelText))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(queuePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(queuePanelContainer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(fulfillmentsPanelLayout.createSequentialGroup()
                         .addComponent(listingURLInput)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -167,7 +172,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
                 .addGroup(fulfillmentsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(fulfillmentsPanelLayout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(queuePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(queuePanelContainer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(fulfillmentsPanelLayout.createSequentialGroup()
                         .addComponent(fulfillmentsPanelHeaderText)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -182,25 +187,32 @@ public class ListingToolGUI extends javax.swing.JFrame {
         generalInfoPanelHeaderText.setFont(new java.awt.Font("SansSerif", 0, 18)); // NOI18N
         generalInfoPanelHeaderText.setText("General Information");
 
-        fulfillmentsPanelAddLabelText1.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
-        fulfillmentsPanelAddLabelText1.setText("TITLE");
+        listingTitleLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
+        listingTitleLabel.setText("TITLE");
+
+        listingTitleInput.setBackground(new java.awt.Color(252, 247, 233));
+        listingTitleInput.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
 
         listingPriceInput.setBackground(new java.awt.Color(252, 247, 233));
         listingPriceInput.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
         listingPriceInput.setHorizontalAlignment(javax.swing.JTextField.CENTER);
 
-        listingTitleInput.setBackground(new java.awt.Color(252, 247, 233));
-        listingTitleInput.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        shippingPriceInput.setBackground(new java.awt.Color(252, 247, 233));
+        shippingPriceInput.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
+        shippingPriceInput.setHorizontalAlignment(javax.swing.JTextField.CENTER);
 
-        listingMarginInput.setBackground(new java.awt.Color(252, 247, 233));
-        listingMarginInput.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
-        listingMarginInput.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        profitMarginInput.setBackground(new java.awt.Color(252, 247, 233));
+        profitMarginInput.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
+        profitMarginInput.setHorizontalAlignment(javax.swing.JTextField.CENTER);
 
         listingPriceLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
         listingPriceLabel.setText("PRICE");
 
-        marginPriceLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
-        marginPriceLabel.setText("MARGIN");
+        shippingPriceLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
+        shippingPriceLabel.setText("SHIPPING");
+
+        profitMarginLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
+        profitMarginLabel.setText("MARGIN");
 
         categoryLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N
         categoryLabel.setText("CATEGORY");
@@ -214,9 +226,13 @@ public class ListingToolGUI extends javax.swing.JFrame {
         descriptionLabel.setText("DESCRIPTION");
 
         descRawInput.setFont(new java.awt.Font("Consolas", 0, 11)); // NOI18N
+        descRawScrollPane.setMinimumSize(new Dimension(667, 252));
+        descHtmlScrollPane.setMinimumSize(descRawScrollPane.getMinimumSize());
         descRawScrollPane.setViewportView(descRawInput);
 
+        descHtmlView.setEditable(false);
         descHtmlView.setContentType("text/html"); // NOI18N
+        descHtmlView.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
         descHtmlScrollPane.setViewportView(descHtmlView);
 
         final javax.swing.GroupLayout generalInfoPanelLayout = new javax.swing.GroupLayout(generalInfoPanel);
@@ -226,28 +242,39 @@ public class ListingToolGUI extends javax.swing.JFrame {
             .addComponent(descRawScrollPane)
             .addComponent(descHtmlScrollPane)
             .addComponent(listingTitleInput)
-            .addComponent(generalInfoPanelHeaderText)
-            .addComponent(descriptionLabel)
             .addGroup(generalInfoPanelLayout.createSequentialGroup()
                 .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(categoryLabel)
-                    .addComponent(fulfillmentsPanelAddLabelText1)
-                    .addComponent(categoryDropdown, javax.swing.GroupLayout.PREFERRED_SIZE, 594, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(generalInfoPanelLayout.createSequentialGroup()
+                        .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(listingTitleLabel)
+                            .addComponent(categoryLabel))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(generalInfoPanelLayout.createSequentialGroup()
+                        .addComponent(categoryDropdown, 0, 534, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(listingPriceLabel)
+                            .addComponent(listingPriceInput, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(listingPriceInput, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(listingPriceLabel))
+                    .addComponent(shippingPriceInput, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(shippingPriceLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(marginPriceLabel)
-                    .addComponent(listingMarginInput, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(profitMarginLabel)
+                    .addComponent(profitMarginInput, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)))
+            .addGroup(generalInfoPanelLayout.createSequentialGroup()
+                .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(generalInfoPanelHeaderText)
+                    .addComponent(descriptionLabel))
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         generalInfoPanelLayout.setVerticalGroup(
             generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(generalInfoPanelLayout.createSequentialGroup()
                 .addComponent(generalInfoPanelHeaderText)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(fulfillmentsPanelAddLabelText1)
+                .addComponent(listingTitleLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(listingTitleInput, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -258,22 +285,25 @@ public class ListingToolGUI extends javax.swing.JFrame {
                         .addComponent(categoryDropdown, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(generalInfoPanelLayout.createSequentialGroup()
                         .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(listingPriceLabel)
-                            .addComponent(marginPriceLabel))
+                            .addComponent(shippingPriceLabel)
+                            .addComponent(profitMarginLabel)
+                            .addComponent(listingPriceLabel))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(listingPriceInput, javax.swing.GroupLayout.DEFAULT_SIZE, 30, Short.MAX_VALUE)
-                            .addComponent(listingMarginInput))))
+                            .addComponent(shippingPriceInput, javax.swing.GroupLayout.DEFAULT_SIZE, 30, Short.MAX_VALUE)
+                            .addComponent(profitMarginInput)
+                            .addComponent(listingPriceInput))))
                 .addGap(13, 13, 13)
                 .addComponent(descriptionLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(descRawScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE)
+                .addComponent(descRawScrollPane)
                 .addGap(0, 0, 0)
-                .addComponent(descHtmlScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE))
+                .addComponent(descHtmlScrollPane))
         );
 
         statusTextLabel.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
-        statusTextLabel.setText("Parsing listing description");
+        statusTextLabel.setForeground(new java.awt.Color(0, 51, 255));
+        statusTextLabel.setText("");
         statusTextLabel.setVerticalAlignment(javax.swing.SwingConstants.TOP);
 
         skipListingBtn.setBackground(new java.awt.Color(255, 51, 51));
@@ -325,8 +355,8 @@ public class ListingToolGUI extends javax.swing.JFrame {
         statusAreaPanelLayout.setVerticalGroup(
             statusAreaPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(statusAreaPanelLayout.createSequentialGroup()
-                .addComponent(statusTextLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 11, Short.MAX_VALUE)
+                .addComponent(statusTextLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 35, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(statusAreaPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(skipListingBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(statusAreaPanelLayout.createSequentialGroup()
@@ -340,20 +370,34 @@ public class ListingToolGUI extends javax.swing.JFrame {
         recentSalesHeaderText.setText("Recent sales");
 
         recentSalesScrollPane.setName(""); // NOI18N
-        recentSalesScrollPane.setViewportView(recentSalesHtmlView);
+
+        recentSalesPanel.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
 
         final javax.swing.GroupLayout recentSalesPanelLayout = new javax.swing.GroupLayout(recentSalesPanel);
         recentSalesPanel.setLayout(recentSalesPanelLayout);
         recentSalesPanelLayout.setHorizontalGroup(
             recentSalesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(recentSalesPanelLayout.createSequentialGroup()
-                .addComponent(recentSalesHeaderText)
-                .addContainerGap(203, Short.MAX_VALUE))
-            .addComponent(recentSalesScrollPane)
+            .addGap(0, 295, Short.MAX_VALUE)
         );
         recentSalesPanelLayout.setVerticalGroup(
             recentSalesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(recentSalesPanelLayout.createSequentialGroup()
+            .addGap(0, 746, Short.MAX_VALUE)
+        );
+
+        recentSalesScrollPane.setViewportView(recentSalesPanel);
+
+        final javax.swing.GroupLayout recentSalesPanelContainerLayout = new javax.swing.GroupLayout(recentSalesPanelContainer);
+        recentSalesPanelContainer.setLayout(recentSalesPanelContainerLayout);
+        recentSalesPanelContainerLayout.setHorizontalGroup(
+            recentSalesPanelContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(recentSalesPanelContainerLayout.createSequentialGroup()
+                .addComponent(recentSalesHeaderText)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addComponent(recentSalesScrollPane)
+        );
+        recentSalesPanelContainerLayout.setVerticalGroup(
+            recentSalesPanelContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(recentSalesPanelContainerLayout.createSequentialGroup()
                 .addComponent(recentSalesHeaderText)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(recentSalesScrollPane))
@@ -362,23 +406,27 @@ public class ListingToolGUI extends javax.swing.JFrame {
         imagesPanelHeaderText.setFont(new java.awt.Font("SansSerif", 0, 18)); // NOI18N
         imagesPanelHeaderText.setText("Images");
 
-        imagesPanelScrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        //imagesPanelScrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
-        final javax.swing.GroupLayout imagesPanelLayout = new javax.swing.GroupLayout(imagesPanel);
-        imagesPanel.setLayout(imagesPanelLayout);
-        imagesPanelLayout.setHorizontalGroup(
-            imagesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(imagesPanelLayout.createSequentialGroup()
+        imagesPanel.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
+
+        imagesPanelScrollPane.setViewportView(imagesPanel);
+
+        final javax.swing.GroupLayout imagesPanelContainerLayout = new javax.swing.GroupLayout(imagesPanelContainer);
+        imagesPanelContainer.setLayout(imagesPanelContainerLayout);
+        imagesPanelContainerLayout.setHorizontalGroup(
+            imagesPanelContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(imagesPanelContainerLayout.createSequentialGroup()
                 .addComponent(imagesPanelHeaderText)
                 .addGap(0, 0, Short.MAX_VALUE))
             .addComponent(imagesPanelScrollPane)
         );
-        imagesPanelLayout.setVerticalGroup(
-            imagesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(imagesPanelLayout.createSequentialGroup()
+        imagesPanelContainerLayout.setVerticalGroup(
+            imagesPanelContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(imagesPanelContainerLayout.createSequentialGroup()
                 .addComponent(imagesPanelHeaderText)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(imagesPanelScrollPane))
+                .addComponent(imagesPanelScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
         );
 
         final javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -389,26 +437,28 @@ public class ListingToolGUI extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(fulfillmentsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(imagesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(imagesPanelContainer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(statusAreaPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(generalInfoPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(recentSalesPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(recentSalesPanelContainer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(recentSalesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(generalInfoPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(recentSalesPanelContainer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(fulfillmentsPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(statusAreaPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(imagesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(generalInfoPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(imagesPanelContainer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap())
         );
 
         pack();
@@ -424,34 +474,37 @@ public class ListingToolGUI extends javax.swing.JFrame {
     public javax.swing.JLabel descriptionLabel;
     public javax.swing.JPanel fulfillmentsPanel;
     public javax.swing.JLabel fulfillmentsPanelAddLabelText;
-    public javax.swing.JLabel fulfillmentsPanelAddLabelText1;
     public javax.swing.JLabel fulfillmentsPanelHeaderText;
     public javax.swing.JTextField listingURLInput;
-    public javax.swing.JTextField listingTitleInput;
-    public javax.swing.JLabel urlQueueLabel;
-    public javax.swing.JLabel urlQueueSizeLabel;
-    public javax.swing.JLabel parsedQueueLabel;
-    public javax.swing.JLabel parsedQueueSizeLabel;
     public javax.swing.JButton fullfillmentsPanelFileBtn;
     public javax.swing.JPanel generalInfoPanel;
     public javax.swing.JLabel generalInfoPanelHeaderText;
     public javax.swing.JPanel imagesPanel;
+    public javax.swing.JPanel imagesPanelContainer;
     public javax.swing.JLabel imagesPanelHeaderText;
     public javax.swing.JScrollPane imagesPanelScrollPane;
-    public javax.swing.JTextField listingMarginInput;
     public javax.swing.JTextField listingPriceInput;
     public javax.swing.JLabel listingPriceLabel;
-    public javax.swing.JLabel marginPriceLabel;
+    public javax.swing.JTextField listingTitleInput;
+    public javax.swing.JLabel listingTitleLabel;
+    public javax.swing.JLabel parsedQueueLabel;
+    public javax.swing.JLabel parsedQueueSizeLabel;
     public javax.swing.JComboBox platformDropdown;
     public javax.swing.JLabel platformLabel;
+    public javax.swing.JTextField profitMarginInput;
+    public javax.swing.JLabel profitMarginLabel;
     public javax.swing.JButton publishListingBtn;
-    public javax.swing.JPanel queuePanel;
+    public javax.swing.JPanel queuePanelContainer;
     public javax.swing.JLabel recentSalesHeaderText;
-    public javax.swing.JEditorPane recentSalesHtmlView;
     public javax.swing.JPanel recentSalesPanel;
+    public javax.swing.JPanel recentSalesPanelContainer;
     public javax.swing.JScrollPane recentSalesScrollPane;
+    public javax.swing.JTextField shippingPriceInput;
+    public javax.swing.JLabel shippingPriceLabel;
     public javax.swing.JButton skipListingBtn;
     public javax.swing.JPanel statusAreaPanel;
     public javax.swing.JLabel statusTextLabel;
+    public javax.swing.JLabel urlsToParseLabel;
+    public javax.swing.JLabel urlQueueSizeLabel;
     // End of variables declaration//GEN-END:variables
 }
