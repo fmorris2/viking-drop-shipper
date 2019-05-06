@@ -6,6 +6,8 @@ import java.awt.RenderingHints;
 import java.awt.Transparency;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,6 +25,8 @@ import java.util.concurrent.Executors;
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
 import javax.swing.JList;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
@@ -37,6 +41,7 @@ public class ListingToolController {
 	private final ListingToolGUI gui = ListingToolGUI.get();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
+	private JList<BufferedImage> imageList;
 	private DefaultListModel<BufferedImage> imagesModel;
 	private SwtBrowserCanvas browser;
 	private double originalListingPrice;
@@ -98,11 +103,49 @@ public class ListingToolController {
 
 	private void addImageList() {
 		imagesModel = new DefaultListModel<>();
-		final JList<BufferedImage> imageList = new JList<>(imagesModel);
+		imageList = new JList<>(imagesModel);
+		imageList.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if(e.getButton() == MouseEvent.BUTTON3) {
+					handleImageListRightClick(e);
+				}
+			}
+		});
 		imageList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
 		imageList.setCellRenderer(new IconCellRenderer());
 		gui.imagesPanel.add(imageList);
 		gui.imagesPanel.revalidate();
+	}
+
+	private void handleImageListRightClick(final MouseEvent evt) {
+		final JPopupMenu menu = new JPopupMenu();
+
+		final JMenuItem moveUp = new JMenuItem("Move up");
+		moveUp.addActionListener(e -> moveSelectedImageUp());
+
+		final JMenuItem moveDown = new JMenuItem("Move down");
+		moveDown.addActionListener(e -> moveSelectedImageDown());
+
+		final JMenuItem delete = new JMenuItem("Delete");
+		delete.addActionListener(e -> deleteSelectedImage());
+
+		menu.add(moveUp);
+		menu.add(moveDown);
+		menu.add(delete);
+		menu.show(gui.imagesPanel, evt.getPoint().x, evt.getPoint().y);
+	}
+
+	private void moveSelectedImageUp() {
+
+	}
+
+	private void moveSelectedImageDown() {
+
+	}
+
+	private void deleteSelectedImage() {
+
 	}
 
 	private void addRecentSalesBrowser() {
@@ -161,8 +204,8 @@ public class ListingToolController {
 
 	private void updateMarginWithPrice() {
 		try {
-			final String listingPriceTxt = gui.listingPriceInput.getText().replace("$", "");
-			final String shippingPriceTxt = gui.shippingPriceInput.getText().replace("$", "");
+			final String listingPriceTxt = gui.listingPriceInput.getText().isEmpty() ? "0.00" : gui.listingPriceInput.getText().replace("$", "");
+			final String shippingPriceTxt = gui.shippingPriceInput.getText().isEmpty() ? "0.00" : gui.shippingPriceInput.getText().replace("$", "");
 			final double currentPrice = Double.parseDouble(listingPriceTxt) + Double.parseDouble(shippingPriceTxt);
 			final String margin = DECIMAL_FORMAT.format(((currentPrice - (originalListingPrice * 1.20)) / currentPrice) * 100);
 			gui.profitMarginInput.setText(margin + "%");
@@ -173,8 +216,8 @@ public class ListingToolController {
 
     private void updateListingPriceWithMargin() {
     	try {
-    		final String marginText = gui.profitMarginInput.getText().replace("%", "");
-	    	final String shippingPriceTxt = gui.shippingPriceInput.getText().replace("$", "");
+    		final String marginText = gui.profitMarginInput.getText().isEmpty() ? "0.00" : gui.profitMarginInput.getText().replace("%", "");
+	    	final String shippingPriceTxt = gui.shippingPriceInput.getText().isEmpty() ? "0.00" : gui.shippingPriceInput.getText().replace("$", "");
 	    	final double price = originalListingPrice * (1.20 + (Double.parseDouble(marginText) / 100))
 	    			- (!shippingPriceTxt.isEmpty() ? Double.parseDouble(shippingPriceTxt) : 0);
 	    	final String priceWithMargin = DECIMAL_FORMAT.format(price);
