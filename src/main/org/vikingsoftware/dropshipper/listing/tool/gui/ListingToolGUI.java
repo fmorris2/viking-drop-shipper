@@ -14,6 +14,7 @@ import java.awt.Dimension;
 public class ListingToolGUI extends javax.swing.JFrame {
 
 	private static final long serialVersionUID = 7954579463528571026L;
+	private static final String TITLE = "Viking Software Drop Shipper - Semi-Auto Zombie Lister";
 
 	private static ListingToolGUI instance;
 	private static ListingToolController controller;
@@ -47,7 +48,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-
+    	this.setTitle(TITLE);
         fulfillmentsPanel = new javax.swing.JPanel();
         fulfillmentsPanelHeaderText = new javax.swing.JLabel();
         fulfillmentsPanelAddLabelText = new javax.swing.JLabel();
@@ -227,7 +228,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
 
         descRawInput.setFont(new java.awt.Font("Consolas", 0, 11)); // NOI18N
         descRawScrollPane.setMinimumSize(new Dimension(667, 252));
-        descHtmlScrollPane.setMinimumSize(descRawScrollPane.getMinimumSize());
+        descHtmlScrollPane.setMinimumSize(new Dimension(667, 400));
         descRawScrollPane.setViewportView(descRawInput);
 
         descHtmlView.setEditable(false);
@@ -372,17 +373,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
         recentSalesScrollPane.setName(""); // NOI18N
 
         recentSalesPanel.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
-
-        final javax.swing.GroupLayout recentSalesPanelLayout = new javax.swing.GroupLayout(recentSalesPanel);
-        recentSalesPanel.setLayout(recentSalesPanelLayout);
-        recentSalesPanelLayout.setHorizontalGroup(
-            recentSalesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 295, Short.MAX_VALUE)
-        );
-        recentSalesPanelLayout.setVerticalGroup(
-            recentSalesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 746, Short.MAX_VALUE)
-        );
+        recentSalesScrollPane.setMinimumSize(new Dimension(400, recentSalesPanel.getHeight()));
 
         recentSalesScrollPane.setViewportView(recentSalesPanel);
 

@@ -60,5 +60,6 @@
 	<classpathentry kind="lib" path="lib/externalLib/streambuffer.jar"/>
 	<classpathentry kind="lib" path="lib/externalLib/xalan.jar"/>
 	<classpathentry kind="lib" path="lib/externalLib/log4j-1.2.16.jar"/>
+	<classpathentry kind="lib" path="lib/swt.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

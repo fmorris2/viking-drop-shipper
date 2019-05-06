@@ -66,14 +66,7 @@
 		    <artifactId>named-regexp</artifactId>
 		    <version>0.2.5</version>
 		</dependency>
-		
-		<!-- https://mvnrepository.com/artifact/com.hynnet/DJNativeSwing-SWT -->
-		<dependency>
-		    <groupId>com.hynnet</groupId>
-		    <artifactId>DJNativeSwing-SWT</artifactId>
-		    <version>1.0.0</version>
-		</dependency>
-		
+
 		<!-- https://mvnrepository.com/artifact/net.sf.jtidy/jtidy -->
 		<dependency>
 		    <groupId>net.sf.jtidy</groupId>

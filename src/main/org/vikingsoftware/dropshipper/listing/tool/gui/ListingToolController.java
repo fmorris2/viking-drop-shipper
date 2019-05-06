@@ -1,5 +1,6 @@
 package main.org.vikingsoftware.dropshipper.listing.tool.gui;
 
+import java.awt.BorderLayout;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Transparency;
@@ -10,8 +11,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -28,18 +31,21 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.workers.Fulfillmen
 
 public class ListingToolController {
 
-	private static final DecimalFormat decimalFormat = new DecimalFormat("###.##");
+	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("###.##");
+	private static final String BASE_EBAY_SEARCH_URL = "https://www.ebay.com/sch/i.html?_nkw=";
 
 	private final ListingToolGUI gui = ListingToolGUI.get();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
 	private DefaultListModel<BufferedImage> imagesModel;
+	private SwtBrowserCanvas browser;
 	private double originalListingPrice;
 
 	public void setup() {
 		SwingUtilities.invokeLater(() -> {
 			addListeners();
 			addImageList();
+			addRecentSalesBrowser();
 		});
 	}
 
@@ -91,7 +97,6 @@ public class ListingToolController {
 	}
 
 	private void addImageList() {
-		System.out.println("addImageList from EDT: " + SwingUtilities.isEventDispatchThread());
 		imagesModel = new DefaultListModel<>();
 		final JList<BufferedImage> imageList = new JList<>(imagesModel);
 		imageList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
@@ -100,11 +105,27 @@ public class ListingToolController {
 		gui.imagesPanel.revalidate();
 	}
 
+	private void addRecentSalesBrowser() {
+		browser = new SwtBrowserCanvas();
+		gui.recentSalesPanel.setLayout(new BorderLayout());
+		gui.recentSalesPanel.add(browser, BorderLayout.CENTER);
+		if(browser.initialise()) {
+			browser.setUrl("http://www.google.com");
+		}
+		gui.recentSalesPanel.revalidate();
+		gui.recentSalesPanel.repaint();
+	}
+
 	public void displayNextListing() {
 		final Listing listing = ListingQueue.peek();
 		imagesModel.removeAllElements();
 		if(listing != null) {
 			SwingUtilities.invokeLater(() -> {
+				try {
+					browser.setUrl(BASE_EBAY_SEARCH_URL + URLEncoder.encode(listing.title, "UTF-8"));
+				} catch (final UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
 				gui.listingTitleInput.setText(listing.title);
 				gui.descRawInput.setText(listing.description);
 				gui.descHtmlView.setText(listing.description);
@@ -143,7 +164,7 @@ public class ListingToolController {
 			final String listingPriceTxt = gui.listingPriceInput.getText().replace("$", "");
 			final String shippingPriceTxt = gui.shippingPriceInput.getText().replace("$", "");
 			final double currentPrice = Double.parseDouble(listingPriceTxt) + Double.parseDouble(shippingPriceTxt);
-			final String margin = decimalFormat.format(((currentPrice - (originalListingPrice * 1.20)) / currentPrice) * 100);
+			final String margin = DECIMAL_FORMAT.format(((currentPrice - (originalListingPrice * 1.20)) / currentPrice) * 100);
 			gui.profitMarginInput.setText(margin + "%");
 		} catch(final Exception e) {
 			//swallow exception
@@ -156,7 +177,7 @@ public class ListingToolController {
 	    	final String shippingPriceTxt = gui.shippingPriceInput.getText().replace("$", "");
 	    	final double price = originalListingPrice * (1.20 + (Double.parseDouble(marginText) / 100))
 	    			- (!shippingPriceTxt.isEmpty() ? Double.parseDouble(shippingPriceTxt) : 0);
-	    	final String priceWithMargin = decimalFormat.format(price);
+	    	final String priceWithMargin = DECIMAL_FORMAT.format(price);
 	    	gui.listingPriceInput.setText("$" + priceWithMargin);
     	} catch(final Exception e) {
     		//swallow exception
