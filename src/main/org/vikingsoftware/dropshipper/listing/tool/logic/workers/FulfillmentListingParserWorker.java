@@ -37,7 +37,7 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 
 	public void addUrlToQueue(final String url) {
 		urlQueue.add(url);
-		SwingUtilities.invokeLater(() -> ListingToolGUI.get().urlQueueSizeLabel.setText(Integer.toString(urlQueue.size())));
+		SwingUtilities.invokeLater(() -> ListingToolGUI.get().urlsToParseValue.setText(Integer.toString(urlQueue.size())));
 	}
 
 	public void updateStatus(final String status) {
@@ -48,7 +48,7 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 	protected void process(List<String> chunks) {
 		if(!chunks.isEmpty()) {
 			final String status = chunks.get(chunks.size() - 1);
-			SwingUtilities.invokeLater(() -> ListingToolGUI.get().statusTextLabel.setText(status));
+			SwingUtilities.invokeLater(() -> ListingToolGUI.get().statusTextValue.setText(status));
 		}
 	}
 
@@ -64,7 +64,7 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 						ListingToolGUI.getController().displayNextListing();
 					}
 					urlQueue.poll();
-					SwingUtilities.invokeLater(() -> ListingToolGUI.get().urlQueueSizeLabel.setText(Integer.toString(urlQueue.size())));
+					SwingUtilities.invokeLater(() -> ListingToolGUI.get().urlsToParseValue.setText(Integer.toString(urlQueue.size())));
 					attempts = 0;
 				} else if(attempts > LISTING_ATTEMPT_THRESHOLD) {
 					System.out.println("Failed to parse URL: " + urlQueue.poll());

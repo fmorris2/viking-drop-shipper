@@ -48,12 +48,12 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 		try {
 			final Listing listing = new Listing();
 
-			SwingUtilities.invokeLater(() -> ListingToolGUI.get().statusTextLabel.setText("Parsing listing title"));
+			SwingUtilities.invokeLater(() -> ListingToolGUI.get().statusTextValue.setText("Parsing listing title"));
 			final Supplier<WebElement> titleEl = () -> driver.findElement(By.cssSelector("#product-details > div.row.visible-xl > div > div.product-h1-container.visible-xl-block > h1"));
 			listing.title = driver.waitForTextToAppear(titleEl, 30_000).trim();
 			System.out.println("Listing Title: " + listing.title);
 
-			SwingUtilities.invokeLater(() -> ListingToolGUI.get().statusTextLabel.setText("Parsing listing description"));
+			SwingUtilities.invokeLater(() -> ListingToolGUI.get().statusTextValue.setText("Parsing listing description"));
 			final String featuresHtml = driver.findElement(By.cssSelector(".features-container > .pdp-features")).getAttribute("innerHTML");
 			listing.description = "<span>Features:</span>\n<ul>\n"+featuresHtml+"</ul>";
 

@@ -37,7 +37,8 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.workers.Fulfillmen
 public class ListingToolController {
 
 	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("###.##");
-	private static final String BASE_EBAY_SEARCH_URL = "https://www.ebay.com/sch/i.html?LH_Sold=1&LH_Complete=1&_nkw=";
+	private static final String BASE_EBAY_SEARCH_URL = "https://www.ebay.com/sch/i.html?_nkw=";
+	private static final String BASE_EBAY_SEARCH_URL_SOLD_ITEMS = "https://www.ebay.com/sch/i.html?LH_Sold=1&LH_Complete=1&_nkw=";
 
 	private final ListingToolGUI gui = ListingToolGUI.get();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -45,6 +46,7 @@ public class ListingToolController {
 	private JList<BufferedImage> imageList;
 	private DefaultListModel<BufferedImage> imagesModel;
 	private SwtBrowserCanvas browser;
+	private Listing currentListingClone;
 	private double originalListingPrice;
 
 	public void setup() {
@@ -56,7 +58,7 @@ public class ListingToolController {
 	}
 
 	private void addListeners() {
-		gui.listingURLInput.addKeyListener(createFulfillmentUrlKeyAdapter());
+		gui.urlsToParseValue.addKeyListener(createFulfillmentUrlKeyAdapter());
 
         gui.descRawInput.addKeyListener(new KeyAdapter() {
         	@Override
@@ -99,6 +101,11 @@ public class ListingToolController {
         });
 
         gui.fullfillmentsPanelFileBtn.addActionListener(e -> importFile());
+        gui.soldItemsCheckbox.addActionListener(e -> updateRecentSoldItemsBrowser());
+        gui.resetListingInformation.addActionListener(e -> {
+        	displayListing(currentListingClone);
+        	ListingQueue.replaceFirst(currentListingClone);
+        });
 
 	}
 
@@ -146,7 +153,6 @@ public class ListingToolController {
 
 	private void moveSelectedImage(final int direction) {
 		final int selected = imageList.getSelectedIndex();
-		System.out.println("Move selected image: " + selected);
 		final Listing listing = ListingQueue.peek();
 		final ListingImage toMove = listing.pictures.remove(selected);
 		listing.pictures.add(selected + direction, toMove);
@@ -181,15 +187,15 @@ public class ListingToolController {
 	}
 
 	public void displayNextListing() {
-		final Listing listing = ListingQueue.peek();
+		displayListing(ListingQueue.peek());
+	}
+
+	public void displayListing(final Listing listing) {
 		imagesModel.removeAllElements();
 		if(listing != null) {
 			SwingUtilities.invokeLater(() -> {
-				try {
-					browser.setUrl(BASE_EBAY_SEARCH_URL + URLEncoder.encode(listing.title, "UTF-8"));
-				} catch (final UnsupportedEncodingException e) {
-					e.printStackTrace();
-				}
+				currentListingClone = listing.clone();
+				updateRecentSoldItemsBrowser();
 				gui.listingTitleInput.setText(listing.title);
 				gui.descRawInput.setText(listing.description);
 				gui.descHtmlView.setText(listing.description);
@@ -214,6 +220,15 @@ public class ListingToolController {
 				originalListingPrice = 0;
 				updateListingPriceWithMargin();
 			});
+		}
+	}
+
+	private void updateRecentSoldItemsBrowser() {
+		try {
+			final String baseUrl = gui.soldItemsCheckbox.isSelected() ? BASE_EBAY_SEARCH_URL_SOLD_ITEMS : BASE_EBAY_SEARCH_URL;
+			browser.setUrl(baseUrl + URLEncoder.encode(ListingQueue.peek().title, "UTF-8"));
+		} catch (final UnsupportedEncodingException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -250,7 +265,6 @@ public class ListingToolController {
     }
 
 	private void publishListing() {
-		final Listing listing = ListingQueue.poll();
 		//publish...
 		displayNextListing();
 	}
@@ -261,9 +275,9 @@ public class ListingToolController {
 			@Override
 			public void keyReleased(final KeyEvent e) {
 				if(e.getKeyCode() == KeyEvent.VK_ENTER) {
-					System.out.println("Attempting to add fulfillment URL to queue: " + gui.listingURLInput.getText());
-					FulfillmentListingParserWorker.instance().addUrlToQueue(gui.listingURLInput.getText());
-					SwingUtilities.invokeLater(() -> gui.listingURLInput.setText(""));
+					System.out.println("Attempting to add fulfillment URL to queue: " + gui.urlsToParseValue.getText());
+					FulfillmentListingParserWorker.instance().addUrlToQueue(gui.urlsToParseValue.getText());
+					SwingUtilities.invokeLater(() -> gui.urlsToParseValue.setText(""));
 				}
 			}
 		};
