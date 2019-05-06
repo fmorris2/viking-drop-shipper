@@ -7,10 +7,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
 
 import javax.imageio.ImageIO;
@@ -25,6 +24,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.Cost
 import main.org.vikingsoftware.dropshipper.core.web.costco.CostcoWebDriver;
 import main.org.vikingsoftware.dropshipper.listing.tool.gui.ListingToolGUI;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingImage;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.AbstractFulfillmentParser;
 
 public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWebDriver> {
@@ -95,8 +95,8 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 		return true;
 	}
 
-	private Map<String, BufferedImage> getPictures() throws InterruptedException, MalformedURLException, IOException {
-		final Map<String, BufferedImage> pics = new HashMap<>();
+	private List<ListingImage> getPictures() throws InterruptedException, MalformedURLException, IOException {
+		final List<ListingImage> pics = new ArrayList<>();
 		final Supplier<WebElement> thumbnailTrack = () -> driver.findElement(By.cssSelector("#theViews > div > div"));
 		final Supplier<List<WebElement>> thumbnails = () -> thumbnailTrack.get().findElements(By.tagName("a"));
 		for(int i = 0; i < thumbnails.get().size(); i++) {
@@ -105,7 +105,7 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 			final WebElement mainImg = driver.findElement(By.cssSelector("#RICHFXViewerContainer___richfx_id_0_initialImage"));
 			final String imgSrc = mainImg.getAttribute("src");
 			final BufferedImage img = ImageIO.read(new URL(imgSrc));
-			pics.put(imgSrc, img);
+			pics.add(new ListingImage(imgSrc, img));
 		}
 
 		return pics;

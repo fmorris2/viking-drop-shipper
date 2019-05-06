@@ -18,7 +18,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -30,13 +30,14 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingImage;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingQueue;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.workers.FulfillmentListingParserWorker;
 
 public class ListingToolController {
 
 	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("###.##");
-	private static final String BASE_EBAY_SEARCH_URL = "https://www.ebay.com/sch/i.html?_nkw=";
+	private static final String BASE_EBAY_SEARCH_URL = "https://www.ebay.com/sch/i.html?LH_Sold=1&LH_Complete=1&_nkw=";
 
 	private final ListingToolGUI gui = ListingToolGUI.get();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -107,7 +108,9 @@ public class ListingToolController {
 		imageList.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
-				if(e.getButton() == MouseEvent.BUTTON3) {
+				if(SwingUtilities.isRightMouseButton(e)) {
+		            final int row = imageList.locationToIndex(e.getPoint());
+		            imageList.setSelectedIndex(row);
 					handleImageListRightClick(e);
 				}
 			}
@@ -119,39 +122,57 @@ public class ListingToolController {
 	}
 
 	private void handleImageListRightClick(final MouseEvent evt) {
+		final int selected = imageList.getSelectedIndex();
 		final JPopupMenu menu = new JPopupMenu();
 
-		final JMenuItem moveUp = new JMenuItem("Move up");
-		moveUp.addActionListener(e -> moveSelectedImageUp());
+		if(selected > 0) {
+			final JMenuItem moveUp = new JMenuItem("Move up");
+			moveUp.addActionListener(e -> moveSelectedImageUp());
+			menu.add(moveUp);
+		}
 
-		final JMenuItem moveDown = new JMenuItem("Move down");
-		moveDown.addActionListener(e -> moveSelectedImageDown());
+		if(selected < imagesModel.getSize() - 1) {
+			final JMenuItem moveDown = new JMenuItem("Move down");
+			moveDown.addActionListener(e -> moveSelectedImageDown());
+			menu.add(moveDown);
+		}
 
 		final JMenuItem delete = new JMenuItem("Delete");
 		delete.addActionListener(e -> deleteSelectedImage());
 
-		menu.add(moveUp);
-		menu.add(moveDown);
 		menu.add(delete);
 		menu.show(gui.imagesPanel, evt.getPoint().x, evt.getPoint().y);
 	}
 
-	private void moveSelectedImageUp() {
+	private void moveSelectedImage(final int direction) {
+		final int selected = imageList.getSelectedIndex();
+		System.out.println("Move selected image: " + selected);
+		final Listing listing = ListingQueue.peek();
+		final ListingImage toMove = listing.pictures.remove(selected);
+		listing.pictures.add(selected + direction, toMove);
+		imagesModel.removeAllElements();
+		addImages(listing.pictures);
+	}
 
+	private void moveSelectedImageUp() {
+		moveSelectedImage(-1);
 	}
 
 	private void moveSelectedImageDown() {
-
+		moveSelectedImage(1);
 	}
 
 	private void deleteSelectedImage() {
-
+		ListingQueue.peek().pictures.remove(imageList.getSelectedIndex());
+		imagesModel.remove(imageList.getSelectedIndex());
 	}
 
 	private void addRecentSalesBrowser() {
 		browser = new SwtBrowserCanvas();
+		browser.setFocusable(false);
 		gui.recentSalesPanel.setLayout(new BorderLayout());
 		gui.recentSalesPanel.add(browser, BorderLayout.CENTER);
+		gui.recentSalesPanel.setFocusable(false);
 		if(browser.initialise()) {
 			browser.setUrl("http://www.google.com");
 		}
@@ -188,6 +209,7 @@ public class ListingToolController {
 				gui.descHtmlView.setText("");
 				gui.listingPriceInput.setText("");
 				gui.profitMarginInput.setText("");
+				browser.setUrl("http://www.google.com");
 
 				originalListingPrice = 0;
 				updateListingPriceWithMargin();
@@ -195,9 +217,9 @@ public class ListingToolController {
 		}
 	}
 
-	private void addImages(final Map<String, BufferedImage> images) {
-		for(final BufferedImage image : images.values()) {
-			final BufferedImage resizedImage = resize(image, 300);
+	private void addImages(final List<ListingImage> images) {
+		for(final ListingImage image : images) {
+			final BufferedImage resizedImage = resize(image.image, 300);
 			imagesModel.addElement(resizedImage);
 		}
 	}

@@ -179,6 +179,8 @@ public abstract class LoginWebDriver extends ChromeDriver {
 		options.setHeadless(HEADLESS);
 		options.addArguments("--no-sandbox");
 		options.addArguments("--disable-dev-shm-usage");
+		options.addArguments("--disk-cache-size=4096");
+		options.addArguments("--profile.managed_default_content_settings.images=2", "--blink-settings=imagesEnabled=false");
 		return options;
 	}
 }

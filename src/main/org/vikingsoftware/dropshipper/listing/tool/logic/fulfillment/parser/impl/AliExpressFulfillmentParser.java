@@ -1,6 +1,5 @@
 package main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.impl;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -24,6 +23,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.AliE
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 import main.org.vikingsoftware.dropshipper.core.web.aliexpress.AliExpressWebDriver;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingImage;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.PropertyItem;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.PropertyItemOption;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.AbstractFulfillmentParser;
@@ -51,7 +51,7 @@ public class AliExpressFulfillmentParser extends AbstractFulfillmentParser<AliEx
 			listing.description = getDescription(driver);
 
 			System.out.println("listing title: " + listing.title);
-			System.out.println("listing pics: " + listing.pictures.keySet());
+			System.out.println("listing pics: " + listing.pictures);
 			System.out.println("listing description: " + listing.description);
 			System.out.println("listing variations: " + listing.variations);
 			return listing;
@@ -62,8 +62,8 @@ public class AliExpressFulfillmentParser extends AbstractFulfillmentParser<AliEx
 		return null;
 	}
 
-	private Map<String, BufferedImage> getPictures(final AliExpressWebDriver driver) throws InterruptedException, MalformedURLException, IOException {
-		final Map<String, BufferedImage> pics = new HashMap<>();
+	private List<ListingImage> getPictures(final AliExpressWebDriver driver) throws InterruptedException, MalformedURLException, IOException {
+		final List<ListingImage> pics = new ArrayList<>();
 
 		final WebElement thumbsEl = driver.findElement(By.id("j-image-thumb-list"));
 		final int numThumbNails = thumbsEl.findElements(By.className("img-thumb-item")).size();
@@ -79,7 +79,7 @@ public class AliExpressFulfillmentParser extends AbstractFulfillmentParser<AliEx
 				final String curr = currentImg;
 				waitForImgChange(() -> curr != null && curr.equals(fullImg.get()));
 				currentImg = fullImg.get();
-				pics.put(currentImg, ImageIO.read(new URL(currentImg)));
+				pics.add(new ListingImage(currentImg, ImageIO.read(new URL(currentImg))));
 			} catch(final StaleElementReferenceException e) {
 				i--;
 			}
