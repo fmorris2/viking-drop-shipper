@@ -276,7 +276,9 @@ public class ListingToolController {
 		final Listing toPublish = ListingQueue.peek().clone();
 		toPublish.title = gui.listingTitleInput.getText().trim();
 		toPublish.price = Double.parseDouble(gui.listingPriceInput.getText().replace("$", "").trim());
-		toPublish.shipping = Double.parseDouble(gui.shippingPriceInput.getText().replace("$", "").trim());
+		if(!gui.shippingPriceInput.getText().isEmpty()) {
+			toPublish.shipping = Double.parseDouble(gui.shippingPriceInput.getText().replace("$", "").trim());
+		}
 		toPublish.targetProfitMargin = Double.parseDouble(gui.profitMarginInput.getText().replace("%", "").trim());
 		toPublish.description = gui.descRawInput.getText();
 		return toPublish;
