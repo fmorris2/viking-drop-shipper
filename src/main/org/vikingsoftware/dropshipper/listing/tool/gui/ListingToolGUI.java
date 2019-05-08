@@ -225,7 +225,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
 
         categoryDropdown.setBackground(new java.awt.Color(214, 223, 233));
         categoryDropdown.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
-        categoryDropdown.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Home & Garden > Food & Beverages > Coffee > Coffee Pods & K-Cups", "Home & Garden > Food & Beverages > Coffee > Ground Coffee", "Home & Garden > Food & Beverages > Coffee > Coffee Beans", "Business & Industrial > Restaurant & Food Service > Wholesale Lots > Bulk Food" }));
+        categoryDropdown.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "" }));
         categoryDropdown.setFocusable(false);
 
         descriptionLabel.setFont(new java.awt.Font("SansSerif", 1, 11)); // NOI18N

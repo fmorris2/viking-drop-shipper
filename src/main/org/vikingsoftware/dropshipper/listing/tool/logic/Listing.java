@@ -9,8 +9,7 @@ import java.util.Set;
 public class Listing implements Cloneable {
 	public String title;
 	public String description;
-	public String categoryId;
-	public String categoryName;
+	public EbayCategory category;
 	public String itemId;
 	public int fulfillmentPlatformId;
 	public double price;
@@ -25,8 +24,6 @@ public class Listing implements Cloneable {
 		final Listing clone = new Listing();
 		clone.title = title;
 		clone.description = description;
-		clone.categoryId = categoryId;
-		clone.categoryName = categoryName;
 		clone.itemId = itemId;
 		clone.fulfillmentPlatformId = fulfillmentPlatformId;
 		clone.price = price;

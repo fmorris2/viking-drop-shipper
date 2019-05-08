@@ -2,15 +2,27 @@ package main.org.vikingsoftware.dropshipper.core.ebay;
 
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import com.ebay.sdk.ApiContext;
 import com.ebay.sdk.TimeFilter;
+import com.ebay.sdk.call.AddFixedPriceItemCall;
 import com.ebay.sdk.call.CompleteSaleCall;
 import com.ebay.sdk.call.GetSellerTransactionsCall;
+import com.ebay.sdk.call.GetSuggestedCategoriesCall;
 import com.ebay.sdk.call.ReviseFixedPriceItemCall;
+import com.ebay.soap.eBLBaseComponents.BuyerRequirementDetailsType;
+import com.ebay.soap.eBLBaseComponents.CategoryType;
+import com.ebay.soap.eBLBaseComponents.CountryCodeType;
+import com.ebay.soap.eBLBaseComponents.CurrencyCodeType;
 import com.ebay.soap.eBLBaseComponents.ItemType;
+import com.ebay.soap.eBLBaseComponents.ListingDurationCodeType;
+import com.ebay.soap.eBLBaseComponents.ListingTypeCodeType;
+import com.ebay.soap.eBLBaseComponents.PictureDetailsType;
+import com.ebay.soap.eBLBaseComponents.ReturnPolicyType;
+import com.ebay.soap.eBLBaseComponents.ReturnsAcceptedCodeType;
 import com.ebay.soap.eBLBaseComponents.ShipmentTrackingDetailsType;
 import com.ebay.soap.eBLBaseComponents.ShipmentType;
 import com.ebay.soap.eBLBaseComponents.TransactionType;
@@ -28,6 +40,8 @@ import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.EbayConversionUtils;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.EbayCategory;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 
 public class EbayCalls {
 
@@ -149,5 +163,79 @@ public class EbayCalls {
 		}
 
 		return false;
+	}
+
+	public static EbayCategory[] getSuggestedCategories(final String listingTitle) {
+		final ApiContext api = EbayApiContextManager.getLiveContext();
+		final GetSuggestedCategoriesCall call = new GetSuggestedCategoriesCall(api);
+		call.setQuery(listingTitle);
+		try {
+			return Arrays.stream(call.getSuggestedCategories())
+					.map(category -> new EbayCategory(category.getCategory().getCategoryID(), category.getCategory().getCategoryName()))
+					.toArray(EbayCategory[]::new);
+		} catch (final Exception e) {
+			e.printStackTrace();
+		}
+
+		return new EbayCategory[0];
+	}
+
+	public static Optional<String> createListing(final Listing listing) {
+		final ApiContext api = EbayApiContextManager.getLiveContext();
+		final AddFixedPriceItemCall call = new AddFixedPriceItemCall(api);
+		call.setItem(createItemTypeForListing(listing));
+		return Optional.ofNullable(call.getReturnedItemID());
+	}
+
+	private static ItemType createItemTypeForListing(final Listing listing) {
+		final ItemType item = new ItemType();
+		item.setBuyerRequirementDetails(createBuyerRequirementsForListing(listing));
+		item.setCountry(CountryCodeType.US);
+		item.setCurrency(CurrencyCodeType.USD);
+		item.setDescription(listing.description);
+		item.setDispatchTimeMax(1);
+		item.setListingDuration(ListingDurationCodeType.GTC.value());
+		item.setListingType(ListingTypeCodeType.FIXED_PRICE_ITEM);
+		item.setLocation("St. Louis, MO");
+		item.setPostalCode("63101");
+		item.setPayPalEmailAddress("thevikingmarketplace@gmail.com");
+		item.setPictureDetails(createPictureDetailsForListing(listing));
+		item.setPrimaryCategory(createCategoryTypeForListing(listing));
+		item.setQuantity(0);
+		item.setReturnPolicy(createReturnPolicyTypeForListing(listing));
+
+		//TODO LEFT OFF ON Item.ShippingDetails @ https://developer.ebay.com/devzone/xml/docs/reference/ebay/AddFixedPriceItem.html
+
+
+		return item;
+	}
+
+	private static BuyerRequirementDetailsType createBuyerRequirementsForListing(final Listing listing) {
+		final BuyerRequirementDetailsType type = new BuyerRequirementDetailsType();
+		type.setShipToRegistrationCountry(true);
+		return type;
+	}
+
+	private static PictureDetailsType createPictureDetailsForListing(final Listing listing) {
+		final PictureDetailsType type = new PictureDetailsType();
+		final String[] urls = listing.pictures.stream()
+				.map(image -> image.url.replace("http://", "https://"))
+				.toArray(String[]::new);
+
+		type.setExternalPictureURL(urls);
+		return type;
+	}
+
+	private static CategoryType createCategoryTypeForListing(final Listing listing) {
+		final CategoryType type = new CategoryType();
+		type.setCategoryID(listing.category.id);
+		return type;
+	}
+
+	private static ReturnPolicyType createReturnPolicyTypeForListing(final Listing listing) {
+		final ReturnPolicyType type = new ReturnPolicyType();
+		type.setReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_ACCEPTED.value());
+		type.setInternationalReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_NOT_ACCEPTED.value());
+		return type;
 	}
 }

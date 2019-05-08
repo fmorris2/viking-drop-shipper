@@ -52,7 +52,6 @@ public abstract class LoginWebDriver extends ChromeDriver {
 		this.account = account;
 		try {
 			manage().timeouts().implicitlyWait(DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
-			manage().window().maximize();
 
 			final Object loginLock = loginLocks.computeIfAbsent(account, acc -> new Object());
 			synchronized(loginLock) {
@@ -181,6 +180,7 @@ public abstract class LoginWebDriver extends ChromeDriver {
 		options.addArguments("--disable-dev-shm-usage");
 		options.addArguments("--disk-cache-size=4096");
 		options.addArguments("--profile.managed_default_content_settings.images=2", "--blink-settings=imagesEnabled=false");
+		options.addArguments("--start-maximized");
 		return options;
 	}
 }

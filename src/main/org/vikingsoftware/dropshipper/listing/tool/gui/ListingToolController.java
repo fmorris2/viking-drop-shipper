@@ -19,9 +19,11 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
 import javax.swing.JList;
@@ -29,6 +31,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
+import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.EbayCategory;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingImage;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingQueue;
@@ -45,6 +49,7 @@ public class ListingToolController {
 
 	private JList<BufferedImage> imageList;
 	private DefaultListModel<BufferedImage> imagesModel;
+	private DefaultComboBoxModel<EbayCategory> categoryModel;
 	private SwtBrowserCanvas browser;
 	private Listing currentListingClone;
 	private double originalListingPrice;
@@ -54,6 +59,7 @@ public class ListingToolController {
 			addListeners();
 			addImageList();
 			addRecentSalesBrowser();
+			addCategoryModel();
 		});
 	}
 
@@ -186,6 +192,12 @@ public class ListingToolController {
 		gui.recentSalesPanel.repaint();
 	}
 
+	@SuppressWarnings("unchecked")
+	private void addCategoryModel() {
+		categoryModel = new DefaultComboBoxModel<>();
+		gui.categoryDropdown.setModel(categoryModel);
+	}
+
 	public void displayNextListing() {
 		displayListing(ListingQueue.peek());
 	}
@@ -207,6 +219,7 @@ public class ListingToolController {
 				addImages(listing.pictures);
 				originalListingPrice = listing.price;
 				updateListingPriceWithMargin();
+				updateCategoryModel(listing);
 			});
 		} else {
 			SwingUtilities.invokeLater(() -> {
@@ -216,10 +229,19 @@ public class ListingToolController {
 				gui.listingPriceInput.setText("");
 				gui.profitMarginInput.setText("");
 				browser.setUrl("http://www.google.com");
+				categoryModel.removeAllElements();
 
 				originalListingPrice = 0;
 				updateListingPriceWithMargin();
 			});
+		}
+	}
+
+	private void updateCategoryModel(final Listing listing) {
+		final EbayCategory[] suggestedCategories = EbayCalls.getSuggestedCategories(listing.title);
+		categoryModel.removeAllElements();
+		for(final EbayCategory category : suggestedCategories) {
+			categoryModel.addElement(category);
 		}
 	}
 
@@ -267,7 +289,12 @@ public class ListingToolController {
 	private void publishListing() {
 		//publish...
 		final Listing toPublish = createListingToPublish();
-
+		final Optional<String> publishedEbayListingItemId = EbayCalls.createListing(toPublish);
+		if(publishedEbayListingItemId.isPresent()) {
+			System.out.println("Successfully published eBay listing: " + toPublish.title);
+		} else {
+			System.out.println("Failed to publish eBay listing for listing: " + toPublish.title);
+		}
 		ListingQueue.poll();
 		displayNextListing();
 	}
@@ -281,6 +308,7 @@ public class ListingToolController {
 		}
 		toPublish.targetProfitMargin = Double.parseDouble(gui.profitMarginInput.getText().replace("%", "").trim());
 		toPublish.description = gui.descRawInput.getText();
+		toPublish.category = (EbayCategory)gui.categoryDropdown.getSelectedItem();
 		return toPublish;
 	}
 
