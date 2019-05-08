@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
-import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 public class CustomerOrderManager {
@@ -16,7 +16,7 @@ public class CustomerOrderManager {
 	public static List<CustomerOrder> loadOrdersToExecute() {
 		final List<CustomerOrder> toExecute = new ArrayList<>();
 		try {
-			final Statement st = VDSDBManager.get().createStatement();
+			final Statement st = VSDSDBManager.get().createStatement();
 			final ResultSet results = st.executeQuery("SELECT * FROM customer_order"
 					+ " LEFT JOIN processed_orders ON customer_order.id=processed_orders.customer_order_id"
 					+ " WHERE processed_orders.customer_order_id IS NULL");
@@ -34,7 +34,7 @@ public class CustomerOrderManager {
 
 	public static Optional<CustomerOrder> loadCustomerOrderById(final int id) {
 		try {
-			final Statement st = VDSDBManager.get().createStatement();
+			final Statement st = VSDSDBManager.get().createStatement();
 			final ResultSet results = st.executeQuery("SELECT * FROM customer_order"
 					+ " WHERE id="+id);
 
@@ -50,7 +50,7 @@ public class CustomerOrderManager {
 
 	public static CustomerOrder loadFirstCustomerOrder() {
 		CustomerOrder toReturn = null;
-		final Statement st = VDSDBManager.get().createStatement();
+		final Statement st = VSDSDBManager.get().createStatement();
 		try {
 			final ResultSet results = st.executeQuery("SELECT * FROM customer_order LIMIT 1");
 			if(results.next()) {

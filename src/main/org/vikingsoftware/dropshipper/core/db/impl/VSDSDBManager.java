@@ -3,13 +3,13 @@ package main.org.vikingsoftware.dropshipper.core.db.impl;
 import main.org.vikingsoftware.dropshipper.core.db.DBCredentialManager;
 import main.org.vikingsoftware.dropshipper.core.db.DBManager;
 
-public class VDSDBManager extends DBManager {
+public class VSDSDBManager extends DBManager {
 
-	private static VDSDBManager manager;
+	private static VSDSDBManager manager;
 
-	public static VDSDBManager get() {
+	public static VSDSDBManager get() {
 		if(manager == null) {
-			manager = new VDSDBManager();
+			manager = new VSDSDBManager();
 		}
 
 		return manager;

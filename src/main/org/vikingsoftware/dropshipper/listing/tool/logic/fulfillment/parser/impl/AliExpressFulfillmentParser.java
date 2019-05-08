@@ -19,6 +19,7 @@ import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.AliExpressDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 import main.org.vikingsoftware.dropshipper.core.web.aliexpress.AliExpressWebDriver;
@@ -44,6 +45,7 @@ public class AliExpressFulfillmentParser extends AbstractFulfillmentParser<AliEx
 	protected Listing parseListing() {
 		try {
 			final Listing listing = new Listing();
+			listing.fulfillmentPlatformId = FulfillmentPlatforms.ALI_EXPRESS.getId();
 			listing.title = driver.findElement(By.className("product-name")).getText().trim();
 			listing.pictures = getPictures(driver);
 			listing.propertyItems = getPropertyItems(driver);

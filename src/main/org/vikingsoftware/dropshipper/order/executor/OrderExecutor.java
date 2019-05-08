@@ -16,7 +16,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentMana
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
-import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 public class OrderExecutor implements CycleParticipant {
@@ -79,8 +79,8 @@ public class OrderExecutor implements CycleParticipant {
 				+ "fulfillment_account_id, fulfillment_transaction_id,"
 				+ "buy_subtotal, buy_sales_tax, buy_shipping, buy_product_fees, buy_total, profit) VALUES(?,?,?,?,?,?,?,?,?,?)";
 
-		final PreparedStatement prepared = VDSDBManager.get().createPreparedStatement(sql);
-		final Statement deleteBatch = VDSDBManager.get().createStatement();
+		final PreparedStatement prepared = VSDSDBManager.get().createPreparedStatement(sql);
+		final Statement deleteBatch = VSDSDBManager.get().createStatement();
 		successfulOrders.addAll(successfullyFulfilledOrders.values());
 		try {
 			for(final ProcessedOrder order : successfulOrders) {
@@ -116,7 +116,7 @@ public class OrderExecutor implements CycleParticipant {
 		//store all new orders in DB
 		final String sql = "INSERT INTO failed_fulfillment_attempts(customer_order_id, fulfillment_listing_id) VALUES(?,?)";
 
-		final PreparedStatement prepared = VDSDBManager.get().createPreparedStatement(sql);
+		final PreparedStatement prepared = VSDSDBManager.get().createPreparedStatement(sql);
 		try {
 			for(final ProcessedOrder order : failedOrders) {
 				prepared.setInt(1, order.customer_order_id);

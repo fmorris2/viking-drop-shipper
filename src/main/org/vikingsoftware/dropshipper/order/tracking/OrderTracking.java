@@ -13,7 +13,7 @@ import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
-import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
@@ -51,7 +51,7 @@ public class OrderTracking implements CycleParticipant {
 			taskStarter.execute(() -> futures.get(index).run());
 		}
 
-		final Statement st = VDSDBManager.get().createStatement();
+		final Statement st = VSDSDBManager.get().createStatement();
 		for(int i = 0; i < futures.size(); i++) {
 			try {
 				System.out.println("Checking status of inventory update task #" + i + "...");
@@ -81,7 +81,7 @@ public class OrderTracking implements CycleParticipant {
 	private List<ProcessedOrder> getUntrackedOrders() {
 		final List<ProcessedOrder> orders = new ArrayList<>();
 		try {
-			final Statement st = VDSDBManager.get().createStatement();
+			final Statement st = VSDSDBManager.get().createStatement();
 			final ResultSet res = st.executeQuery("SELECT * FROM processed_orders WHERE tracking_number IS NULL");
 			while(res.next()) {
 				final ProcessedOrder order = new ProcessedOrder.Builder()

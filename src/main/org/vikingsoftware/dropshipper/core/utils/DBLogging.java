@@ -9,7 +9,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 
 public class DBLogging {
 
@@ -22,7 +22,7 @@ public class DBLogging {
 
 	private static void updateLogs() {
 		try {
-			final PreparedStatement st = VDSDBManager.get().createPreparedStatement("INSERT INTO logging(class,level,message,exception)"
+			final PreparedStatement st = VSDSDBManager.get().createPreparedStatement("INSERT INTO logging(class,level,message,exception)"
 					+ " VALUES(?,?,?,?)");
 			while(!messageQueue.isEmpty()) {
 				final LogMessage msg = messageQueue.poll();

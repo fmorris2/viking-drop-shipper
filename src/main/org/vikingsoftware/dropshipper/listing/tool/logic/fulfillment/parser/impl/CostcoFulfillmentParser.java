@@ -20,6 +20,7 @@ import org.openqa.selenium.WebElement;
 import org.w3c.dom.Document;
 import org.w3c.tidy.Tidy;
 
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.CostcoDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.costco.CostcoWebDriver;
 import main.org.vikingsoftware.dropshipper.listing.tool.gui.ListingToolGUI;
@@ -47,11 +48,17 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 	public Listing parseListing() {
 		try {
 			final Listing listing = new Listing();
+			listing.fulfillmentPlatformId = FulfillmentPlatforms.COSTCO.getId();
 
 			SwingUtilities.invokeLater(() -> ListingToolGUI.get().statusTextValue.setText("Parsing listing title"));
 			final Supplier<WebElement> titleEl = () -> driver.findElement(By.cssSelector("#product-details > div.row.visible-xl > div > div.product-h1-container.visible-xl-block > h1"));
 			listing.title = driver.waitForTextToAppear(titleEl, 30_000).trim();
 			System.out.println("Listing Title: " + listing.title);
+
+			final String itemId = driver.findElement(By.cssSelector(
+					"#product-page > div.row.top-content > div.col-xs-12.hidden-xl > div.row.form-group > div > span > span")).getAttribute("textContent");
+			listing.itemId = itemId.trim();
+			System.out.println("Listing Item ID: " + listing.itemId);
 
 			SwingUtilities.invokeLater(() -> ListingToolGUI.get().statusTextValue.setText("Parsing listing description"));
 			final String featuresHtml = driver.findElement(By.cssSelector(".features-container > .pdp-features")).getAttribute("innerHTML");

@@ -14,7 +14,7 @@ import java.util.Set;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
-import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
 
@@ -51,7 +51,7 @@ public class FulfillmentManager {
 	public static void freeze(final int fulfillmentPlatformId) {
 		frozenFulfillmentPlatforms.add(fulfillmentPlatformId);
 		try {
-			final Statement st = VDSDBManager.get().createStatement();
+			final Statement st = VSDSDBManager.get().createStatement();
 			st.execute("UPDATE fulfillment_platform SET frozen=1 WHERE id=" + fulfillmentPlatformId);
 		} catch(final Exception e) {
 			DBLogging.critical(FulfillmentManager.class, "failed to freeze fulfillment platform " + fulfillmentPlatformId, e);
@@ -65,7 +65,7 @@ public class FulfillmentManager {
 		}
 
 		try {
-			final Statement st = VDSDBManager.get().createStatement();
+			final Statement st = VSDSDBManager.get().createStatement();
 			st.execute("INSERT INTO fulfillment_listings_to_examine(fulfillment_listing_id, current_listing_title)"
 					+ " VALUES("+listing.id+",'"+newTitle+"')");
 			System.out.println("Successfully flagged listing " + listing + " for examination");
@@ -140,7 +140,7 @@ public class FulfillmentManager {
 	}
 
 	private void loadValidFulfillmentListings() {
-		final Statement st = VDSDBManager.get().createStatement();
+		final Statement st = VSDSDBManager.get().createStatement();
 		try {
 			final ResultSet results = st.executeQuery("SELECT * FROM fulfillment_listing"
 					+ " INNER JOIN fulfillment_mapping ON"
@@ -168,7 +168,7 @@ public class FulfillmentManager {
 	}
 
 	private void loadFulfillmentPlatforms() {
-		final Statement st = VDSDBManager.get().createStatement();
+		final Statement st = VSDSDBManager.get().createStatement();
 		try {
 			final ResultSet results = st.executeQuery("SELECT * FROM fulfillment_platform");
 			while(results.next()) {

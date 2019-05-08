@@ -266,7 +266,20 @@ public class ListingToolController {
 
 	private void publishListing() {
 		//publish...
+		final Listing toPublish = createListingToPublish();
+
+		ListingQueue.poll();
 		displayNextListing();
+	}
+
+	private Listing createListingToPublish() {
+		final Listing toPublish = ListingQueue.peek().clone();
+		toPublish.title = gui.listingTitleInput.getText().trim();
+		toPublish.price = Double.parseDouble(gui.listingPriceInput.getText().replace("$", "").trim());
+		toPublish.shipping = Double.parseDouble(gui.shippingPriceInput.getText().replace("$", "").trim());
+		toPublish.targetProfitMargin = Double.parseDouble(gui.profitMarginInput.getText().replace("%", "").trim());
+		toPublish.description = gui.descRawInput.getText();
+		return toPublish;
 	}
 
 	private KeyAdapter createFulfillmentUrlKeyAdapter() {

@@ -25,7 +25,7 @@ import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.Marketp
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
-import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.EbayConversionUtils;
 
@@ -69,7 +69,7 @@ public class EbayCalls {
 	private static void logUnknownTransactionMappingsInDB(final List<TransactionType> transactions) {
 		try {
 			System.out.println("Logging " + transactions.size() + " unknown eBay transactions in DB");
-			final Statement st = VDSDBManager.get().createStatement();
+			final Statement st = VSDSDBManager.get().createStatement();
 			for(final TransactionType trans : transactions) {
 				st.addBatch("INSERT INTO unknown_transaction_mappings(marketplace_id, listing_id) "
 						+ "VALUES("+Marketplaces.EBAY.getMarketplaceId()+", '"+trans.getItem().getItemID()+"')");
