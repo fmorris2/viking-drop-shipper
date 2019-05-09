@@ -219,7 +219,7 @@ public class EbayCalls {
 	private static PictureDetailsType createPictureDetailsForListing(final Listing listing) {
 		final PictureDetailsType type = new PictureDetailsType();
 		final String[] urls = listing.pictures.stream()
-				.map(image -> image.url.replace("http://", "https://"))
+				.map(image -> image.url.replace("http://", "https://")) //eBay requires external images to have a link with https
 				.toArray(String[]::new);
 
 		type.setExternalPictureURL(urls);

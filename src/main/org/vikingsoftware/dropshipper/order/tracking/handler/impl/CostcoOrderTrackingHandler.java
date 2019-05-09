@@ -18,10 +18,7 @@ public class CostcoOrderTrackingHandler extends AbstractOrderTrackingHandler<Cos
 
 	private static final String BASE_ORDER_DETAILS_URL = "https://www.costco.com/OrderStatusDetailsView?orderId=";
 
-	private static final String TRACKING_NUM_SELECTOR = "#order-details-wrapper > div.order-ajax > div.col-xs-12.outer_box.product_list.pull-right > "
-			+ "div.row > div > div:nth-child(3) > div > div.cust_orderbox "
-			+ "> div.col-md-3.col-xl-3.col-lg-3.col-sm-3.col-xs-12.flbox.hidden-md.hidden-sm.hidden-xs.order-details-item-shipping-details "
-			+ "> div > p:nth-child(2) > a";
+	private static final String TRACKING_NUM_SELECTOR = ".shipment_details .blue_link";
 
 	@Override
 	public boolean prepareToTrack() {
