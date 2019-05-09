@@ -13,6 +13,8 @@ import com.ebay.sdk.call.CompleteSaleCall;
 import com.ebay.sdk.call.GetSellerTransactionsCall;
 import com.ebay.sdk.call.GetSuggestedCategoriesCall;
 import com.ebay.sdk.call.ReviseFixedPriceItemCall;
+import com.ebay.soap.eBLBaseComponents.AmountType;
+import com.ebay.soap.eBLBaseComponents.BuyerPaymentMethodCodeType;
 import com.ebay.soap.eBLBaseComponents.BuyerRequirementDetailsType;
 import com.ebay.soap.eBLBaseComponents.CategoryType;
 import com.ebay.soap.eBLBaseComponents.CountryCodeType;
@@ -25,6 +27,9 @@ import com.ebay.soap.eBLBaseComponents.ReturnPolicyType;
 import com.ebay.soap.eBLBaseComponents.ReturnsAcceptedCodeType;
 import com.ebay.soap.eBLBaseComponents.ShipmentTrackingDetailsType;
 import com.ebay.soap.eBLBaseComponents.ShipmentType;
+import com.ebay.soap.eBLBaseComponents.ShippingDetailsType;
+import com.ebay.soap.eBLBaseComponents.ShippingServiceOptionsType;
+import com.ebay.soap.eBLBaseComponents.SiteCodeType;
 import com.ebay.soap.eBLBaseComponents.TransactionType;
 import com.ebay.soap.eBLBaseComponents.VariationType;
 import com.ebay.soap.eBLBaseComponents.VariationsType;
@@ -184,6 +189,11 @@ public class EbayCalls {
 		final ApiContext api = EbayApiContextManager.getLiveContext();
 		final AddFixedPriceItemCall call = new AddFixedPriceItemCall(api);
 		call.setItem(createItemTypeForListing(listing));
+		try {
+			call.addFixedPriceItem();
+		} catch (final Exception e) {
+			e.printStackTrace();
+		}
 		return Optional.ofNullable(call.getReturnedItemID());
 	}
 
@@ -203,10 +213,19 @@ public class EbayCalls {
 		item.setPrimaryCategory(createCategoryTypeForListing(listing));
 		item.setQuantity(0);
 		item.setReturnPolicy(createReturnPolicyTypeForListing(listing));
+		item.setShippingDetails(createShippingDetailsForListing(listing));
+		item.setSite(SiteCodeType.US);
+		item.setTitle(listing.title);
+		item.setConditionID(1000); //brand new
 
-		//TODO LEFT OFF ON Item.ShippingDetails @ https://developer.ebay.com/devzone/xml/docs/reference/ebay/AddFixedPriceItem.html
+		final BuyerPaymentMethodCodeType[] paymentMethods = {BuyerPaymentMethodCodeType.PAY_PAL};
+		item.setPaymentMethods(paymentMethods);
 
 
+		final AmountType price = new AmountType();
+		price.setCurrencyID(CurrencyCodeType.USD);
+		price.setValue(listing.price);
+		item.setStartPrice(price);
 		return item;
 	}
 
@@ -237,5 +256,26 @@ public class EbayCalls {
 		type.setReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_ACCEPTED.value());
 		type.setInternationalReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_NOT_ACCEPTED.value());
 		return type;
+	}
+
+	private static ShippingDetailsType createShippingDetailsForListing(final Listing listing) {
+		final ShippingDetailsType type = new ShippingDetailsType();
+		type.setGlobalShipping(false);
+		type.setShippingServiceOptions(createShippingServiceOptionsForListing(listing));
+
+		return type;
+	}
+
+	private static ShippingServiceOptionsType[] createShippingServiceOptionsForListing(final Listing listing) {
+		final ShippingServiceOptionsType type = new ShippingServiceOptionsType();
+		type.setFreeShipping(listing.shipping <= 0);
+		type.setShippingService(listing.shippingService.value());
+
+		final AmountType shippingCost = new AmountType();
+		shippingCost.setCurrencyID(CurrencyCodeType.USD);
+		shippingCost.setValue(listing.shipping);
+		type.setShippingServiceCost(shippingCost);
+
+		return new ShippingServiceOptionsType[] {type};
 	}
 }

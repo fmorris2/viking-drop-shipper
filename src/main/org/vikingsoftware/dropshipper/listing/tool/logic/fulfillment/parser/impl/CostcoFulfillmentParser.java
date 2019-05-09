@@ -20,6 +20,8 @@ import org.openqa.selenium.WebElement;
 import org.w3c.dom.Document;
 import org.w3c.tidy.Tidy;
 
+import com.ebay.soap.eBLBaseComponents.ShippingServiceCodeType;
+
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.CostcoDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.costco.CostcoWebDriver;
@@ -49,6 +51,7 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 		try {
 			final Listing listing = new Listing();
 			listing.fulfillmentPlatformId = FulfillmentPlatforms.COSTCO.getId();
+			listing.shippingService = ShippingServiceCodeType.SHIPPING_METHOD_STANDARD;
 
 			SwingUtilities.invokeLater(() -> ListingToolGUI.get().statusTextValue.setText("Parsing listing title"));
 			final Supplier<WebElement> titleEl = () -> driver.findElement(By.cssSelector("#product-details > div.row.visible-xl > div > div.product-h1-container.visible-xl-block > h1"));

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.ebay.soap.eBLBaseComponents.ShippingServiceCodeType;
+
 public class Listing implements Cloneable {
 	public String title;
 	public String description;
@@ -13,6 +15,7 @@ public class Listing implements Cloneable {
 	public String itemId;
 	public int fulfillmentPlatformId;
 	public double price;
+	public ShippingServiceCodeType shippingService;
 	public double shipping;
 	public double targetProfitMargin;
 	public List<ListingImage> pictures = new ArrayList<>();
@@ -27,6 +30,7 @@ public class Listing implements Cloneable {
 		clone.itemId = itemId;
 		clone.fulfillmentPlatformId = fulfillmentPlatformId;
 		clone.price = price;
+		clone.shippingService = shippingService;
 		clone.shipping = shipping;
 		clone.pictures = new ArrayList<>(pictures);
 		clone.propertyItems = new ArrayList<>(propertyItems);
