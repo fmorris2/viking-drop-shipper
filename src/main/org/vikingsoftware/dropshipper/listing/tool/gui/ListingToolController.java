@@ -205,38 +205,46 @@ public class ListingToolController {
 	public void displayListing(final Listing listing) {
 		imagesModel.removeAllElements();
 		if(listing != null) {
-			SwingUtilities.invokeLater(() -> {
-				currentListingClone = listing.clone();
-				updateRecentSoldItemsBrowser();
-				gui.listingTitleInput.setText(listing.title);
-				gui.descRawInput.setText(listing.description);
-				gui.descHtmlView.setText(listing.description);
-				gui.brandInput.setText(listing.brand);
-				gui.listingPriceInput.setText("$" + listing.price);
-				if(gui.profitMarginInput.getText().isEmpty()) {
-					gui.profitMarginInput.setText("-20%");
-				}
-
-				addImages(listing.pictures);
-				originalListingPrice = listing.price;
-				updateListingPriceWithMargin();
-				updateCategoryModel(listing);
-			});
+			setGUI(listing);
 		} else {
-			SwingUtilities.invokeLater(() -> {
-				gui.listingTitleInput.setText("");
-				gui.descRawInput.setText("");
-				gui.descHtmlView.setText("");
-				gui.listingPriceInput.setText("");
-				gui.profitMarginInput.setText("");
-				gui.brandInput.setText("");
-				browser.setUrl("http://www.google.com");
-				categoryModel.removeAllElements();
-
-				originalListingPrice = 0;
-				updateListingPriceWithMargin();
-			});
+			clearGUI();
 		}
+	}
+
+	private void setGUI(final Listing listing) {
+		SwingUtilities.invokeLater(() -> {
+			currentListingClone = listing.clone();
+			updateRecentSoldItemsBrowser();
+			gui.listingTitleInput.setText(listing.title);
+			gui.descRawInput.setText(listing.description);
+			gui.descHtmlView.setText(listing.description);
+			gui.brandInput.setText(listing.brand);
+			gui.listingPriceInput.setText("$" + listing.price);
+			if(gui.profitMarginInput.getText().isEmpty()) {
+				gui.profitMarginInput.setText("-20%");
+			}
+
+			addImages(listing.pictures);
+			originalListingPrice = listing.price;
+			updateListingPriceWithMargin();
+			updateCategoryModel(listing);
+		});
+	}
+
+	private void clearGUI() {
+		SwingUtilities.invokeLater(() -> {
+			gui.listingTitleInput.setText("");
+			gui.descRawInput.setText("");
+			gui.descHtmlView.setText("");
+			gui.listingPriceInput.setText("");
+			gui.profitMarginInput.setText("");
+			gui.brandInput.setText("");
+			browser.setUrl("http://www.google.com");
+			categoryModel.removeAllElements();
+
+			originalListingPrice = 0;
+			updateListingPriceWithMargin();
+		});
 	}
 
 	private void updateCategoryModel(final Listing listing) {

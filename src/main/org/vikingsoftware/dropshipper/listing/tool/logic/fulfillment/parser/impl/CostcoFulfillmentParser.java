@@ -64,7 +64,10 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 				driver.findElement(By.id("add-to-cart-btn"));
 			} catch(final Exception e) {
 				listing.canShip = false;
+				return listing;
 			}
+
+			listing.canShip = true;
 
 			final String itemId = driver.findElement(By.cssSelector(
 					"#product-page > div.row.top-content > div.col-xs-12.hidden-xl > div.row.form-group > div > span > span")).getAttribute("textContent");
