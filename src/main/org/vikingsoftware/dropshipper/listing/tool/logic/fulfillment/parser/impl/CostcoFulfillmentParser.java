@@ -123,15 +123,11 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 
 	private List<ListingImage> getPictures() throws InterruptedException, MalformedURLException, IOException {
 		final List<ListingImage> pics = new ArrayList<>();
-		final Supplier<WebElement> thumbnailTrack = () -> driver.findElement(By.cssSelector("#theViews > div > div"));
-		final Supplier<List<WebElement>> thumbnails = () -> thumbnailTrack.get().findElements(By.tagName("a"));
-		for(int i = 0; i < thumbnails.get().size(); i++) {
-			thumbnails.get().get(i).click();
-			Thread.sleep(1000);
-			final WebElement mainImg = driver.findElement(By.cssSelector("#RICHFXViewerContainer___richfx_id_0_initialImage"));
-			final String imgSrc = mainImg.getAttribute("src");
-			final BufferedImage img = ImageIO.read(new URL(imgSrc));
-			pics.add(new ListingImage(imgSrc, img));
+		final Supplier<List<WebElement>> thumbnails = () -> driver.findElements(By.cssSelector("#theViews > div > div > a > img"));
+		for(final WebElement thumbnail : thumbnails.get()) {
+			final String convertedUrl = thumbnail.getAttribute("src").replace("recipeId=735", "recipeId=729");
+			final BufferedImage img = ImageIO.read(new URL(convertedUrl));
+			pics.add(new ListingImage(convertedUrl, img));
 		}
 
 		return pics;
@@ -148,7 +144,19 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 		final OutputStream out = new ByteArrayOutputStream();
 		tidy.pprint(htmlDom, out);
 
-		listing.description = out.toString();
+		String replacedDesc = out.toString();
+		replacedDesc = replacedDesc.replaceAll("<!DOCTYPE[^>]*(>?)", "");
+		replacedDesc = replacedDesc.replaceAll("<\\/*html.*>", "");
+		replacedDesc = replacedDesc.replaceAll("<head>(?:.|\\n|\\r)+?<\\/head>", "");
+		replacedDesc = replacedDesc.replaceAll("<\\/*body>", "");
+		replacedDesc = replacedDesc.replaceAll("(\\\"\\s*|;\\s*)(max-)*width\\:\\s*([1-9]\\d{3,}|9[3-9]\\d|9[4-9]{2})(px|%)(\\s*!important)*", "\1\2width:923px!important");
+		replacedDesc = replacedDesc.replaceAll("width=\"([1-9]\\d{3,}|9[3-9]\\d|9[4-9]{2})\"", "width=\"923\"");
+		replacedDesc = replacedDesc.replaceAll("height=\"\\d+\"", "");
+
+		listing.description =
+				"<div style=\"font-family: Helvetica; max-width: 923px\">" +
+						replacedDesc +
+				"</div>";
 	}
 
 	private Map<String, String> getSpecifications() {

@@ -22,7 +22,7 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser
 public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 
 	private static final long CYCLE_TIME = 50;
-	private static final int LISTING_ATTEMPT_THRESHOLD = 3;
+	private static final int LISTING_ATTEMPT_THRESHOLD = 2;
 	private static final Set<String> preExistingFulfillmentURLs = new HashSet<>();
 	private static final Map<Integer, Set<String>> platformToFulfillmentIds = new HashMap<>();
 
@@ -78,6 +78,7 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 			if(!urlQueue.isEmpty()) {
 				final Listing listing = FulfillmentParsingManager.parseListing(urlQueue.peek());
 				if(listing != null) {
+					attempts++;
 					listing.url = urlQueue.peek();
 					if(!listing.canShip) {
 						System.out.println("Can't ship listing " + listing.title + "!");
@@ -93,11 +94,9 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 					}
 					urlQueue.poll();
 					attempts = 0;
-				} else if(attempts > LISTING_ATTEMPT_THRESHOLD) {
+				} else if(attempts == LISTING_ATTEMPT_THRESHOLD) {
 					System.out.println("Failed to parse URL: " + urlQueue.poll());
 					attempts = 0;
-				} else {
-					attempts++;
 				}
 			}
 			Thread.sleep(CYCLE_TIME);
