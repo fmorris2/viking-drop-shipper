@@ -17,6 +17,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.sql.PreparedStatement;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Optional;
@@ -31,6 +32,12 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
+import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.EbayCategory;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
@@ -302,11 +309,83 @@ public class ListingToolController {
 		final Optional<String> publishedEbayListingItemId = EbayCalls.createListing(toPublish);
 		if(publishedEbayListingItemId.isPresent()) {
 			System.out.println("Successfully published eBay listing: " + toPublish.title);
+			connectListingInDB(toPublish, publishedEbayListingItemId.get());
 		} else {
 			System.out.println("Failed to publish eBay listing for listing: " + toPublish.title);
 		}
 		ListingQueue.poll();
 		displayNextListing();
+	}
+
+	private void connectListingInDB(final Listing listing, final String listingId) {
+		try {
+			if(insertMarketplaceListing(listing, listingId) && insertFulfillmentListing(listing)) {
+				final MarketplaceListing marketplaceListing = MarketplaceLoader.loadMarketplaceListingByListingId(listingId);
+				final FulfillmentListing fulfillmentListing = FulfillmentManager.get().getListingForItemId(listing.fulfillmentPlatformId, listing.itemId).get();
+				if(insertFulfillmentMapping(marketplaceListing, fulfillmentListing)) {
+					System.out.println("Successfully connected listing in DB: " + listing.title);
+				} else {
+					System.out.println("FAILED TO CONNECT LISTING IN DB: " + listing.title);
+					System.exit(0);
+				}
+			} else {
+				System.out.println("FAILED TO CONNECT LISTING IN DB: " + listing.title);
+				System.exit(0);
+			}
+		} catch(final Exception e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
+	}
+
+	private boolean insertMarketplaceListing(final Listing listing, final String listingId) {
+		try {
+			final String query = "INSERT INTO marketplace_listing(marketplace_id, listing_id, listing_title,"
+					+ " fulfillment_quantity_multiplier, active) VALUES(?,?,?,?,?)";
+			final PreparedStatement statement = VSDSDBManager.get().createPreparedStatement(query);
+			statement.setInt(1, Marketplaces.EBAY.getMarketplaceId());
+			statement.setString(2, listingId);
+			statement.setString(3, listing.title);
+			statement.setInt(4, 1);
+			statement.setInt(5, 1);
+			statement.execute();
+			return true;
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+
+		return false;
+	}
+
+	private boolean insertFulfillmentListing(final Listing listing) {
+		try {
+			final String query = "INSERT INTO fulfillment_listing(fulfillment_platform_id, item_id, listing_title, listing_url)"
+					+ " VALUES(?,?,?,?)";
+			final PreparedStatement statement = VSDSDBManager.get().createPreparedStatement(query);
+			statement.setInt(1, listing.fulfillmentPlatformId);
+			statement.setString(2, listing.itemId);
+			statement.setString(3, listing.title);
+			statement.setString(4, listing.url);
+			statement.execute();
+			return true;
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	private boolean insertFulfillmentMapping(final MarketplaceListing marketListing, final FulfillmentListing fulfillmentListing) {
+		try {
+			final String query = "INSERT INTO fulfillment_mapping(marketplace_listing_id, fulfillment_listing_id) VALUES(?,?)";
+			final PreparedStatement statement = VSDSDBManager.get().createPreparedStatement(query);
+			statement.setInt(1, marketListing.id);
+			statement.setInt(2, fulfillmentListing.id);
+			statement.execute();
+			return true;
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	private Listing createListingToPublish() {

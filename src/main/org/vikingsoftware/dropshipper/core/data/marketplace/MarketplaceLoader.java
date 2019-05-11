@@ -62,14 +62,22 @@ public class MarketplaceLoader {
 	}
 
 	public static MarketplaceListing loadMarketplaceListingById(final int listingId) {
+		return loadMarketplaceListing("id", Integer.toString(listingId));
+	}
+
+	public static MarketplaceListing loadMarketplaceListingByListingId(final String listingId) {
+		return loadMarketplaceListing("listing_id", listingId);
+	}
+
+	private static MarketplaceListing loadMarketplaceListing(final String key, final String val) {
 		try {
 			final Statement st = VSDSDBManager.get().createStatement();
-			final ResultSet result = st.executeQuery("SELECT * from marketplace_listing WHERE id="+listingId);
+			final ResultSet result = st.executeQuery("SELECT * from marketplace_listing WHERE " + key +"="+val);
 			if(result.next()) {
 				return Marketplace.loadListingFromResultSet(result);
 			}
 		} catch(final SQLException e) {
-			DBLogging.high(MarketplaceLoader.class, "failed to load marketplace listing by id: " + listingId, e);
+			DBLogging.high(MarketplaceLoader.class, "failed to load marketplace listing by " + key + ": " + val, e);
 		}
 
 		return null;

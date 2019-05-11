@@ -84,7 +84,6 @@ public class Marketplace {
 			.marketplaceId(results.getInt("marketplace_id"))
 			.listingId(results.getString("listing_id"))
 			.listingTitle(results.getString("listing_title"))
-			.listingUrl(results.getString("listing_url"))
 			.fulfillmentQuantityMultiplier(results.getInt("fulfillment_quantity_multiplier"))
 		.build();
 	}

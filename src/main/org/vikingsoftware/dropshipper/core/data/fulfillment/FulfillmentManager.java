@@ -131,6 +131,30 @@ public class FulfillmentManager {
 		return Optional.empty();
 	}
 
+	public Optional<FulfillmentListing> getListingForItemId(final int platformId, final String itemId) {
+		final Statement st = VSDSDBManager.get().createStatement();
+		try {
+			final ResultSet results = st.executeQuery("SELECT * FROM fulfillment_listing WHERE fulfillment_platform_id=" + platformId +
+					" AND item_id="+itemId);
+
+			if(results.next()) {
+				final FulfillmentListing listing = new FulfillmentListing.Builder()
+						.id(results.getInt("id"))
+						.fulfillment_platform_id(platformId)
+						.item_id(itemId)
+						.listing_title(results.getString("listing_title"))
+						.listing_url(results.getString("listing_url"))
+						.build();
+
+				return Optional.of(listing);
+			}
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+
+		return Optional.empty();
+	}
+
 	public List<FulfillmentListing> getListingsForOrder(final CustomerOrder order) {
 		return listings.getOrDefault(order.marketplace_listing_id, new ArrayList<>());
 	}

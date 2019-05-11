@@ -45,6 +45,8 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 		return instance;
 	}
 
+
+
 	public static boolean isPreExistingItemId(final int platform, final String id) {
 		return platformToFulfillmentIds.getOrDefault(platform, new HashSet<>()).contains(id);
 	}
@@ -76,6 +78,7 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 			if(!urlQueue.isEmpty()) {
 				final Listing listing = FulfillmentParsingManager.parseListing(urlQueue.peek());
 				if(listing != null) {
+					listing.url = urlQueue.peek();
 					if(!listing.canShip) {
 						System.out.println("Can't ship listing " + listing.title + "!");
 					} else if(!platformToFulfillmentIds.getOrDefault(listing.fulfillmentPlatformId, new HashSet<>()).contains(listing.itemId)) {

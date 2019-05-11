@@ -6,7 +6,6 @@ public class MarketplaceListing {
 	public final int marketplaceId;
 	public final String listingId;
 	public final String listingTitle;
-	public final String listingUrl;
 	public final int fulfillment_quantity_multiplier;
 
 	private MarketplaceListing(final Builder builder) {
@@ -14,7 +13,6 @@ public class MarketplaceListing {
 		this.marketplaceId = builder.marketplaceId;
 		this.listingId = builder.listingId;
 		this.listingTitle = builder.listingTitle;
-		this.listingUrl = builder.listingUrl;
 		this.fulfillment_quantity_multiplier = builder.fulfillment_quantity_multiplier;
 	}
 
@@ -23,7 +21,6 @@ public class MarketplaceListing {
 		private int marketplaceId;
 		private String listingId;
 		private String listingTitle;
-		private String listingUrl;
 		private int fulfillment_quantity_multiplier;
 
 		public Builder id(final int id) {
@@ -43,11 +40,6 @@ public class MarketplaceListing {
 
 		public Builder listingTitle(final String listingTitle) {
 			this.listingTitle = listingTitle;
-			return this;
-		}
-
-		public Builder listingUrl(final String listingUrl) {
-			this.listingUrl = listingUrl;
 			return this;
 		}
 
