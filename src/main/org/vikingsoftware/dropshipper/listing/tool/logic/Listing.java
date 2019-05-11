@@ -13,6 +13,7 @@ public class Listing implements Cloneable {
 	public String description;
 	public EbayCategory category;
 	public String itemId;
+	public String brand;
 	public int fulfillmentPlatformId;
 	public double price;
 	public ShippingServiceCodeType shippingService;
@@ -21,6 +22,7 @@ public class Listing implements Cloneable {
 	public List<ListingImage> pictures = new ArrayList<>();
 	public List<PropertyItem> propertyItems = new ArrayList<>();
 	public Map<Set<PropertyItemOption>, Double> variations = new HashMap<>();
+	public boolean canShip = false;
 
 	@Override
 	public Listing clone() {
@@ -28,6 +30,7 @@ public class Listing implements Cloneable {
 		clone.title = title;
 		clone.description = description;
 		clone.itemId = itemId;
+		clone.brand = brand;
 		clone.fulfillmentPlatformId = fulfillmentPlatformId;
 		clone.price = price;
 		clone.shippingService = shippingService;
@@ -35,6 +38,7 @@ public class Listing implements Cloneable {
 		clone.pictures = new ArrayList<>(pictures);
 		clone.propertyItems = new ArrayList<>(propertyItems);
 		clone.variations = new HashMap<>(variations);
+		clone.canShip = canShip;
 		return clone;
 	}
 }

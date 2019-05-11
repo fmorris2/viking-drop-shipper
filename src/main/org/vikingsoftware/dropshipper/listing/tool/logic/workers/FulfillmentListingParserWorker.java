@@ -76,17 +76,19 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 			if(!urlQueue.isEmpty()) {
 				final Listing listing = FulfillmentParsingManager.parseListing(urlQueue.peek());
 				if(listing != null) {
-					if(!platformToFulfillmentIds.getOrDefault(listing.fulfillmentPlatformId, new HashSet<>()).contains(listing.itemId)) {
+					if(!listing.canShip) {
+						System.out.println("Can't ship listing " + listing.title + "!");
+					} else if(!platformToFulfillmentIds.getOrDefault(listing.fulfillmentPlatformId, new HashSet<>()).contains(listing.itemId)) {
 						final boolean shouldDisplayListing = ListingQueue.isEmpty();
 						ListingQueue.add(listing);
 						if(shouldDisplayListing) {
 							ListingToolGUI.getController().displayNextListing();
 						}
-						urlQueue.poll();
 						SwingUtilities.invokeLater(() -> ListingToolGUI.get().urlsToParseValue.setText(Integer.toString(urlQueue.size())));
 					} else {
 						System.out.println("We already have a mapping for item id " + listing.itemId + " on fulfillment platform " + listing.fulfillmentPlatformId + " in the DB");
 					}
+					urlQueue.poll();
 					attempts = 0;
 				} else if(attempts > LISTING_ATTEMPT_THRESHOLD) {
 					System.out.println("Failed to parse URL: " + urlQueue.poll());

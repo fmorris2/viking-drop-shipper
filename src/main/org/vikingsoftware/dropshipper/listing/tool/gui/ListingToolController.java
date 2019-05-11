@@ -211,6 +211,7 @@ public class ListingToolController {
 				gui.listingTitleInput.setText(listing.title);
 				gui.descRawInput.setText(listing.description);
 				gui.descHtmlView.setText(listing.description);
+				gui.brandInput.setText(listing.brand);
 				gui.listingPriceInput.setText("$" + listing.price);
 				if(gui.profitMarginInput.getText().isEmpty()) {
 					gui.profitMarginInput.setText("-20%");
@@ -228,6 +229,7 @@ public class ListingToolController {
 				gui.descHtmlView.setText("");
 				gui.listingPriceInput.setText("");
 				gui.profitMarginInput.setText("");
+				gui.brandInput.setText("");
 				browser.setUrl("http://www.google.com");
 				categoryModel.removeAllElements();
 
@@ -309,6 +311,7 @@ public class ListingToolController {
 		toPublish.targetProfitMargin = Double.parseDouble(gui.profitMarginInput.getText().replace("%", "").trim());
 		toPublish.description = gui.descRawInput.getText();
 		toPublish.category = (EbayCategory)gui.categoryDropdown.getSelectedItem();
+		toPublish.brand = gui.brandInput.getText();
 		return toPublish;
 	}
 

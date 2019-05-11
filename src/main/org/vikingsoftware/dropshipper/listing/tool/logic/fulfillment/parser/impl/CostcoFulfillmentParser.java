@@ -9,7 +9,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import javax.imageio.ImageIO;
@@ -58,6 +60,12 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 			listing.title = driver.waitForTextToAppear(titleEl, 30_000).trim();
 			System.out.println("Listing Title: " + listing.title);
 
+			try {
+				driver.findElement(By.id("add-to-cart-btn"));
+			} catch(final Exception e) {
+				listing.canShip = false;
+			}
+
 			final String itemId = driver.findElement(By.cssSelector(
 					"#product-page > div.row.top-content > div.col-xs-12.hidden-xl > div.row.form-group > div > span > span")).getAttribute("textContent");
 			listing.itemId = itemId.trim();
@@ -84,6 +92,11 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 
 			listing.pictures = getPictures();
 			System.out.println("Listing Pictures: " + listing.pictures.size());
+
+			//specifications
+			final Map<String, String> specs = getSpecifications();
+			listing.brand = specs.getOrDefault("Brand", "Unbranded");
+			System.out.println("Listing Brand: " + listing.brand);
 
 			listing.propertyItems = Collections.emptyList();
 			listing.variations = Collections.emptyMap();
@@ -133,6 +146,23 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 		tidy.pprint(htmlDom, out);
 
 		listing.description = out.toString();
+	}
+
+	private Map<String, String> getSpecifications() {
+		final Map<String, String> specs = new HashMap<>();
+		try {
+			driver.findElement(By.id("pdp-accordion-header-2")).click();
+			final WebElement specificsMaster = driver.findElement(By.id("pdp-accordion-collapse-2"));
+			final List<WebElement> rows = specificsMaster.findElements(By.cssSelector(".panel-body .row"));
+			for(final WebElement row : rows) {
+				final List<WebElement> keyValEls = row.findElements(By.tagName("div"));
+				specs.put(keyValEls.get(0).getText(), keyValEls.get(1).getText());
+			}
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+
+		return specs;
 	}
 
 }

@@ -22,6 +22,8 @@ import com.ebay.soap.eBLBaseComponents.CurrencyCodeType;
 import com.ebay.soap.eBLBaseComponents.ItemType;
 import com.ebay.soap.eBLBaseComponents.ListingDurationCodeType;
 import com.ebay.soap.eBLBaseComponents.ListingTypeCodeType;
+import com.ebay.soap.eBLBaseComponents.NameValueListArrayType;
+import com.ebay.soap.eBLBaseComponents.NameValueListType;
 import com.ebay.soap.eBLBaseComponents.PictureDetailsType;
 import com.ebay.soap.eBLBaseComponents.ReturnPolicyType;
 import com.ebay.soap.eBLBaseComponents.ReturnsAcceptedCodeType;
@@ -217,6 +219,20 @@ public class EbayCalls {
 		item.setSite(SiteCodeType.US);
 		item.setTitle(listing.title);
 		item.setConditionID(1000); //brand new
+
+		final NameValueListArrayType specifics = new NameValueListArrayType();
+
+		final NameValueListType brand = new NameValueListType();
+		brand.setName("Brand");
+		brand.setValue(new String[]{listing.brand});
+
+		final NameValueListType upc = new NameValueListType();
+		brand.setName("UPC");
+		brand.setValue(new String[]{"Does Not Apply"});
+
+		final NameValueListType[] specificsVals = {brand, upc};
+		specifics.setNameValueList(specificsVals);
+		item.setItemSpecifics(specifics);
 
 		final BuyerPaymentMethodCodeType[] paymentMethods = {BuyerPaymentMethodCodeType.PAY_PAL};
 		item.setPaymentMethods(paymentMethods);
