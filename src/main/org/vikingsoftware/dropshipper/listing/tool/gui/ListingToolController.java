@@ -264,8 +264,10 @@ public class ListingToolController {
 
 	private void updateRecentSoldItemsBrowser() {
 		try {
-			final String baseUrl = gui.soldItemsCheckbox.isSelected() ? BASE_EBAY_SEARCH_URL_SOLD_ITEMS : BASE_EBAY_SEARCH_URL;
-			browser.setUrl(baseUrl + URLEncoder.encode(ListingQueue.peek().title, "UTF-8"));
+			if(ListingQueue.peek() != null) {
+				final String baseUrl = gui.soldItemsCheckbox.isSelected() ? BASE_EBAY_SEARCH_URL_SOLD_ITEMS : BASE_EBAY_SEARCH_URL;
+				browser.setUrl(baseUrl + URLEncoder.encode(ListingQueue.peek().title, "UTF-8"));
+			}
 		} catch (final UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
