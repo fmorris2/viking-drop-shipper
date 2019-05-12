@@ -31,6 +31,7 @@ import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
@@ -44,6 +45,7 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingImage;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingQueue;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.workers.FulfillmentListingParserWorker;
+import main.org.vikingsoftware.dropshipper.listing.tool.types.DocumentAdapter;
 
 public class ListingToolController {
 
@@ -60,6 +62,7 @@ public class ListingToolController {
 	private SwtBrowserCanvas browser;
 	private Listing currentListingClone;
 	private double originalListingPrice;
+	private int updateCounter = 2;
 
 	public void setup() {
 		SwingUtilities.invokeLater(() -> {
@@ -93,22 +96,37 @@ public class ListingToolController {
         });
         gui.publishListingBtn.addActionListener(e -> publishListing());
 
-        gui.profitMarginInput.addKeyListener(new KeyAdapter() {
+        gui.profitMarginInput.getDocument().addDocumentListener(new DocumentAdapter() {
         	@Override
-        	public void keyTyped(KeyEvent e) {
-            	updateListingPriceWithMargin();
+        	public void insertUpdate(DocumentEvent evt) {
+        		updateListingPriceWithMargin();
         	}
-        });
-        gui.listingPriceInput.addKeyListener(new KeyAdapter() {
         	@Override
-        	public void keyTyped(KeyEvent e) {
-            	updateMarginWithPrice();
+        	public void removeUpdate(DocumentEvent evt) {
+        		updateListingPriceWithMargin();
+    		}
+        });
+
+        gui.listingPriceInput.getDocument().addDocumentListener(new DocumentAdapter() {
+        	@Override
+        	public void insertUpdate(DocumentEvent evt) {
+        		updateMarginWithPrice();
+        	}
+        	@Override
+			public void removeUpdate(DocumentEvent evt) {
+        		updateMarginWithPrice();
         	}
         });
 
-        gui.shippingPriceInput.addKeyListener(new KeyAdapter() {
+        gui.shippingPriceInput.getDocument().addDocumentListener(new DocumentAdapter() {
         	@Override
-        	public void keyTyped(KeyEvent e) {
+        	public void insertUpdate(DocumentEvent evt) {
+        		updateCounter = 2;
+        		updateMarginWithPrice();
+        	}
+        	@Override
+			public void removeUpdate(DocumentEvent evt) {
+        		updateCounter = 2;
         		updateMarginWithPrice();
         	}
         });
@@ -216,6 +234,7 @@ public class ListingToolController {
 		} else {
 			clearGUI();
 		}
+		gui.listingPriceInput.requestFocus();
 	}
 
 	private void setGUI(final Listing listing) {
@@ -293,16 +312,20 @@ public class ListingToolController {
 	}
 
     private void updateListingPriceWithMargin() {
-    	try {
-    		final String marginText = gui.profitMarginInput.getText().isEmpty() ? "0.00" : gui.profitMarginInput.getText().replace("%", "");
-	    	final String shippingPriceTxt = gui.shippingPriceInput.getText().isEmpty() ? "0.00" : gui.shippingPriceInput.getText().replace("$", "");
-	    	final double price = originalListingPrice * (1.20 + (Double.parseDouble(marginText) / 100))
-	    			- (!shippingPriceTxt.isEmpty() ? Double.parseDouble(shippingPriceTxt) : 0);
-	    	final String priceWithMargin = DECIMAL_FORMAT.format(price);
-	    	gui.listingPriceInput.setText("$" + priceWithMargin);
-    	} catch(final Exception e) {
-    		//swallow exception
+    	if(updateCounter <= 0) {
+	    	try {
+	    		final String marginText = gui.profitMarginInput.getText().isEmpty() ? "0.00" : gui.profitMarginInput.getText().replace("%", "");
+		    	final String shippingPriceTxt = gui.shippingPriceInput.getText().isEmpty() ? "0.00" : gui.shippingPriceInput.getText().replace("$", "");
+		    	final double price = originalListingPrice * (1.20 + (Double.parseDouble(marginText) / 100))
+		    			- (!shippingPriceTxt.isEmpty() ? Double.parseDouble(shippingPriceTxt) : 0);
+		    	final String priceWithMargin = DECIMAL_FORMAT.format(price);
+		    	gui.listingPriceInput.setText("$" + priceWithMargin);
+	    	} catch(final Exception e) {
+	    		//swallow exception
+	    	}
     	}
+
+    	updateCounter--;
     }
 
 	private void publishListing() {

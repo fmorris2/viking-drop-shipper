@@ -75,29 +75,37 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 	@Override
 	protected Void doInBackground() throws Exception {
 		while(true) {
-			if(!urlQueue.isEmpty()) {
-				final Listing listing = FulfillmentParsingManager.parseListing(urlQueue.peek());
-				attempts++;
-				if(listing != null) {
-					listing.url = urlQueue.peek();
-					if(!listing.canShip) {
-						System.out.println("Can't ship listing " + listing.title + "!");
-					} else if(!platformToFulfillmentIds.getOrDefault(listing.fulfillmentPlatformId, new HashSet<>()).contains(listing.itemId)) {
-						final boolean shouldDisplayListing = ListingQueue.isEmpty();
-						ListingQueue.add(listing);
-						if(shouldDisplayListing) {
-							ListingToolGUI.getController().displayNextListing();
+			try {
+				if(!urlQueue.isEmpty()) {
+					System.out.println("Attempting to parse listing for " + urlQueue.peek());
+					final Listing listing = FulfillmentParsingManager.parseListing(urlQueue.peek());
+					attempts++;
+					if(listing != null) {
+						System.out.println("Successfully parsed listing for " + urlQueue.peek());
+						listing.url = urlQueue.peek();
+						if(!listing.canShip) {
+							System.out.println("Can't ship listing " + listing.title + "!");
+						} else if(!platformToFulfillmentIds.getOrDefault(listing.fulfillmentPlatformId, new HashSet<>()).contains(listing.itemId)) {
+							final boolean shouldDisplayListing = ListingQueue.isEmpty();
+							ListingQueue.add(listing);
+							if(shouldDisplayListing) {
+								ListingToolGUI.getController().displayNextListing();
+							}
+							SwingUtilities.invokeLater(() -> ListingToolGUI.get().urlsToParseValue.setText(Integer.toString(urlQueue.size())));
+						} else {
+							System.out.println("We already have a mapping for item id " + listing.itemId + " on fulfillment platform " + listing.fulfillmentPlatformId + " in the DB");
 						}
-						SwingUtilities.invokeLater(() -> ListingToolGUI.get().urlsToParseValue.setText(Integer.toString(urlQueue.size())));
+						urlQueue.poll();
+						attempts = 0;
+					} else if(attempts == LISTING_ATTEMPT_THRESHOLD) {
+						System.out.println("Failed to parse URL: " + urlQueue.poll() + ". Skipping...");
+						attempts = 0;
 					} else {
-						System.out.println("We already have a mapping for item id " + listing.itemId + " on fulfillment platform " + listing.fulfillmentPlatformId + " in the DB");
+						System.out.println("Failed to parse URL: " + urlQueue.peek() + ". Retrying...");
 					}
-					urlQueue.poll();
-					attempts = 0;
-				} else if(attempts == LISTING_ATTEMPT_THRESHOLD) {
-					System.out.println("Failed to parse URL: " + urlQueue.poll());
-					attempts = 0;
 				}
+			} catch(final Exception e) {
+				e.printStackTrace();
 			}
 			Thread.sleep(CYCLE_TIME);
 		}

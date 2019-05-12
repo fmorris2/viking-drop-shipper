@@ -2,6 +2,8 @@ package main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parse
 
 import javax.swing.SwingUtilities;
 
+import org.openqa.selenium.TimeoutException;
+
 import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
@@ -28,6 +30,10 @@ public abstract class AbstractFulfillmentParser<T extends LoginWebDriver> implem
 				driver.get(url);
 				return parseListing();
 			}
+		} catch(final TimeoutException e) {
+			e.printStackTrace();
+			BrowserRepository.get().replace(supplier);
+			supplier = null;
 		} catch(final Exception e) {
 			e.printStackTrace();
 		} finally {
