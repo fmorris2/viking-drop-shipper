@@ -92,10 +92,13 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 			listing.price = price;
 
 			try {
+				driver.setImplicitWait(2);
 				final String fee = driver.findElement(By.id("grocery-fee-amount")).getAttribute("data-grocery-fee-amount").replace("$", "");
 				listing.price += Double.parseDouble(fee);
 			} catch(final Exception e) {
 				e.printStackTrace();
+			} finally {
+				driver.resetImplicitWait();
 			}
 			System.out.println("Listing Price: " + listing.price);
 
