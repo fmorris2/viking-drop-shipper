@@ -56,7 +56,7 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 			listing.shippingService = ShippingServiceCodeType.SHIPPING_METHOD_STANDARD;
 
 			SwingUtilities.invokeLater(() -> ListingToolGUI.get().statusTextValue.setText("Parsing listing title"));
-			final Supplier<WebElement> titleEl = () -> driver.findElement(By.cssSelector("#product-details > div.row.visible-xl > div > div.product-h1-container.visible-xl-block > h1"));
+			final Supplier<WebElement> titleEl = () -> driver.findElement(By.cssSelector("#product-details h1"));
 			listing.title = driver.waitForTextToAppear(titleEl, 30_000).trim();
 			System.out.println("Listing Title: " + listing.title);
 
@@ -70,7 +70,7 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 			listing.canShip = true;
 
 			final String itemId = driver.findElement(By.cssSelector(
-					"#product-page > div.row.top-content > div.col-xs-12.hidden-xl > div.row.form-group > div > span > span")).getAttribute("textContent");
+					"#product-page span[itemprop=\"sku\"]")).getAttribute("textContent");
 			listing.itemId = itemId.trim();
 			System.out.println("Listing Item ID: " + listing.itemId);
 
