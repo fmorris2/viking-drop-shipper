@@ -1,6 +1,7 @@
 package main.org.vikingsoftware.dropshipper.core.web.costco;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
@@ -37,10 +38,8 @@ public class CostcoWebDriver extends LoginWebDriver {
 	@Override
 	protected boolean verifyLoggedIn() {
 		try {
-			get("https://www.costco.com/AccountInformationView?identifier=manage-membership");
-
-			final String emailValue = findElement(By.id("email-value")).getText();
-			return emailValue.equalsIgnoreCase(account.username);
+			final String displayVal = ((JavascriptExecutor)this).executeScript("return document.getElementById('header_sign_in').style.display").toString();
+			return displayVal.equalsIgnoreCase("none");
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
