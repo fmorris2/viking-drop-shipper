@@ -77,8 +77,8 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 		while(true) {
 			if(!urlQueue.isEmpty()) {
 				final Listing listing = FulfillmentParsingManager.parseListing(urlQueue.peek());
+				attempts++;
 				if(listing != null) {
-					attempts++;
 					listing.url = urlQueue.peek();
 					if(!listing.canShip) {
 						System.out.println("Can't ship listing " + listing.title + "!");
