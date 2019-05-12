@@ -7,7 +7,7 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 
-import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 public class FulfillmentAccountManager {
@@ -56,7 +56,7 @@ public class FulfillmentAccountManager {
 
 	private void load() {
 		try {
-			final Statement st = VDSDBManager.get().createStatement();
+			final Statement st = VSDSDBManager.get().createStatement();
 			final ResultSet res = st.executeQuery("SELECT * FROM fulfillment_accounts WHERE is_enabled = 1");
 			while(res.next()) {
 				final int id = res.getInt("id");

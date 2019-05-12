@@ -12,9 +12,7 @@ import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 
 import main.org.vikingsoftware.dropshipper.VSDropShipper;
-import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
@@ -26,63 +24,16 @@ import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
 import main.org.vikingsoftware.dropshipper.order.executor.error.OrderExecutionException;
-import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.AbstractOrderExecutionStrategy;
 
-public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
-	private static final long LOOP_THRESHOLD = 60_000; //60 seconds
-	private static final int RESTART_THRESHOLD = 5;
-
-	private ProcessedOrder processedOrder;
-
-	private DriverSupplier<SamsClubWebDriver> driverSupplier;
-	private SamsClubWebDriver driver;
-	private FulfillmentAccount account;
+public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrategy<SamsClubWebDriver> {
 
 	private String lastWebPageTitle = "";
-	private long startLoopTime;
-	private int timesRestarted;
 
 	@Override
-	public boolean prepareForExecution() {
-		System.out.println("SamsClubOrderExecutionStrategy#prepareForExecution");
-		driverSupplier = BrowserRepository.get().request(SamsClubDriverSupplier.class);
-		return true;
-	}
-
-	@Override
-	public ProcessedOrder order(final CustomerOrder order, final FulfillmentAccount account, final FulfillmentListing fulfillmentListing) {
-		this.account = account;
-		processedOrder = new ProcessedOrder.Builder()
-				.customer_order_id(order.id)
-				.fulfillment_listing_id(fulfillmentListing.id)
-				.build();
-			try {
-				return executeOrder(order, fulfillmentListing);
-			} catch(final Exception e) {
-				e.printStackTrace();
-				DBLogging.high(getClass(), "order failed: ", e);
-			}
-
-		return processedOrder;
-	}
-
-	private ProcessedOrder executeOrder(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws Exception {
-		System.out.println("SamsClubOrderExecutionStrategy#executeOrder");
-		driver = driverSupplier.get();
-		if(driver.getReady(account)) {
-			System.out.println("\tSuccessfully prepared sams club driver");
-
-			enterAddress(order);
-
-			return orderItem(order, fulfillmentListing);
-
-		} else if(timesRestarted < RESTART_THRESHOLD) {
-			System.out.println("\tFailed to prepare sams club driver! Attempting to restart.");
-			timesRestarted++;
-			return restart(order, fulfillmentListing);
-		} else {
-			return processedOrder;
-		}
+	protected ProcessedOrder executeOrderImpl(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws Exception {
+		enterAddress(order);
+		return orderItem(order, fulfillmentListing);
 	}
 
 	private ProcessedOrder orderItem(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws InterruptedException {
@@ -338,7 +289,7 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 
 		System.out.println("Clicking save...");
 		final WebElement saveButton = driver.findElement(By.cssSelector(".sc-edit-tile-edit-form-actions > .sc-btn-primary"));
-		scrollIntoView(saveButton);
+		driver.scrollIntoView(saveButton);
 		saveButton.click();
 		Thread.sleep(2500); // wait for save
 		System.out.println("\tAddress has been saved.");
@@ -347,11 +298,6 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 	private void scrollToTopOfPage() {
 		final JavascriptExecutor jse = driver;
 		jse.executeScript("window.scrollTo(0, 0)");
-	}
-
-	private void scrollIntoView(final WebElement el) {
-		final JavascriptExecutor jse = driver;
-		jse.executeScript("arguments[0].scrollIntoView()", el);
 	}
 
 	private void clearAndSendKeys(final WebElement el, final String str) throws InterruptedException {
@@ -374,14 +320,6 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 		if(!lastWebPageTitle.equalsIgnoreCase(listing.listing_title)) {
 			throw new OrderExecutionException("Fulfillment listing title ("+currentListingTitle+") is not what we expected ("+listing.listing_title+")");
 		}
-	}
-
-	private void startLoop() {
-		this.startLoopTime = System.currentTimeMillis();
-	}
-
-	private boolean hasExceededThreshold() {
-		return System.currentTimeMillis() - startLoopTime >= LOOP_THRESHOLD;
 	}
 
 	private void enterQuantity(final CustomerOrder order, final WebElement orderOnlineBox) {
@@ -479,18 +417,9 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 		}
 	}
 
-	private ProcessedOrder restart(final CustomerOrder order, final FulfillmentListing listing) throws Exception {
-		driver.quit();
-		BrowserRepository.get().replace(driverSupplier);
-		driverSupplier = BrowserRepository.get().request(SamsClubDriverSupplier.class);
-		return executeOrder(order, listing);
-	}
-
 	@Override
-	public void finishExecution() {
-		BrowserRepository.get().relinquish(driverSupplier);
-		driver = null;
-		driverSupplier = null;
+	protected Class<? extends DriverSupplier<SamsClubWebDriver>> getDriverSupplierClass() {
+		return SamsClubDriverSupplier.class;
 	}
 
 }

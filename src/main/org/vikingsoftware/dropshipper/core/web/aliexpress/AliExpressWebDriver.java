@@ -1,8 +1,6 @@
 package main.org.vikingsoftware.dropshipper.core.web.aliexpress;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -19,8 +17,6 @@ import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 
 
 public class AliExpressWebDriver extends LoginWebDriver {
-
-	private final Map<String,String> cachedOrderOptions = new HashMap<>();
 
 	@Override
 	public boolean prepareForExecutionViaLoginImpl() {
@@ -44,26 +40,6 @@ public class AliExpressWebDriver extends LoginWebDriver {
 	}
 
 	@Override
-	protected String getLandingPageURL() {
-		return "https://www.aliexpress.com";
-	}
-
-	@Override
-	protected boolean verifyLoggedIn() {
-		try {
-			//wait for home page to appear
-			findElement(By.className("nav-user-account"));
-			return true;
-		} catch(final Exception e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-
-	public void clearCachedSelectedOrderOptions() {
-		cachedOrderOptions.clear();
-	}
-
 	public boolean selectOrderOptions(final SkuMapping skuMapping, final FulfillmentListing listing) {
 		try {
 			System.out.println("Selecting item options for sku mapping: " + skuMapping);
@@ -115,6 +91,23 @@ public class AliExpressWebDriver extends LoginWebDriver {
 		}
 
 		return true;
+	}
+
+	@Override
+	protected String getLandingPageURL() {
+		return "https://www.aliexpress.com";
+	}
+
+	@Override
+	protected boolean verifyLoggedIn() {
+		try {
+			//wait for home page to appear
+			findElement(By.className("nav-user-account"));
+			return true;
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	private boolean isMatchingOrderOption(final WebElement listElement, final String valueToSelect) {

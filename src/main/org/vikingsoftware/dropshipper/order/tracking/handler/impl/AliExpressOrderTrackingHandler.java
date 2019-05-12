@@ -1,25 +1,20 @@
 package main.org.vikingsoftware.dropshipper.order.tracking.handler.impl;
 
 import java.util.List;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.RunnableFuture;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 import com.ebay.soap.eBLBaseComponents.ShipmentDeliveryStatusCodeType;
 
-import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.AliExpressDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
+import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.aliexpress.AliExpressWebDriver;
-import main.org.vikingsoftware.dropshipper.order.tracking.handler.OrderTrackingHandler;
+import main.org.vikingsoftware.dropshipper.order.tracking.handler.AbstractOrderTrackingHandler;
 
-public class AliExpressOrderTrackingHandler implements OrderTrackingHandler {
+public class AliExpressOrderTrackingHandler extends AbstractOrderTrackingHandler<AliExpressWebDriver> {
 
 	private static final String BASE_ORDER_DETAIL_URL = "http://trade.aliexpress.com/order_detail.htm?orderId=";
 
@@ -29,32 +24,7 @@ public class AliExpressOrderTrackingHandler implements OrderTrackingHandler {
 	}
 
 	@Override
-	public RunnableFuture<TrackingEntry> getTrackingInfo(final ProcessedOrder order) {
-		return new FutureTask<>(() -> getTrackingInfoImpl(order));
-	}
-
-	private TrackingEntry getTrackingInfoImpl(final ProcessedOrder order) {
-		System.out.println("Initiating tracking info process for processed order " + order.id);
-		AliExpressWebDriver driver = null;
-		AliExpressDriverSupplier supplier = null;
-		try {
-			supplier = BrowserRepository.get().request(AliExpressDriverSupplier.class);
-			driver = supplier.get();
-			final FulfillmentAccount account = FulfillmentAccountManager.get().getAccountById(order.fulfillment_account_id);
-			if(driver.getReady(account)) {
-				return parseTrackingInfo(driver, order);
-			}
-		} catch(final Exception e) {
-			e.printStackTrace();
-		} finally {
-			if(supplier != null) {
-				BrowserRepository.get().relinquish(supplier);
-			}
-		}
-		return null;
-	}
-
-	private TrackingEntry parseTrackingInfo(final WebDriver driver, final ProcessedOrder order) {
+	protected TrackingEntry parseTrackingInfo(final AliExpressWebDriver driver, final ProcessedOrder order) {
 		driver.get(BASE_ORDER_DETAIL_URL + order.fulfillment_transaction_id);
 		final List<WebElement> shippingDetailBlocks = driver.findElements(By.className("shipping-bd"));
 		if(!shippingDetailBlocks.isEmpty()) {
@@ -89,6 +59,11 @@ public class AliExpressOrderTrackingHandler implements OrderTrackingHandler {
 	@Override
 	public void finishTracking() {
 
+	}
+
+	@Override
+	protected Class<? extends DriverSupplier<AliExpressWebDriver>> getDriverSupplierClass() {
+		return AliExpressDriverSupplier.class;
 	}
 
 }

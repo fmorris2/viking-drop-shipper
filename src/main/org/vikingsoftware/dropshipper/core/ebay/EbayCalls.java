@@ -2,17 +2,36 @@ package main.org.vikingsoftware.dropshipper.core.ebay;
 
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import com.ebay.sdk.ApiContext;
 import com.ebay.sdk.TimeFilter;
+import com.ebay.sdk.call.AddFixedPriceItemCall;
 import com.ebay.sdk.call.CompleteSaleCall;
 import com.ebay.sdk.call.GetSellerTransactionsCall;
+import com.ebay.sdk.call.GetSuggestedCategoriesCall;
 import com.ebay.sdk.call.ReviseFixedPriceItemCall;
+import com.ebay.soap.eBLBaseComponents.AmountType;
+import com.ebay.soap.eBLBaseComponents.BuyerPaymentMethodCodeType;
+import com.ebay.soap.eBLBaseComponents.BuyerRequirementDetailsType;
+import com.ebay.soap.eBLBaseComponents.CategoryType;
+import com.ebay.soap.eBLBaseComponents.CountryCodeType;
+import com.ebay.soap.eBLBaseComponents.CurrencyCodeType;
 import com.ebay.soap.eBLBaseComponents.ItemType;
+import com.ebay.soap.eBLBaseComponents.ListingDurationCodeType;
+import com.ebay.soap.eBLBaseComponents.ListingTypeCodeType;
+import com.ebay.soap.eBLBaseComponents.NameValueListArrayType;
+import com.ebay.soap.eBLBaseComponents.NameValueListType;
+import com.ebay.soap.eBLBaseComponents.PictureDetailsType;
+import com.ebay.soap.eBLBaseComponents.ReturnPolicyType;
+import com.ebay.soap.eBLBaseComponents.ReturnsAcceptedCodeType;
 import com.ebay.soap.eBLBaseComponents.ShipmentTrackingDetailsType;
 import com.ebay.soap.eBLBaseComponents.ShipmentType;
+import com.ebay.soap.eBLBaseComponents.ShippingDetailsType;
+import com.ebay.soap.eBLBaseComponents.ShippingServiceOptionsType;
+import com.ebay.soap.eBLBaseComponents.SiteCodeType;
 import com.ebay.soap.eBLBaseComponents.TransactionType;
 import com.ebay.soap.eBLBaseComponents.VariationType;
 import com.ebay.soap.eBLBaseComponents.VariationsType;
@@ -25,13 +44,15 @@ import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.Marketp
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
-import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.EbayConversionUtils;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.EbayCategory;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 
 public class EbayCalls {
 
-	private static final int FAKE_MAX_QUANTITY = 0;
+	private static final int FAKE_MAX_QUANTITY = 1;
 	private static final int MIN_AVAILABLE_FULFILLMENT_QTY = 50;
 
 	private EbayCalls() {}
@@ -69,7 +90,7 @@ public class EbayCalls {
 	private static void logUnknownTransactionMappingsInDB(final List<TransactionType> transactions) {
 		try {
 			System.out.println("Logging " + transactions.size() + " unknown eBay transactions in DB");
-			final Statement st = VDSDBManager.get().createStatement();
+			final Statement st = VSDSDBManager.get().createStatement();
 			for(final TransactionType trans : transactions) {
 				st.addBatch("INSERT INTO unknown_transaction_mappings(marketplace_id, listing_id) "
 						+ "VALUES("+Marketplaces.EBAY.getMarketplaceId()+", '"+trans.getItem().getItemID()+"')");
@@ -149,5 +170,128 @@ public class EbayCalls {
 		}
 
 		return false;
+	}
+
+	public static EbayCategory[] getSuggestedCategories(final String listingTitle) {
+		final ApiContext api = EbayApiContextManager.getLiveContext();
+		final GetSuggestedCategoriesCall call = new GetSuggestedCategoriesCall(api);
+		call.setQuery(listingTitle);
+		try {
+			return Arrays.stream(call.getSuggestedCategories())
+					.map(category -> new EbayCategory(category.getCategory().getCategoryID(), category.getCategory().getCategoryName()))
+					.toArray(EbayCategory[]::new);
+		} catch (final Exception e) {
+			e.printStackTrace();
+		}
+
+		return new EbayCategory[0];
+	}
+
+	public static Optional<String> createListing(final Listing listing) {
+		final ApiContext api = EbayApiContextManager.getLiveContext();
+		final AddFixedPriceItemCall call = new AddFixedPriceItemCall(api);
+		call.setItem(createItemTypeForListing(listing));
+		try {
+			call.addFixedPriceItem();
+		} catch (final Exception e) {
+			e.printStackTrace();
+		}
+		return Optional.ofNullable(call.getReturnedItemID());
+	}
+
+	private static ItemType createItemTypeForListing(final Listing listing) {
+		final ItemType item = new ItemType();
+		item.setBuyerRequirementDetails(createBuyerRequirementsForListing(listing));
+		item.setCountry(CountryCodeType.US);
+		item.setCurrency(CurrencyCodeType.USD);
+		item.setDescription(listing.description);
+		item.setDispatchTimeMax(1);
+		item.setListingDuration(ListingDurationCodeType.GTC.value());
+		item.setListingType(ListingTypeCodeType.FIXED_PRICE_ITEM);
+		item.setLocation("St. Louis, MO");
+		item.setPostalCode("63101");
+		item.setPayPalEmailAddress("thevikingmarketplace@gmail.com");
+		item.setPictureDetails(createPictureDetailsForListing(listing));
+		item.setPrimaryCategory(createCategoryTypeForListing(listing));
+		item.setQuantity(0);
+		item.setReturnPolicy(createReturnPolicyTypeForListing(listing));
+		item.setShippingDetails(createShippingDetailsForListing(listing));
+		item.setSite(SiteCodeType.US);
+		item.setTitle(listing.title);
+		item.setConditionID(1000); //brand new
+
+		final NameValueListArrayType specifics = new NameValueListArrayType();
+
+		final NameValueListType brand = new NameValueListType();
+		brand.setName("Brand");
+		brand.setValue(new String[]{listing.brand});
+
+		final NameValueListType upc = new NameValueListType();
+		brand.setName("UPC");
+		brand.setValue(new String[]{"Does Not Apply"});
+
+		final NameValueListType[] specificsVals = {brand, upc};
+		specifics.setNameValueList(specificsVals);
+		item.setItemSpecifics(specifics);
+
+		final BuyerPaymentMethodCodeType[] paymentMethods = {BuyerPaymentMethodCodeType.PAY_PAL};
+		item.setPaymentMethods(paymentMethods);
+
+
+		final AmountType price = new AmountType();
+		price.setCurrencyID(CurrencyCodeType.USD);
+		price.setValue(listing.price);
+		item.setStartPrice(price);
+		return item;
+	}
+
+	private static BuyerRequirementDetailsType createBuyerRequirementsForListing(final Listing listing) {
+		final BuyerRequirementDetailsType type = new BuyerRequirementDetailsType();
+		type.setShipToRegistrationCountry(true);
+		return type;
+	}
+
+	private static PictureDetailsType createPictureDetailsForListing(final Listing listing) {
+		final PictureDetailsType type = new PictureDetailsType();
+		final String[] urls = listing.pictures.stream()
+				.map(image -> image.url.replace("http://", "https://")) //eBay requires external images to have a link with https
+				.toArray(String[]::new);
+
+		type.setExternalPictureURL(urls);
+		return type;
+	}
+
+	private static CategoryType createCategoryTypeForListing(final Listing listing) {
+		final CategoryType type = new CategoryType();
+		type.setCategoryID(listing.category.id);
+		return type;
+	}
+
+	private static ReturnPolicyType createReturnPolicyTypeForListing(final Listing listing) {
+		final ReturnPolicyType type = new ReturnPolicyType();
+		type.setReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_ACCEPTED.value());
+		type.setInternationalReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_NOT_ACCEPTED.value());
+		return type;
+	}
+
+	private static ShippingDetailsType createShippingDetailsForListing(final Listing listing) {
+		final ShippingDetailsType type = new ShippingDetailsType();
+		type.setGlobalShipping(false);
+		type.setShippingServiceOptions(createShippingServiceOptionsForListing(listing));
+
+		return type;
+	}
+
+	private static ShippingServiceOptionsType[] createShippingServiceOptionsForListing(final Listing listing) {
+		final ShippingServiceOptionsType type = new ShippingServiceOptionsType();
+		type.setFreeShipping(listing.shipping <= 0);
+		type.setShippingService(listing.shippingService.value());
+
+		final AmountType shippingCost = new AmountType();
+		shippingCost.setCurrencyID(CurrencyCodeType.USD);
+		shippingCost.setValue(listing.shipping);
+		type.setShippingServiceCost(shippingCost);
+
+		return new ShippingServiceOptionsType[] {type};
 	}
 }

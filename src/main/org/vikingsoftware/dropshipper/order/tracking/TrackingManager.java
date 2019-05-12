@@ -12,6 +12,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.Fulfill
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
 import main.org.vikingsoftware.dropshipper.order.tracking.handler.impl.AliExpressOrderTrackingHandler;
+import main.org.vikingsoftware.dropshipper.order.tracking.handler.impl.CostcoOrderTrackingHandler;
 import main.org.vikingsoftware.dropshipper.order.tracking.handler.impl.SamsClubOrderTrackingHandler;
 
 public class TrackingManager {
@@ -20,10 +21,12 @@ public class TrackingManager {
 
 	private final AliExpressOrderTrackingHandler aliExpressHandler;
 	private final SamsClubOrderTrackingHandler samsClubHandler;
+	private final CostcoOrderTrackingHandler costcoHandler;
 
 	private TrackingManager () {
 		aliExpressHandler = new AliExpressOrderTrackingHandler();
 		samsClubHandler = new SamsClubOrderTrackingHandler();
+		costcoHandler = new CostcoOrderTrackingHandler();
 	}
 
 	public static TrackingManager get() {
@@ -38,6 +41,7 @@ public class TrackingManager {
 		final Set<Boolean> results = new HashSet<>();
 		results.add(aliExpressHandler.prepareToTrack());
 		results.add(samsClubHandler.prepareToTrack());
+		results.add(costcoHandler.prepareToTrack());
 
 		return !results.contains(false);
 	}
@@ -45,6 +49,7 @@ public class TrackingManager {
 	public void endCycle() {
 		aliExpressHandler.finishTracking();
 		samsClubHandler.finishTracking();
+		costcoHandler.finishTracking();
 	}
 
 	public RunnableFuture<TrackingEntry> getTrackingNum(final ProcessedOrder order) {
@@ -59,6 +64,8 @@ public class TrackingManager {
 				return aliExpressHandler.getTrackingInfo(order);
 			case SAMS_CLUB:
 				return samsClubHandler.getTrackingInfo(order);
+			case COSTCO:
+				return costcoHandler.getTrackingInfo(order);
 			default:
 				return new FutureTask<>(() -> null);
 		}

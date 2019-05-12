@@ -9,13 +9,13 @@ import java.util.Map;
 import java.util.Set;
 
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
-import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 public class MarketplaceLoader {
 
 	public static void loadMarketplaces() {
-		final Statement st = VDSDBManager.get().createStatement();
+		final Statement st = VSDSDBManager.get().createStatement();
 		try {
 			final ResultSet results = st.executeQuery("SELECT * FROM marketplace");
 			while(results.next()) {
@@ -43,7 +43,7 @@ public class MarketplaceLoader {
 
 	private static Map<String, Integer> loadMarketplaceListings(final int marketplaceId) {
 		final Map<String, Integer> listings = new HashMap<>();
-		final Statement st = VDSDBManager.get().createStatement();
+		final Statement st = VSDSDBManager.get().createStatement();
 		try {
 			final ResultSet results = st.executeQuery("SELECT id, listing_id"
 					+ " FROM marketplace_listing"
@@ -62,14 +62,22 @@ public class MarketplaceLoader {
 	}
 
 	public static MarketplaceListing loadMarketplaceListingById(final int listingId) {
+		return loadMarketplaceListing("id", Integer.toString(listingId));
+	}
+
+	public static MarketplaceListing loadMarketplaceListingByListingId(final String listingId) {
+		return loadMarketplaceListing("listing_id", listingId);
+	}
+
+	private static MarketplaceListing loadMarketplaceListing(final String key, final String val) {
 		try {
-			final Statement st = VDSDBManager.get().createStatement();
-			final ResultSet result = st.executeQuery("SELECT * from marketplace_listing WHERE id="+listingId);
+			final Statement st = VSDSDBManager.get().createStatement();
+			final ResultSet result = st.executeQuery("SELECT * from marketplace_listing WHERE " + key +"="+val);
 			if(result.next()) {
 				return Marketplace.loadListingFromResultSet(result);
 			}
 		} catch(final SQLException e) {
-			DBLogging.high(MarketplaceLoader.class, "failed to load marketplace listing by id: " + listingId, e);
+			DBLogging.high(MarketplaceLoader.class, "failed to load marketplace listing by " + key + ": " + val, e);
 		}
 
 		return null;
@@ -77,7 +85,7 @@ public class MarketplaceLoader {
 
 	private static Set<String> loadKnownOrderIds(final int marketplaceId) {
 		final Set<String> knownOrderIds = new HashSet<>();
-		final Statement st = VDSDBManager.get().createStatement();
+		final Statement st = VSDSDBManager.get().createStatement();
 		try {
 			final ResultSet results = st.executeQuery("SELECT marketplace_order_id "
 					+ "FROM customer_order INNER JOIN marketplace_listing ON "

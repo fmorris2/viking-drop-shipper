@@ -9,7 +9,7 @@ import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
-import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.order.parser.strategy.OrderParsingStrategy;
 
 public class OrderParser implements CycleParticipant {
@@ -37,7 +37,7 @@ public class OrderParser implements CycleParticipant {
 				+ " buyer_name, buyer_country, buyer_street_address, buyer_apt_suite_unit_etc, buyer_state_province_region,"
 				+ "buyer_city, buyer_zip_postal_code, buyer_phone_number) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
-		final PreparedStatement prepared = VDSDBManager.get().createPreparedStatement(sql);
+		final PreparedStatement prepared = VSDSDBManager.get().createPreparedStatement(sql);
 		try {
 			for(final CustomerOrder order : newOrders) {
 				prepared.setInt(1, order.marketplace_listing_id);

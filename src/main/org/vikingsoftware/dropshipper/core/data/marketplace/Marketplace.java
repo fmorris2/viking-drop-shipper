@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
-import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 public class Marketplace {
@@ -58,7 +58,7 @@ public class Marketplace {
 
 	private Set<MarketplaceListing> getMarketplaceListings(final boolean activeOnly) {
 		final Set<MarketplaceListing> listings = new HashSet<>();
-		final Statement st = VDSDBManager.get().createStatement();
+		final Statement st = VSDSDBManager.get().createStatement();
 
 		try {
 			String sql = "SELECT * FROM marketplace_listing INNER JOIN fulfillment_mapping ON marketplace_listing.id=fulfillment_mapping.marketplace_listing_id "
@@ -84,9 +84,6 @@ public class Marketplace {
 			.marketplaceId(results.getInt("marketplace_id"))
 			.listingId(results.getString("listing_id"))
 			.listingTitle(results.getString("listing_title"))
-			.listingUrl(results.getString("listing_url"))
-			.listingPrice(results.getDouble("listing_price"))
-			.shippingPrice(results.getDouble("listing_shipping_price"))
 			.fulfillmentQuantityMultiplier(results.getInt("fulfillment_quantity_multiplier"))
 		.build();
 	}

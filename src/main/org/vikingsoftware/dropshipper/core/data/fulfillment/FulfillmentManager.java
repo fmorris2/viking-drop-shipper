@@ -14,7 +14,7 @@ import java.util.Set;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
-import main.org.vikingsoftware.dropshipper.core.db.impl.VDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
 
@@ -51,7 +51,7 @@ public class FulfillmentManager {
 	public static void freeze(final int fulfillmentPlatformId) {
 		frozenFulfillmentPlatforms.add(fulfillmentPlatformId);
 		try {
-			final Statement st = VDSDBManager.get().createStatement();
+			final Statement st = VSDSDBManager.get().createStatement();
 			st.execute("UPDATE fulfillment_platform SET frozen=1 WHERE id=" + fulfillmentPlatformId);
 		} catch(final Exception e) {
 			DBLogging.critical(FulfillmentManager.class, "failed to freeze fulfillment platform " + fulfillmentPlatformId, e);
@@ -65,7 +65,7 @@ public class FulfillmentManager {
 		}
 
 		try {
-			final Statement st = VDSDBManager.get().createStatement();
+			final Statement st = VSDSDBManager.get().createStatement();
 			st.execute("INSERT INTO fulfillment_listings_to_examine(fulfillment_listing_id, current_listing_title)"
 					+ " VALUES("+listing.id+",'"+newTitle+"')");
 			System.out.println("Successfully flagged listing " + listing + " for examination");
@@ -85,7 +85,11 @@ public class FulfillmentManager {
 	public boolean prepareForFulfillment() {
 		load();
 		for(final FulfillmentPlatforms platform : FulfillmentPlatforms.values()) {
+			System.out.println("Generating strategy for " + platform);
 			final OrderExecutionStrategy strategy = platform.generateStrategy();
+			if(strategy == null) {
+				continue;
+			}
 			if(!strategy.prepareForExecution()) {
 				return false;
 			}
@@ -127,6 +131,30 @@ public class FulfillmentManager {
 		return Optional.empty();
 	}
 
+	public Optional<FulfillmentListing> getListingForItemId(final int platformId, final String itemId) {
+		final Statement st = VSDSDBManager.get().createStatement();
+		try {
+			final ResultSet results = st.executeQuery("SELECT * FROM fulfillment_listing WHERE fulfillment_platform_id=" + platformId +
+					" AND item_id="+itemId);
+
+			if(results.next()) {
+				final FulfillmentListing listing = new FulfillmentListing.Builder()
+						.id(results.getInt("id"))
+						.fulfillment_platform_id(platformId)
+						.item_id(itemId)
+						.listing_title(results.getString("listing_title"))
+						.listing_url(results.getString("listing_url"))
+						.build();
+
+				return Optional.of(listing);
+			}
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+
+		return Optional.empty();
+	}
+
 	public List<FulfillmentListing> getListingsForOrder(final CustomerOrder order) {
 		return listings.getOrDefault(order.marketplace_listing_id, new ArrayList<>());
 	}
@@ -136,7 +164,7 @@ public class FulfillmentManager {
 	}
 
 	private void loadValidFulfillmentListings() {
-		final Statement st = VDSDBManager.get().createStatement();
+		final Statement st = VSDSDBManager.get().createStatement();
 		try {
 			final ResultSet results = st.executeQuery("SELECT * FROM fulfillment_listing"
 					+ " INNER JOIN fulfillment_mapping ON"
@@ -164,7 +192,7 @@ public class FulfillmentManager {
 	}
 
 	private void loadFulfillmentPlatforms() {
-		final Statement st = VDSDBManager.get().createStatement();
+		final Statement st = VSDSDBManager.get().createStatement();
 		try {
 			final ResultSet results = st.executeQuery("SELECT * FROM fulfillment_platform");
 			while(results.next()) {

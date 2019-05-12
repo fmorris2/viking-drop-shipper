@@ -1,6 +1,5 @@
 package main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.impl;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -20,18 +19,17 @@ import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
-import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.AliExpressDriverSupplier;
-import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 import main.org.vikingsoftware.dropshipper.core.web.aliexpress.AliExpressWebDriver;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingImage;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.PropertyItem;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.PropertyItemOption;
-import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.FulfillmentParser;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.AbstractFulfillmentParser;
 
-public class AliExpressFulfillmentParser implements FulfillmentParser {
+public class AliExpressFulfillmentParser extends AbstractFulfillmentParser<AliExpressWebDriver> {
 
 	private static final int IMG_CHANGE_TIMEOUT_MS = 2000;
 
@@ -44,47 +42,30 @@ public class AliExpressFulfillmentParser implements FulfillmentParser {
 	}
 
 	@Override
-	public Listing getListingTemplate(final FulfillmentAccount account, final String url) {
-
-		DriverSupplier<AliExpressWebDriver> supplier = null;
-		AliExpressWebDriver driver = null;
-
+	protected Listing parseListing() {
 		try {
-			supplier = BrowserRepository.get().request(AliExpressDriverSupplier.class);
-			driver = supplier.get();
+			final Listing listing = new Listing();
+			listing.fulfillmentPlatformId = FulfillmentPlatforms.ALI_EXPRESS.getId();
+			listing.title = driver.findElement(By.className("product-name")).getText().trim();
+			listing.pictures = getPictures(driver);
+			listing.propertyItems = getPropertyItems(driver);
+			listing.variations = getVariations(driver, listing);
+			listing.description = getDescription(driver);
 
-			if(driver.getReady(account)) {
-				driver.get(url);
-				return parseListing(driver);
-			}
+			System.out.println("listing title: " + listing.title);
+			System.out.println("listing pics: " + listing.pictures);
+			System.out.println("listing description: " + listing.description);
+			System.out.println("listing variations: " + listing.variations);
+			return listing;
 		} catch(final Exception e) {
 			e.printStackTrace();
-		} finally {
-			if(supplier != null) {
-				BrowserRepository.get().relinquish(supplier);
-			}
 		}
+
 		return null;
 	}
 
-	private Listing parseListing(final AliExpressWebDriver driver) throws InterruptedException, MalformedURLException, IOException {
-		final Listing listing = new Listing();
-		listing.title = driver.findElement(By.className("product-name")).getText().trim();
-		listing.pictures = getPictures(driver);
-		listing.propertyItems = getPropertyItems(driver);
-		listing.variations = getVariations(driver, listing);
-		listing.description = getDescription(driver);
-
-		System.out.println("listing title: " + listing.title);
-		System.out.println("listing pics: " + listing.pictures.keySet());
-		System.out.println("listing description: " + listing.description);
-		System.out.println("listing variations: " + listing.variations);
-
-		return listing;
-	}
-
-	private Map<String, BufferedImage> getPictures(final AliExpressWebDriver driver) throws InterruptedException, MalformedURLException, IOException {
-		final Map<String, BufferedImage> pics = new HashMap<>();
+	private List<ListingImage> getPictures(final AliExpressWebDriver driver) throws InterruptedException, MalformedURLException, IOException {
+		final List<ListingImage> pics = new ArrayList<>();
 
 		final WebElement thumbsEl = driver.findElement(By.id("j-image-thumb-list"));
 		final int numThumbNails = thumbsEl.findElements(By.className("img-thumb-item")).size();
@@ -100,7 +81,7 @@ public class AliExpressFulfillmentParser implements FulfillmentParser {
 				final String curr = currentImg;
 				waitForImgChange(() -> curr != null && curr.equals(fullImg.get()));
 				currentImg = fullImg.get();
-				pics.put(currentImg, ImageIO.read(new URL(currentImg)));
+				pics.add(new ListingImage(currentImg, ImageIO.read(new URL(currentImg))));
 			} catch(final StaleElementReferenceException e) {
 				i--;
 			}
@@ -225,6 +206,16 @@ public class AliExpressFulfillmentParser implements FulfillmentParser {
 		}
 
 		return instance;
+	}
+
+	@Override
+	public Class<AliExpressDriverSupplier> getDriverSupplierClass() {
+		return AliExpressDriverSupplier.class;
+	}
+
+	@Override
+	public boolean needsToLogin() {
+		return false;
 	}
 
 }
