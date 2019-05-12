@@ -79,9 +79,7 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 			listing.description = "<span>Features:</span>\n<ul>\n"+featuresHtml+"</ul>";
 
 			try {
-				driver.findElement(By.cssSelector("#view-more > div > input")).click();
-				Thread.sleep(1000);
-				final String productDetails = driver.findElement(By.cssSelector("#pdp-accordion-collapse-1 > div > div.product-info-description")).getAttribute("innerHTML");
+				final String productDetails = driver.findElement(By.cssSelector(".product-info-description")).getAttribute("innerHTML");
 				listing.description += "<br /><hr />" + productDetails;
 			} catch(final Exception e) {
 				//swallow
