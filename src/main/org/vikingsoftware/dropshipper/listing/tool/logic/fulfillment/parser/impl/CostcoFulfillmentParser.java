@@ -129,6 +129,12 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 			pics.add(new ListingImage(convertedUrl, img));
 		}
 
+		if(pics.isEmpty()) {
+			final String url = driver.findElement(By.id("initialProductImage")).getAttribute("src");
+			final BufferedImage img = ImageIO.read(new URL(url));
+			pics.add(new ListingImage(url, img));
+		}
+
 		return pics;
 	}
 
