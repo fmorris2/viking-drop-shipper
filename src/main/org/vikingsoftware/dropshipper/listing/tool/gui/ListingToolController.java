@@ -71,7 +71,7 @@ public class ListingToolController {
 	}
 
 	private void addListeners() {
-		gui.urlsToParseValue.addKeyListener(createFulfillmentUrlKeyAdapter());
+		gui.fulfillmentsPanelInput.addKeyListener(createFulfillmentUrlKeyAdapter());
 
         gui.descRawInput.addKeyListener(new KeyAdapter() {
         	@Override
@@ -410,9 +410,9 @@ public class ListingToolController {
 			@Override
 			public void keyReleased(final KeyEvent e) {
 				if(e.getKeyCode() == KeyEvent.VK_ENTER) {
-					System.out.println("Attempting to add fulfillment URL to queue: " + gui.urlsToParseValue.getText());
-					FulfillmentListingParserWorker.instance().addUrlToQueue(gui.urlsToParseValue.getText());
-					SwingUtilities.invokeLater(() -> gui.urlsToParseValue.setText(""));
+					System.out.println("Attempting to add fulfillment URL to queue: " + gui.fulfillmentsPanelInput.getText());
+					FulfillmentListingParserWorker.instance().addUrlToQueue(gui.fulfillmentsPanelInput.getText());
+					SwingUtilities.invokeLater(() -> gui.fulfillmentsPanelInput.setText(""));
 				}
 			}
 		};
