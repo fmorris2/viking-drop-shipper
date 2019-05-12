@@ -87,7 +87,8 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 
 			makeDescriptionPretty(listing);
 
-			final double price = Double.parseDouble(driver.findElement(By.cssSelector("#math-table > div.your-price.row.no-gutter > div > span.value")).getText());
+			//see if you can get price the same way the inventory updater parses count
+			final double price = Double.parseDouble(driver.findElement(By.cssSelector("meta[property=\"product:price:amount\"]")).getAttribute("content"));
 			listing.price = price;
 			System.out.println("Listing Price: " + listing.price);
 
