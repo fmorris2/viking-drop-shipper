@@ -272,7 +272,7 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 	}
 
 	private void useSelectedAddress() throws InterruptedException {
-		driver.setImplicitWait(30);
+		driver.setImplicitWait(60);
 		try {
 			driver.findElement(By.cssSelector("#entered-address input")).click();
 			driver.findElement(By.id("costcoModalBtn2")).click();
@@ -439,6 +439,12 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		}
 
 		final List<WebElement> items = orderItems.get();
+
+		if(items.isEmpty()) {
+			Thread.sleep(5000);
+			return narrowCartToTargetItem(fulfillmentListing, orderItems);
+		}
+
 		final WebElement targetOrderItem = items.size() == 1 ? items.get(0) : null;
 
 		if(targetOrderItem == null) {
