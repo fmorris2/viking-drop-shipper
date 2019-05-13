@@ -448,7 +448,9 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		final WebElement targetOrderItem = items.size() == 1 ? items.get(0) : null;
 
 		if(targetOrderItem == null) {
-			throw new OrderExecutionException("Could not find target order item " + fulfillmentListing.item_id + " in cart");
+			Thread.sleep(5000);
+			return narrowCartToTargetItem(fulfillmentListing, orderItems);
+			//throw new OrderExecutionException("Could not find target order item " + fulfillmentListing.item_id + " in cart");
 		}
 
 		return targetOrderItem;
