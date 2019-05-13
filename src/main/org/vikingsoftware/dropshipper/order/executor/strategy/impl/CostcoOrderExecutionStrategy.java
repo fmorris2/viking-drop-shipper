@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementClickInterceptedException;
+import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.InvalidElementStateException;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
@@ -60,10 +61,15 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		return verifyAndPlaceOrder(order, fulfillmentListing);
 	}
 
-	private void enterQuantity(final CustomerOrder order) {
-		final WebElement qtyBox = driver.findElement(By.id("minQtyText"));
-		qtyBox.clear();
-		qtyBox.sendKeys(Integer.toString(order.fulfillment_purchase_quantity));
+	private void enterQuantity(final CustomerOrder order) throws InterruptedException {
+		try {
+			final WebElement qtyBox = driver.findElement(By.id("minQtyText"));
+			qtyBox.clear();
+			qtyBox.sendKeys(Integer.toString(order.fulfillment_purchase_quantity));
+		} catch(final ElementNotVisibleException e) {
+			Thread.sleep(1000);
+			enterQuantity(order);
+		}
 	}
 
 	private void addToCart() {
