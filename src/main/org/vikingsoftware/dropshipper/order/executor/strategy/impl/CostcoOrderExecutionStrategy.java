@@ -419,9 +419,22 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 	}
 
 	private WebElement narrowCartToTargetItem(final FulfillmentListing fulfillmentListing, final Supplier<List<WebElement>> orderItems) throws Exception {
+		startLoop();
+		while(orderItems.get().isEmpty() && !this.hasExceededThreshold()) {
+			Thread.sleep(50);
+		}
+
+		System.out.println("# order items: " + orderItems.get().size());
+
+		long numCorrectItems = orderItems.get()
+				.stream()
+				.filter(el -> el.getAttribute("data-orderitemnumber").equalsIgnoreCase(fulfillmentListing.item_id))
+				.count();
+
 		for(final WebElement item : orderItems.get()) {
 			final String itemNum = item.getAttribute("data-orderitemnumber");
-			if(!fulfillmentListing.item_id.equalsIgnoreCase(itemNum)) {
+			final boolean isItem = fulfillmentListing.item_id.equalsIgnoreCase(itemNum);
+			if(!isItem || numCorrectItems > 1) {
 				System.out.println("Removing invalid item from cart: " + itemNum);
 				final int oldNumCartItems = getNumCartItems();
 				try {
@@ -435,22 +448,18 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 
 				}
 				waitForCartUpdate(oldNumCartItems);
+				if(isItem) {
+					numCorrectItems--;
+				}
 			}
 		}
 
 		final List<WebElement> items = orderItems.get();
 
-		if(items.isEmpty()) {
-			Thread.sleep(5000);
-			return narrowCartToTargetItem(fulfillmentListing, orderItems);
-		}
-
 		final WebElement targetOrderItem = items.size() == 1 ? items.get(0) : null;
 
 		if(targetOrderItem == null) {
-			Thread.sleep(5000);
-			return narrowCartToTargetItem(fulfillmentListing, orderItems);
-			//throw new OrderExecutionException("Could not find target order item " + fulfillmentListing.item_id + " in cart");
+			throw new OrderExecutionException("Could not find target order item " + fulfillmentListing.item_id + " in cart");
 		}
 
 		return targetOrderItem;

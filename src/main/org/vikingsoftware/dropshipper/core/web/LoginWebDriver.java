@@ -22,7 +22,7 @@ import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
 
 public abstract class LoginWebDriver extends ChromeDriver {
 
-	public static final int DEFAULT_VISIBILITY_WAIT_SECONDS = 10;
+	public static final int DEFAULT_VISIBILITY_WAIT_SECONDS = 20;
 
 	protected static final int MAX_LOGIN_TRIES = 20;
 
