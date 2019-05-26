@@ -29,6 +29,8 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 	private static final String EMAIL = "wholesale@vikingsoftware.org";
 	private static final String TOKEN_CVV = "983";
 
+	private int enterQtyFailures = 0;
+
 	@Override
 	protected Class<CostcoDriverSupplier> getDriverSupplierClass() {
 		return CostcoDriverSupplier.class;
@@ -38,6 +40,7 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 	protected ProcessedOrder executeOrderImpl(CustomerOrder order, FulfillmentListing fulfillmentListing)
 			throws Exception {
 
+		enterQtyFailures = 0;
 		driver.get(fulfillmentListing.listing_url);
 
 		enterQuantity(order);
@@ -67,7 +70,11 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 			qtyBox.clear();
 			qtyBox.sendKeys(Integer.toString(order.fulfillment_purchase_quantity));
 		} catch(final ElementNotVisibleException e) {
+			if(enterQtyFailures > 30) {
+				throw new OrderExecutionException("Failed to enter qty");
+			}
 			Thread.sleep(1000);
+			enterQtyFailures++;
 			enterQuantity(order);
 		}
 	}
