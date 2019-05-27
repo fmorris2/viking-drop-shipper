@@ -48,7 +48,7 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 
 	public LoginWebDriver() {
 		super(new Settings.Builder()
-				.headless(false)
+				.headless(true)
 				.build()
 		);
 
@@ -169,6 +169,7 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 
 	private boolean prepareWithPreExistingSession() {
 		try {
+			final long start = System.currentTimeMillis();
 			System.out.println("Checking if " + this + " already has pre existing cookies...");
 			final Set<Cookie> sessionCooks = sessionCookies.computeIfAbsent(account, acc -> new HashSet<>());
 			if(cookieCache.computeIfAbsent(this, driver -> new HashSet<>()) != sessionCooks) {
@@ -186,7 +187,7 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 				}
 
 				cookieCache.put(this, sessionCooks);
-				System.out.println(this + " is done adding pre existing session cookies");
+				System.out.println(this + " is done adding pre existing session cookies. Took " + (System.currentTimeMillis() - start) + "ms");
 				get(getLandingPageURL());
 
 				if(!verifyLoggedIn()) {
@@ -196,7 +197,7 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 				}
 
 			} else {
-				System.out.println(this + " HAS PRE EXISTING COOKIES!");
+				System.out.println(this + " HAS PRE EXISTING COOKIES! Took " + (System.currentTimeMillis() - start) + "ms");
 			}
 
 			return true;
