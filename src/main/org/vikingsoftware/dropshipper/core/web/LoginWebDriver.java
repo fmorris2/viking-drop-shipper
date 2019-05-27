@@ -1,5 +1,8 @@
 package main.org.vikingsoftware.dropshipper.core.web;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -8,26 +11,25 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchSessionException;
 import org.openqa.selenium.UnableToSetCookieException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
+
+import com.machinepublishers.jbrowserdriver.JBrowserDriver;
+import com.machinepublishers.jbrowserdriver.Settings;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
 
-public abstract class LoginWebDriver extends ChromeDriver {
+public abstract class LoginWebDriver extends JBrowserDriver {
 
-	public static final int DEFAULT_VISIBILITY_WAIT_SECONDS = 10;
+	public static final int DEFAULT_VISIBILITY_WAIT_SECONDS = 20;
 
 	protected static final int MAX_LOGIN_TRIES = 20;
-
-	private static final boolean HEADLESS = false;
-	private static final ChromeOptions OPTIONS = generateOptions();
 
 	private static final Map<FulfillmentAccount, Set<Cookie>> sessionCookies = new ConcurrentHashMap<>();
 	private static final Map<LoginWebDriver, Set<Cookie>> cookieCache = new ConcurrentHashMap<>();
@@ -38,15 +40,19 @@ public abstract class LoginWebDriver extends ChromeDriver {
 	protected int loginTries = 0;
 	protected FulfillmentAccount account;
 
-	public LoginWebDriver() {
-		super(OPTIONS);
-	}
-
 	public abstract boolean selectOrderOptions(final SkuMapping skuMapping, final FulfillmentListing listing);
 
 	protected abstract boolean prepareForExecutionViaLoginImpl();
 	protected abstract String getLandingPageURL();
 	protected abstract boolean verifyLoggedIn();
+
+	public LoginWebDriver() {
+		super(new Settings.Builder()
+				.headless(true)
+				.build()
+		);
+
+	}
 
 	public boolean getReady(final FulfillmentAccount account) {
 		this.account = account;
@@ -68,6 +74,24 @@ public abstract class LoginWebDriver extends ChromeDriver {
 		}
 
 		return false;
+	}
+
+	@Override
+	public WebElement findElement(By by) {
+		final long start = System.currentTimeMillis();
+		while(System.currentTimeMillis() - start < DEFAULT_VISIBILITY_WAIT_SECONDS * 1000) {
+			try {
+				return super.findElement(by);
+			} catch(final Exception e) {
+				//swallow
+			}
+		}
+
+		return null;
+	}
+
+	public Object js(final String command) {
+		return ((JavascriptExecutor)this).executeScript(command);
 	}
 
 	public void resetImplicitWait() {
@@ -111,6 +135,17 @@ public abstract class LoginWebDriver extends ChromeDriver {
 		}
 	}
 
+	public void saveCurrentPageToFile(final String fileName) {
+		final String pageSource = getPageSource();
+
+		try(final FileWriter fR = new FileWriter(fileName + ".html");
+			final BufferedWriter bR = new BufferedWriter(fR)) {
+			bR.write(pageSource);
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	private boolean prepareForExecutionViaLogin() {
 		try {
 			if(!sessionCookies.computeIfAbsent(account, acc -> new HashSet<>()).isEmpty()) {
@@ -134,6 +169,7 @@ public abstract class LoginWebDriver extends ChromeDriver {
 
 	private boolean prepareWithPreExistingSession() {
 		try {
+			final long start = System.currentTimeMillis();
 			System.out.println("Checking if " + this + " already has pre existing cookies...");
 			final Set<Cookie> sessionCooks = sessionCookies.computeIfAbsent(account, acc -> new HashSet<>());
 			if(cookieCache.computeIfAbsent(this, driver -> new HashSet<>()) != sessionCooks) {
@@ -151,7 +187,7 @@ public abstract class LoginWebDriver extends ChromeDriver {
 				}
 
 				cookieCache.put(this, sessionCooks);
-				System.out.println(this + " is done adding pre existing session cookies");
+				System.out.println(this + " is done adding pre existing session cookies. Took " + (System.currentTimeMillis() - start) + "ms");
 				get(getLandingPageURL());
 
 				if(!verifyLoggedIn()) {
@@ -161,7 +197,7 @@ public abstract class LoginWebDriver extends ChromeDriver {
 				}
 
 			} else {
-				System.out.println(this + " HAS PRE EXISTING COOKIES!");
+				System.out.println(this + " HAS PRE EXISTING COOKIES! Took " + (System.currentTimeMillis() - start) + "ms");
 			}
 
 			return true;
@@ -171,16 +207,5 @@ public abstract class LoginWebDriver extends ChromeDriver {
 		}
 
 		return false;
-	}
-
-	protected static ChromeOptions generateOptions() {
-		final ChromeOptions options = new ChromeOptions();
-		options.setHeadless(HEADLESS);
-		options.addArguments("--no-sandbox");
-		options.addArguments("--disable-dev-shm-usage");
-		options.addArguments("--disk-cache-size=4096");
-		options.addArguments("--profile.managed_default_content_settings.images=2", "--blink-settings=imagesEnabled=false");
-		options.addArguments("--start-maximized");
-		return options;
 	}
 }

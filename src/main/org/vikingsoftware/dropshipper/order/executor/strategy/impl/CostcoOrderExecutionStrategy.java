@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementClickInterceptedException;
+import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.InvalidElementStateException;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
@@ -28,6 +29,8 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 	private static final String EMAIL = "wholesale@vikingsoftware.org";
 	private static final String TOKEN_CVV = "983";
 
+	private int enterQtyFailures = 0;
+
 	@Override
 	protected Class<CostcoDriverSupplier> getDriverSupplierClass() {
 		return CostcoDriverSupplier.class;
@@ -37,6 +40,7 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 	protected ProcessedOrder executeOrderImpl(CustomerOrder order, FulfillmentListing fulfillmentListing)
 			throws Exception {
 
+		enterQtyFailures = 0;
 		driver.get(fulfillmentListing.listing_url);
 
 		enterQuantity(order);
@@ -60,10 +64,19 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		return verifyAndPlaceOrder(order, fulfillmentListing);
 	}
 
-	private void enterQuantity(final CustomerOrder order) {
-		final WebElement qtyBox = driver.findElement(By.id("minQtyText"));
-		qtyBox.clear();
-		qtyBox.sendKeys(Integer.toString(order.fulfillment_purchase_quantity));
+	private void enterQuantity(final CustomerOrder order) throws InterruptedException {
+		try {
+			final WebElement qtyBox = driver.findElement(By.id("minQtyText"));
+			qtyBox.clear();
+			qtyBox.sendKeys(Integer.toString(order.fulfillment_purchase_quantity));
+		} catch(final ElementNotVisibleException e) {
+			if(enterQtyFailures > 30) {
+				throw new OrderExecutionException("Failed to enter qty");
+			}
+			Thread.sleep(1000);
+			enterQtyFailures++;
+			enterQuantity(order);
+		}
 	}
 
 	private void addToCart() {
@@ -266,7 +279,7 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 	}
 
 	private void useSelectedAddress() throws InterruptedException {
-		driver.setImplicitWait(30);
+		driver.setImplicitWait(60);
 		try {
 			driver.findElement(By.cssSelector("#entered-address input")).click();
 			driver.findElement(By.id("costcoModalBtn2")).click();
@@ -413,9 +426,22 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 	}
 
 	private WebElement narrowCartToTargetItem(final FulfillmentListing fulfillmentListing, final Supplier<List<WebElement>> orderItems) throws Exception {
+		startLoop();
+		while(orderItems.get().isEmpty() && !this.hasExceededThreshold()) {
+			Thread.sleep(50);
+		}
+
+		System.out.println("# order items: " + orderItems.get().size());
+
+		long numCorrectItems = orderItems.get()
+				.stream()
+				.filter(el -> el.getAttribute("data-orderitemnumber").equalsIgnoreCase(fulfillmentListing.item_id))
+				.count();
+
 		for(final WebElement item : orderItems.get()) {
 			final String itemNum = item.getAttribute("data-orderitemnumber");
-			if(!fulfillmentListing.item_id.equalsIgnoreCase(itemNum)) {
+			final boolean isItem = fulfillmentListing.item_id.equalsIgnoreCase(itemNum);
+			if(!isItem || numCorrectItems > 1) {
 				System.out.println("Removing invalid item from cart: " + itemNum);
 				final int oldNumCartItems = getNumCartItems();
 				try {
@@ -429,10 +455,14 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 
 				}
 				waitForCartUpdate(oldNumCartItems);
+				if(isItem) {
+					numCorrectItems--;
+				}
 			}
 		}
 
 		final List<WebElement> items = orderItems.get();
+
 		final WebElement targetOrderItem = items.size() == 1 ? items.get(0) : null;
 
 		if(targetOrderItem == null) {
