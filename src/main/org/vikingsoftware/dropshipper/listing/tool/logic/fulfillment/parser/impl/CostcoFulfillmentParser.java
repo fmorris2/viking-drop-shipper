@@ -142,7 +142,7 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 		final List<ListingImage> pics = new ArrayList<>();
 		final Supplier<List<WebElement>> thumbnails = () -> driver.findElements(By.cssSelector("#theViews > div > div > a > img"));
 		for(final WebElement thumbnail : thumbnails.get()) {
-			final String convertedUrl = thumbnail.getAttribute("src").replace("recipeId=735", "recipeId=729");
+			final String convertedUrl = thumbnail.getAttribute("src").replaceAll("recipeId=\\d+", "recipeId=729");
 			final BufferedImage img = ImageIO.read(new URL(convertedUrl));
 			pics.add(new ListingImage(convertedUrl, img));
 		}
