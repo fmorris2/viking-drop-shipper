@@ -26,9 +26,15 @@ public abstract class AbstractFulfillmentParser<T extends LoginWebDriver> implem
 			driver = supplier.get();
 			SwingUtilities.invokeLater(() -> ListingToolGUI.get().statusTextValue.setText("Preparing web driver"));
 			if(!needsToLogin() || driver.getReady(account)) {
+				System.out.println("Navigating to listing URL: " + url);
 				SwingUtilities.invokeLater(() -> ListingToolGUI.get().statusTextValue.setText("Loading Fulfillment Listing URL"));
 				driver.get(url);
-				return parseListing();
+				System.out.println("About to parse listing in AbstractFulfillmentParser");
+				final Listing listing = parseListing();
+				if(listing != null) {
+					listing.url = url;
+					return listing;
+				}
 			}
 		} catch(final TimeoutException e) {
 			e.printStackTrace();

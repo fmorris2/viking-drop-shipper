@@ -14,7 +14,6 @@ import java.util.function.Supplier;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.NoSuchSessionException;
 import org.openqa.selenium.UnableToSetCookieException;
 import org.openqa.selenium.WebElement;
 
@@ -48,17 +47,21 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 
 	public LoginWebDriver() {
 		super(new Settings.Builder()
-				.headless(false)
+				.headless(true)
 				.build()
 		);
 	}
 
 	public boolean getReady(final FulfillmentAccount account) {
+		System.out.println("LoginWebDriver#getReady");
 		this.account = account;
 		try {
 			manage().timeouts().implicitlyWait(DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
 			manage().window().maximize();
 			
+			if(account == null) {
+				System.out.println("account is null: " + account);
+			}
 			final Object loginLock = loginLocks.computeIfAbsent(account, acc -> new Object());
 			synchronized(loginLock) {
 				if(sessionCookies.computeIfAbsent(account, acc -> new HashSet<>()).isEmpty()) {
@@ -69,7 +72,7 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 
 			System.out.println("prepareWithPreExistingSession");
 			return prepareWithPreExistingSession();
-		} catch(final NoSuchSessionException e) {
+		} catch(final Exception e) {
 			e.printStackTrace();
 		}
 
@@ -118,8 +121,11 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 	public String waitForTextToAppear(final Supplier<WebElement> element, final long ms) {
 		final long start = System.currentTimeMillis();
 		while(System.currentTimeMillis() - start < ms) {
-			final String txt = element.get().getText();
+			final WebElement el = element.get();
+			String txt = el.getText();
 			if(txt != null && !txt.isEmpty()) {
+				return txt;
+			} else if((txt = el.getAttribute("value")) != null && !txt.isEmpty()) {
 				return txt;
 			}
 		}

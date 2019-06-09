@@ -129,11 +129,19 @@ public class EbayCalls {
 			System.out.println("Setting stock for listing id " + listingId + " to " + itemToRevise.getQuantity());
 			call.setItemToBeRevised(itemToRevise);
 			final int fees = call.reviseFixedPriceItem().getFee().length;
-			System.out.println("fees: " + fees);
 			return fees > 0;
 		} catch(final Exception e) {
 			e.printStackTrace();
 			DBLogging.high(EbayCalls.class, "failed to update inventory for listing " + listingId + " and invEntries " + invEntries + ": ", e);
+		
+			if(e.getMessage().equals("You are not allowed to revise ended listings.")) {
+				System.out.println("setting ended listing to inactive in database...");
+				if(MarketplaceListing.setIsActive(listingId, false)) {
+					System.out.println("\tsuccess");
+				} else {
+					System.out.println("\tfailure");
+				}
+			}
 		}
 
 		return false;

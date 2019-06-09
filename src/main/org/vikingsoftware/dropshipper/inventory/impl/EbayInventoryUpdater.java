@@ -1,7 +1,6 @@
 package main.org.vikingsoftware.dropshipper.inventory.impl;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,15 +43,20 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 
 			System.out.println("Updating inventory for eBay listing " + listing);
 			final Map<String, Integer> skuStocks = new HashMap<>();
-			final List<FulfillmentListing> fulfillmentListings = FulfillmentManager.get().getListingsForMarketplaceListing(listing.id);
-			for(final FulfillmentListing fulfillmentListing : fulfillmentListings) {
-				System.out.println("Compiling inventory counts for fulfillment listing " + fulfillmentListing.id);
-				final Collection<SkuInventoryEntry> entries = Collections.singletonList(new SkuInventoryEntry(null, 0));//FulfillmentStockManager.getStock(listing, fulfillmentListing).get();
-				System.out.println("SkuInventoryEntries: " + entries.size());
-				for(final SkuInventoryEntry entry : entries) {
-					int currentStock = skuStocks.getOrDefault(entry.sku, 0);
-					currentStock += entry.stock;
-					skuStocks.put(entry.sku, currentStock);
+			if(!listing.active) {
+				skuStocks.put(null, 0);
+			} else {
+				final List<FulfillmentListing> fulfillmentListings = FulfillmentManager.get().getListingsForMarketplaceListing(listing.id);
+				for(final FulfillmentListing fulfillmentListing : fulfillmentListings) {
+					System.out.println("Compiling inventory counts for fulfillment listing " + fulfillmentListing.id);
+					final Collection<SkuInventoryEntry> entries = //Collections.singletonList(new SkuInventoryEntry(null, 0));
+							FulfillmentStockManager.getStock(listing, fulfillmentListing).get();
+					System.out.println("SkuInventoryEntries: " + entries.size());
+					for(final SkuInventoryEntry entry : entries) {
+						int currentStock = skuStocks.getOrDefault(entry.sku, 0);
+						currentStock += entry.stock;
+						skuStocks.put(entry.sku, currentStock);
+					}
 				}
 			}
 
@@ -71,13 +75,27 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 
 	private boolean sendInventoryUpdateToEbay(final MarketplaceListing listing, final Map<String, Integer> skuStocks) {
 		try {
+			/*
+			 * There is no need to continue sending updates to eBay & our DB
+			 * if the listing is currently inactive, and the last inventory update
+			 * we sent to eBay was 0. This if statement cuts down on extra unnecessary
+			 * processing
+			 */
+			if(!listing.active && listing.last_inventory_update == 0) {
+				return true;
+			}
+			
 			System.out.println("Sending " + skuStocks.size() + " item stock updates to eBay");
 			final List<SkuInventoryEntry> entries = skuStocks.entrySet()
 					.stream()
 					.map(entry -> new SkuInventoryEntry(entry.getKey(), entry.getValue()))
 					.collect(Collectors.toList());
 
-			EbayCalls.updateInventory(listing.listingId, entries);
+			if(EbayCalls.updateInventory(listing.listingId, entries)) {
+				listing.setLastInventoryUpdate(entries.stream().map(entry -> entry.stock).count());
+			} else {
+				listing.setLastInventoryUpdate(0);
+			}
 			updateCache.put(listing.listingId, System.currentTimeMillis());
 			return true;
 		} catch(final Exception e) {

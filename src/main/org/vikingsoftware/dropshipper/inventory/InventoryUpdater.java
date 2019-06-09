@@ -24,8 +24,8 @@ public class InventoryUpdater implements CycleParticipant {
 	private final Map<Integer, AutomaticInventoryUpdater> inventoryUpdaters = new HashMap<>();
 	private final ExecutorService taskStarter = Executors.newFixedThreadPool(TASK_STARTER_THREADS);
 
-	private List<MarketplaceListing> activeListings;
-
+	private List<MarketplaceListing> listings;
+	
 	@Override
 	public void cycle() {
 		MarketplaceLoader.loadMarketplaces();
@@ -35,7 +35,7 @@ public class InventoryUpdater implements CycleParticipant {
 			return;
 		}
 		FulfillmentManager.get().load();
-		activeListings = generateActiveListings();
+		listings = generateListings();
 		updateListings();
 	}
 
@@ -56,9 +56,9 @@ public class InventoryUpdater implements CycleParticipant {
 	}
 
 	private void updateListings() {
-		System.out.println("Starting inventory update process for " + activeListings.size() + " active listings...");
+		System.out.println("Starting inventory update process for " + listings.size() + " listings...");
 		final List<RunnableFuture<Boolean>> updates = new ArrayList<>();
-		for(final MarketplaceListing listing : activeListings) {
+		for(final MarketplaceListing listing : listings) {
 			final AutomaticInventoryUpdater updater = inventoryUpdaters.get(listing.marketplaceId);
 			updates.add(updater.updateInventory(listing));
 		}
@@ -79,17 +79,17 @@ public class InventoryUpdater implements CycleParticipant {
 				DBLogging.high(getClass(), "failed to check inventory update task: ", e);
 			}
 			if(successfulUpdate) {
-				System.out.println("Successfully updated inventory for listing " + activeListings.get(i));
+				System.out.println("Successfully updated inventory for listing " + listings.get(i));
 			} else {
-				System.out.println("Failed to update inventory for listing " + activeListings.get(i));
+				System.out.println("Failed to update inventory for listing " + listings.get(i));
 			}
 		}
 	}
 
-	private List<MarketplaceListing> generateActiveListings() {
+	private List<MarketplaceListing> generateListings() {
 		final List<MarketplaceListing> toReturn = new ArrayList<>();
 		for(final Marketplaces market : Marketplaces.values()) {
-			toReturn.addAll(market.getMarketplace().getActiveMarketplaceListings());
+			toReturn.addAll(market.getMarketplace().getMarketplaceListings());
 		}
 
 		return toReturn;

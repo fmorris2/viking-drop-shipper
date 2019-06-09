@@ -19,11 +19,11 @@ public class FulfillmentParsingManager {
 	public static Listing parseListing(final String url) {
 		if(url != null) {
 			if(url.contains("aliexpress.com")) {
-				return AliExpressFulfillmentParser.get().getListingTemplate(aliExpressAccount, url);
+				return new AliExpressFulfillmentParser().getListingTemplate(aliExpressAccount, url);
 			}
 
 			if(url.contains("costco.com")) {
-				return CostcoFulfillmentParser.get().getListingTemplate(costcoAccount, url);
+				return new CostcoFulfillmentParser().getListingTemplate(costcoAccount, url);
 			}
 		}
 
