@@ -25,6 +25,7 @@ import com.ebay.soap.eBLBaseComponents.ListingTypeCodeType;
 import com.ebay.soap.eBLBaseComponents.NameValueListArrayType;
 import com.ebay.soap.eBLBaseComponents.NameValueListType;
 import com.ebay.soap.eBLBaseComponents.PictureDetailsType;
+import com.ebay.soap.eBLBaseComponents.ProductListingDetailsType;
 import com.ebay.soap.eBLBaseComponents.ReturnPolicyType;
 import com.ebay.soap.eBLBaseComponents.ReturnsAcceptedCodeType;
 import com.ebay.soap.eBLBaseComponents.ShipmentTrackingDetailsType;
@@ -214,12 +215,13 @@ public class EbayCalls {
 		item.setCountry(CountryCodeType.US);
 		item.setCurrency(CurrencyCodeType.USD);
 		item.setDescription(listing.description);
-		item.setDispatchTimeMax(1);
+		item.setDispatchTimeMax(2);
 		item.setListingDuration(ListingDurationCodeType.GTC.value());
 		item.setListingType(ListingTypeCodeType.FIXED_PRICE_ITEM);
 		item.setLocation("St. Louis, MO");
 		item.setPostalCode("63101");
 		item.setPayPalEmailAddress("thevikingmarketplace@gmail.com");
+		item.setProductListingDetails(createProductListingDetailsForListing(listing));
 		item.setPictureDetails(createPictureDetailsForListing(listing));
 		item.setPrimaryCategory(createCategoryTypeForListing(listing));
 		item.setQuantity(0);
@@ -236,8 +238,8 @@ public class EbayCalls {
 		brand.setValue(new String[]{listing.brand});
 
 		final NameValueListType upc = new NameValueListType();
-		brand.setName("UPC");
-		brand.setValue(new String[]{"Does Not Apply"});
+		upc.setName("UPC");
+		upc.setValue(new String[]{"Does Not Apply"});
 
 		final NameValueListType[] specificsVals = {brand, upc};
 		specifics.setNameValueList(specificsVals);
@@ -259,6 +261,12 @@ public class EbayCalls {
 		type.setShipToRegistrationCountry(true);
 		return type;
 	}
+	
+	private static ProductListingDetailsType createProductListingDetailsForListing(final Listing listing) {
+		final ProductListingDetailsType type = new ProductListingDetailsType();
+		type.setUPC("Does not apply");
+		return type;
+	}
 
 	private static PictureDetailsType createPictureDetailsForListing(final Listing listing) {
 		final PictureDetailsType type = new PictureDetailsType();
@@ -278,7 +286,7 @@ public class EbayCalls {
 
 	private static ReturnPolicyType createReturnPolicyTypeForListing(final Listing listing) {
 		final ReturnPolicyType type = new ReturnPolicyType();
-		type.setReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_ACCEPTED.value());
+		type.setReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_NOT_ACCEPTED.value());
 		type.setInternationalReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_NOT_ACCEPTED.value());
 		return type;
 	}

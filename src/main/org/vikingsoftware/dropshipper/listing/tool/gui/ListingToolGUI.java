@@ -28,10 +28,10 @@ public class ListingToolGUI extends javax.swing.JFrame {
         initComponents();
         descRawScrollPane.setMinimumSize(new Dimension(667, 252));
         descHtmlScrollPane.setMinimumSize(new Dimension(667, 400));
-        recentSalesScrollPane.setMinimumSize(new Dimension(335, recentSalesPanel.getHeight()));
-        recentSalesScrollPane.setMaximumSize(new Dimension(335, 800));
-        recentSalesScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-        recentSalesScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+//        recentSalesScrollPane.setMinimumSize(new Dimension(335, recentSalesPanel.getHeight()));
+//        recentSalesScrollPane.setMaximumSize(new Dimension(335, 800));
+//        recentSalesScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+//        recentSalesScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         platformDropdown.setEnabled(false);
         setTitle(TITLE);
     }
@@ -97,8 +97,8 @@ public class ListingToolGUI extends javax.swing.JFrame {
         platformLabel = new javax.swing.JLabel();
         recentSalesPanelContainer = new javax.swing.JPanel();
         recentSalesHeaderText = new javax.swing.JLabel();
-        recentSalesScrollPane = new javax.swing.JScrollPane();
-        recentSalesPanel = new javax.swing.JPanel();
+//        recentSalesScrollPane = new javax.swing.JScrollPane();
+//        recentSalesPanel = new javax.swing.JPanel();
         soldItemsCheckbox = new javax.swing.JCheckBox();
         imagesPanelContainer = new javax.swing.JPanel();
         imagesPanelHeaderText = new javax.swing.JLabel();
@@ -274,6 +274,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
             .addGroup(generalInfoPanelLayout.createSequentialGroup()
                 .addComponent(generalInfoPanelHeaderText)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(soldItemsCheckbox)
                 .addComponent(resetListingInformation))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, generalInfoPanelLayout.createSequentialGroup()
                 .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -306,6 +307,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
             .addGroup(generalInfoPanelLayout.createSequentialGroup()
                 .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(generalInfoPanelHeaderText)
+                    .addComponent(soldItemsCheckbox)
                     .addComponent(resetListingInformation))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -407,45 +409,45 @@ public class ListingToolGUI extends javax.swing.JFrame {
         recentSalesHeaderText.setFont(new java.awt.Font("SansSerif", 0, 18)); // NOI18N
         recentSalesHeaderText.setText("Recent sales");
 
-        recentSalesScrollPane.setName(""); // NOI18N
+//        recentSalesScrollPane.setName(""); // NOI18N
+//
+//        recentSalesPanel.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
+//
+//        final javax.swing.GroupLayout recentSalesPanelLayout = new javax.swing.GroupLayout(recentSalesPanel);
+//        recentSalesPanel.setLayout(recentSalesPanelLayout);
+//        recentSalesPanelLayout.setHorizontalGroup(
+//            recentSalesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+//            .addGap(0, 368, Short.MAX_VALUE)
+//        );
+//        recentSalesPanelLayout.setVerticalGroup(
+//            recentSalesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+//            .addGap(0, 941, Short.MAX_VALUE)
+//        );
 
-        recentSalesPanel.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
-
-        final javax.swing.GroupLayout recentSalesPanelLayout = new javax.swing.GroupLayout(recentSalesPanel);
-        recentSalesPanel.setLayout(recentSalesPanelLayout);
-        recentSalesPanelLayout.setHorizontalGroup(
-            recentSalesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 368, Short.MAX_VALUE)
-        );
-        recentSalesPanelLayout.setVerticalGroup(
-            recentSalesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 941, Short.MAX_VALUE)
-        );
-
-        recentSalesScrollPane.setViewportView(recentSalesPanel);
+//        recentSalesScrollPane.setViewportView(recentSalesPanel);
 
         soldItemsCheckbox.setFont(new java.awt.Font("SansSerif", 0, 11)); // NOI18N
         soldItemsCheckbox.setText("Sold items");
 
-        final javax.swing.GroupLayout recentSalesPanelContainerLayout = new javax.swing.GroupLayout(recentSalesPanelContainer);
-        recentSalesPanelContainer.setLayout(recentSalesPanelContainerLayout);
-        recentSalesPanelContainerLayout.setHorizontalGroup(
-            recentSalesPanelContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(recentSalesPanelContainerLayout.createSequentialGroup()
-                .addComponent(recentSalesHeaderText)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(soldItemsCheckbox))
-            .addComponent(recentSalesScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 335, Short.MAX_VALUE)
-        );
-        recentSalesPanelContainerLayout.setVerticalGroup(
-            recentSalesPanelContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(recentSalesPanelContainerLayout.createSequentialGroup()
-                .addGroup(recentSalesPanelContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(recentSalesHeaderText)
-                    .addComponent(soldItemsCheckbox, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(recentSalesScrollPane))
-        );
+//        final javax.swing.GroupLayout recentSalesPanelContainerLayout = new javax.swing.GroupLayout(recentSalesPanelContainer);
+//        recentSalesPanelContainer.setLayout(recentSalesPanelContainerLayout);
+//        recentSalesPanelContainerLayout.setHorizontalGroup(
+//            recentSalesPanelContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+//            .addGroup(recentSalesPanelContainerLayout.createSequentialGroup()
+//                .addComponent(recentSalesHeaderText)
+//                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+//                .addComponent(soldItemsCheckbox))
+//            .addComponent(recentSalesScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 335, Short.MAX_VALUE)
+//        );
+//        recentSalesPanelContainerLayout.setVerticalGroup(
+//            recentSalesPanelContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+//            .addGroup(recentSalesPanelContainerLayout.createSequentialGroup()
+//                .addGroup(recentSalesPanelContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+//                    .addComponent(recentSalesHeaderText)
+//                    .addComponent(soldItemsCheckbox, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE))
+//                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+//                .addComponent(recentSalesScrollPane))
+//        );
 
         imagesPanelHeaderText.setFont(new java.awt.Font("SansSerif", 0, 18)); // NOI18N
         imagesPanelHeaderText.setText("Images");
@@ -541,9 +543,9 @@ public class ListingToolGUI extends javax.swing.JFrame {
     public javax.swing.JButton publishListingBtn;
     public javax.swing.JPanel queuePanelContainer;
     public javax.swing.JLabel recentSalesHeaderText;
-    public javax.swing.JPanel recentSalesPanel;
+//    public javax.swing.JPanel recentSalesPanel;
     public javax.swing.JPanel recentSalesPanelContainer;
-    public javax.swing.JScrollPane recentSalesScrollPane;
+//    public javax.swing.JScrollPane recentSalesScrollPane;
     public javax.swing.JButton resetListingInformation;
     public javax.swing.JTextField shippingPriceInput;
     public javax.swing.JLabel shippingPriceLabel;
