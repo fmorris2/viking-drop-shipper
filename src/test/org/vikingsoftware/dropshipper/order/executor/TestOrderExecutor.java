@@ -9,11 +9,9 @@ public class TestOrderExecutor {
 
 	@Test
 	public void test() {
-		OrderExecutor.isTestMode = false;
+		OrderExecutor.isTestMode = true;
 		final OrderExecutor executor = new OrderExecutor();
-		for(int i = 0; i < 1; i++) {
-			executor.cycle();
-		}
+		executor.cycle();
 		
 		Assert.assertTrue(true);
 	}

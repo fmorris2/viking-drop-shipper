@@ -137,7 +137,7 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 		final char[] chars = keys.toCharArray();
 		for(final char character : chars) {
 			el.sendKeys(""+character);
-			Thread.sleep(150);
+			Thread.sleep(2);
 		}
 	}
 
