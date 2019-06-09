@@ -26,6 +26,7 @@ import com.ebay.soap.eBLBaseComponents.ShippingServiceCodeType;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.CostcoDriverSupplier;
+import main.org.vikingsoftware.dropshipper.core.utils.CostcoUtils;
 import main.org.vikingsoftware.dropshipper.core.web.costco.CostcoWebDriver;
 import main.org.vikingsoftware.dropshipper.listing.tool.gui.ListingToolGUI;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
@@ -34,48 +35,48 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser
 
 public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWebDriver> {
 
-	private static CostcoFulfillmentParser instance;
-
-	private CostcoFulfillmentParser() {
-
-	}
-
-	public static synchronized CostcoFulfillmentParser get() {
-		if(instance == null) {
-			instance = new CostcoFulfillmentParser();
-		}
-
-		return instance;
-	}
-
 	@Override
 	public Listing parseListing() {
 		try {
 			final Listing listing = new Listing();
 			listing.fulfillmentPlatformId = FulfillmentPlatforms.COSTCO.getId();
 			listing.shippingService = ShippingServiceCodeType.SHIPPING_METHOD_STANDARD;
-
+			
 			SwingUtilities.invokeLater(() -> ListingToolGUI.get().statusTextValue.setText("Parsing listing title"));
-			final Supplier<WebElement> titleEl = () -> driver.findElement(By.cssSelector("#product-details h1"));
-			listing.title = driver.waitForTextToAppear(titleEl, 30_000).trim();
+			driver.setImplicitWait(2);
+			
+			final String pageSource = driver.getPageSource();
+			listing.title = CostcoUtils.parseListingTitleFromPageSource(pageSource);
 			System.out.println("Listing Title: " + listing.title);
-
-			try {
-				driver.findElement(By.id("add-to-cart-btn"));
-			} catch(final Exception e) {
+			
+			System.out.println("Checking 2 day shipping / listing buy limit per membership...");
+			if(CostcoUtils.isTwoDayShipping(pageSource) || CostcoUtils.getListingLimitPerMember(pageSource) != -1) {
+				System.out.println("\tListing either has 2 day shipping, or a per-member buy limit. Skipping...");
 				listing.canShip = false;
 				return listing;
 			}
+			System.out.println("\tdone.");
+
+			System.out.println("Finding add to cart button...");
+			try {				
+				driver.js("document.getElementById(\"add-to-cart-btn\").getAttribute(\"value\");");
+			} catch(final Exception e) {
+				System.out.println("\tListing has no add to cart button. Skipping...");
+				listing.canShip = false;
+				return listing;
+			}
+			System.out.println("\tdone.");
 
 			listing.canShip = true;
 
-			final String itemId = driver.findElement(By.cssSelector(
-					"#product-page span[itemprop=\"sku\"]")).getAttribute("textContent");
-			listing.itemId = itemId.trim();
-			System.out.println("Listing Item ID: " + listing.itemId);
-
+			System.out.println("Parsing item id...");
+			final String itemId = CostcoUtils.getProductIdFromPageSource(pageSource);
+			listing.itemId = itemId;
+			System.out.println("\tListing Item ID: " + listing.itemId);
+			
+			System.out.println("Parsing listing description...");
 			SwingUtilities.invokeLater(() -> ListingToolGUI.get().statusTextValue.setText("Parsing listing description"));
-			final String featuresHtml = driver.findElement(By.cssSelector(".features-container > .pdp-features")).getAttribute("innerHTML");
+			final String featuresHtml = (String)driver.js("document.querySelector(\".features-container > .pdp-features\").getAttribute(\"innerHTML\");");
 			listing.description = "<span>Features:</span>\n<ul>\n"+featuresHtml+"</ul>";
 
 			try {
@@ -84,22 +85,27 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 			} catch(final Exception e) {
 				//swallow
 			}
+			System.out.println("\tdone.");
 
+			System.out.println("Making description pretty...");
 			makeDescriptionPretty(listing);
+			System.out.println("\tdone.");
 
 			//see if you can get price the same way the inventory updater parses count
+			driver.setImplicitWait(1);
+			System.out.println("Parsing price...");
 			final double price = Double.parseDouble(driver.findElement(By.cssSelector("meta[property=\"product:price:amount\"]")).getAttribute("content"));
 			listing.price = price;
+			System.out.println("\tdone.");
 
 			try {
-				driver.setImplicitWait(2);
-				final String fee = driver.findElement(By.id("grocery-fee-amount")).getAttribute("data-grocery-fee-amount").replace("$", "");
-				listing.price += Double.parseDouble(fee);
+				System.out.println("Parsing grocery fee...");
+				final String fee = (String)driver.js("document.getElementById(\"grocery-fee-amount\").getAttribute(\"data-grocery-fee-amount\");");
+				listing.price += Double.parseDouble(fee.replace("$", ""));
 			} catch(final Exception e) {
-				e.printStackTrace();
-			} finally {
-				driver.resetImplicitWait();
+				System.out.println("\tlisting has no grocery fee");
 			}
+			System.out.println("\tdone.");
 			System.out.println("Listing Price: " + listing.price);
 
 			listing.pictures = getPictures();
@@ -116,6 +122,8 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 			return listing;
 		} catch(final Exception e) {
 			e.printStackTrace();
+		} finally {
+			driver.resetImplicitWait();
 		}
 		return null;
 	}
@@ -134,7 +142,7 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 		final List<ListingImage> pics = new ArrayList<>();
 		final Supplier<List<WebElement>> thumbnails = () -> driver.findElements(By.cssSelector("#theViews > div > div > a > img"));
 		for(final WebElement thumbnail : thumbnails.get()) {
-			final String convertedUrl = thumbnail.getAttribute("src").replace("recipeId=735", "recipeId=729");
+			final String convertedUrl = thumbnail.getAttribute("src").replaceAll("recipeId=\\d+", "recipeId=729");
 			final BufferedImage img = ImageIO.read(new URL(convertedUrl));
 			pics.add(new ListingImage(convertedUrl, img));
 		}

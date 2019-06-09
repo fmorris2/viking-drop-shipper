@@ -84,6 +84,8 @@ public class Marketplace {
 			.marketplaceId(results.getInt("marketplace_id"))
 			.listingId(results.getString("listing_id"))
 			.listingTitle(results.getString("listing_title"))
+			.active(results.getBoolean("active"))
+			.last_inventory_update(results.getInt("last_inventory_update"))
 			.fulfillmentQuantityMultiplier(results.getInt("fulfillment_quantity_multiplier"))
 		.build();
 	}

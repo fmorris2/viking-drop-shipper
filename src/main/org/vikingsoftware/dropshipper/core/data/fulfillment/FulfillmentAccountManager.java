@@ -20,7 +20,7 @@ public class FulfillmentAccountManager {
 		//intentionally empty
 	}
 
-	public static FulfillmentAccountManager get() {
+	public static synchronized FulfillmentAccountManager get() {
 		if(instance == null) {
 			instance = new FulfillmentAccountManager();
 			instance.load();

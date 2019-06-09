@@ -33,13 +33,7 @@ public class AliExpressFulfillmentParser extends AbstractFulfillmentParser<AliEx
 
 	private static final int IMG_CHANGE_TIMEOUT_MS = 2000;
 
-	private static AliExpressFulfillmentParser instance;
-
-
 	private final Set<PropertyItemOption> currentlySelectedOptions = new HashSet<>();
-	private AliExpressFulfillmentParser() {
-		super();
-	}
 
 	@Override
 	protected Listing parseListing() {
@@ -198,14 +192,6 @@ public class AliExpressFulfillmentParser extends AbstractFulfillmentParser<AliEx
 			Thread.sleep(10);
 		}
 		return driver.findElement(By.className("description-content")).getAttribute("outerHTML");
-	}
-
-	public static AliExpressFulfillmentParser get() {
-		if(instance == null) {
-			instance = new AliExpressFulfillmentParser();
-		}
-
-		return instance;
 	}
 
 	@Override

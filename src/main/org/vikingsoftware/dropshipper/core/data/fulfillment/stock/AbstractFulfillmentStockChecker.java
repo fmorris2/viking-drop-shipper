@@ -50,7 +50,9 @@ public abstract class AbstractFulfillmentStockChecker<T extends LoginWebDriver> 
 			} else {
 				System.out.println("failed to get " + driver + " ready!");
 				driver.quit();
+				System.out.println("\tsuccessfully quit web driver.");
 				BrowserRepository.get().replace(supplier);
+				System.out.println("\tsuccessfully replaced driver supplier");
 				supplier = null;
 			}
 		} catch(final Exception e) {

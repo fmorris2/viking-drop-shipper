@@ -21,6 +21,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.Cost
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.web.costco.CostcoWebDriver;
+import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
 import main.org.vikingsoftware.dropshipper.order.executor.error.OrderExecutionException;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.AbstractOrderExecutionStrategy;
 
@@ -182,68 +183,67 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 			}
 		}
 		System.out.println("Clicking add new address");
+		Thread.sleep(1000); //wait for modal to pop up
 		driver.findElement(By.cssSelector(".address-choose-header a")).click();
 
 		System.out.println("Entering buyer first name: " + order.getFirstName());
 		final WebElement firstNameEl = driver.findElement(By.id("firstId")); //wait for modal to appear
 		firstNameEl.clear();
-		Thread.sleep(250);
+		Thread.sleep(500);
 		driver.sendKeysSlowly(firstNameEl, order.getFirstName());
-		Thread.sleep(250);
+		Thread.sleep(500);
 
 		System.out.println("Entering buyer last name: " + order.getLastName());
 		final WebElement lastNameEl = driver.findElement(By.id("lastId"));
 		lastNameEl.clear();
-		Thread.sleep(250);
+		Thread.sleep(500);
 		driver.sendKeysSlowly(lastNameEl, order.getLastName());
-		Thread.sleep(250);
+		Thread.sleep(500);
 
 		System.out.println("Entering buyer street address: " + order.buyer_street_address);
 		final WebElement streetEl = driver.findElement(By.id("address1Id"));
 		streetEl.clear();
-		Thread.sleep(250);
+		Thread.sleep(500);
 		driver.sendKeysSlowly(streetEl, order.buyer_street_address);
-		Thread.sleep(250);
+		Thread.sleep(500);
 
 		final WebElement address2 = driver.findElement(By.id("address2Id"));
 		address2.clear();
-		Thread.sleep(250);
+		Thread.sleep(500);
 		if(order.buyer_apt_suite_unit_etc != null && !order.buyer_apt_suite_unit_etc.isEmpty()) {
 			System.out.println("Entering buyer apt / suite / unit / etc: " + order.buyer_apt_suite_unit_etc);
 			driver.sendKeysSlowly(address2, order.buyer_apt_suite_unit_etc);
-			Thread.sleep(250);
+			Thread.sleep(500);
 		}
 
 		System.out.println("Entering buyer zip code: " + order.buyer_zip_postal_code.substring(0, 5));
 		final WebElement zipEl = driver.findElement(By.id("postalId"));
 		zipEl.clear();
-		Thread.sleep(250);
+		Thread.sleep(500);
 		driver.sendKeysSlowly(zipEl, order.buyer_zip_postal_code.substring(0, 5));
-		Thread.sleep(250);
-
-		Thread.sleep(15000);
+		Thread.sleep(500);
 
 		final String phoneNum = order.buyer_phone_number == null ? null : order.buyer_phone_number.replaceAll("\\D", "");
 		if(phoneNum != null) {
 			System.out.println("Entering buyer phone number: " + phoneNum);
 			final WebElement phoneNumEl = driver.findElement(By.id("phoneId"));
 			phoneNumEl.clear();
-			Thread.sleep(250);
+			Thread.sleep(500);
 			driver.sendKeysSlowly(phoneNumEl, phoneNum);
-			Thread.sleep(250);
+			Thread.sleep(500);
 		}
 
 		System.out.println("Entering city: " + order.buyer_city);
 		final WebElement cityEl = driver.findElement(By.id("cityId"));
 		cityEl.clear();
-		Thread.sleep(250);
+		Thread.sleep(500);
 		driver.sendKeysSlowly(cityEl, order.buyer_city);
-		Thread.sleep(250);
+		Thread.sleep(500);
 
 		System.out.println("Entering email: " + EMAIL);
 		final WebElement emailEl = driver.findElement(By.id("emailId"));
 		emailEl.clear();
-		Thread.sleep(250);
+		Thread.sleep(500);
 		driver.sendKeysSlowly(emailEl, EMAIL);
 
 		System.out.println("Unchecking save address box");
@@ -399,7 +399,10 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		final WebElement placeOrderButton = driver.findElement(By.cssSelector("input[name=\"place-order\"]"));
 		driver.scrollIntoView(placeOrderButton);
 		try {
-			placeOrderButton.click();
+			Thread.sleep(1000);
+			if(!OrderExecutor.isTestMode) {
+				placeOrderButton.click();
+			}
 		} catch(final WebDriverException e) {
 			e.printStackTrace();
 			Thread.sleep(1500);
@@ -478,7 +481,7 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		try {
 			for(final WebElement el : pullLeftEls.get()) {
 				if(el.getText().contains("Item")) {
-					return Integer.parseInt(el.getText().substring(1).split(" ")[0]);
+					return Integer.parseInt(el.getText().substring(1).split(" ")[0]);
 				}
 			}
 		} catch(final StaleElementReferenceException e) {

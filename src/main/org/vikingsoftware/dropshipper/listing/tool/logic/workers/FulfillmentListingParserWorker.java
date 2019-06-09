@@ -4,16 +4,19 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.utils.ThreadUtils;
 import main.org.vikingsoftware.dropshipper.listing.tool.gui.ListingToolGUI;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingQueue;
@@ -22,15 +25,15 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser
 public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 
 	private static final long CYCLE_TIME = 50;
-	private static final int LISTING_ATTEMPT_THRESHOLD = 2;
+	
 	private static final Set<String> preExistingFulfillmentURLs = new HashSet<>();
 	private static final Map<Integer, Set<String>> platformToFulfillmentIds = new HashMap<>();
 
 	private static FulfillmentListingParserWorker instance;
 
-	private final Queue<String> urlQueue = new LinkedList<>();
-
-	private int attempts;
+	private final ExecutorService threadPool = Executors.newFixedThreadPool(ThreadUtils.NUM_THREADS);
+	private final Queue<String> urlQueue = new ConcurrentLinkedQueue<>();
+	private final Queue<Listing> completedListings = new ConcurrentLinkedQueue<>();
 
 	private FulfillmentListingParserWorker() {
 		execute();
@@ -44,8 +47,6 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 
 		return instance;
 	}
-
-
 
 	public static boolean isPreExistingItemId(final int platform, final String id) {
 		return platformToFulfillmentIds.getOrDefault(platform, new HashSet<>()).contains(id);
@@ -77,37 +78,46 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 		while(true) {
 			try {
 				if(!urlQueue.isEmpty()) {
-					System.out.println("Attempting to parse listing for " + urlQueue.peek());
-					final Listing listing = FulfillmentParsingManager.parseListing(urlQueue.peek());
-					attempts++;
-					if(listing != null) {
-						System.out.println("Successfully parsed listing for " + urlQueue.peek());
-						listing.url = urlQueue.peek();
-						if(!listing.canShip) {
-							System.out.println("Can't ship listing " + listing.title + "!");
-						} else if(!platformToFulfillmentIds.getOrDefault(listing.fulfillmentPlatformId, new HashSet<>()).contains(listing.itemId)) {
-							final boolean shouldDisplayListing = ListingQueue.isEmpty();
-							ListingQueue.add(listing);
-							if(shouldDisplayListing) {
-								ListingToolGUI.getController().displayNextListing();
-							}
-							SwingUtilities.invokeLater(() -> ListingToolGUI.get().urlsToParseValue.setText(Integer.toString(urlQueue.size())));
-						} else {
-							System.out.println("We already have a mapping for item id " + listing.itemId + " on fulfillment platform " + listing.fulfillmentPlatformId + " in the DB");
-						}
-						urlQueue.poll();
-						attempts = 0;
-					} else if(attempts == LISTING_ATTEMPT_THRESHOLD) {
-						System.out.println("Failed to parse URL: " + urlQueue.poll() + ". Skipping...");
-						attempts = 0;
-					} else {
-						System.out.println("Failed to parse URL: " + urlQueue.peek() + ". Retrying...");
-					}
+					threadPool.submit(this::parse);
+				}
+				
+				while(!completedListings.isEmpty()) {
+					handleCompletedListing(completedListings.poll());
 				}
 			} catch(final Exception e) {
 				e.printStackTrace();
 			}
 			Thread.sleep(CYCLE_TIME);
+		}
+	}
+	
+	private void parse() {
+		try {
+			final String url = urlQueue.poll();
+			System.out.println("Attempting to parse listing for " + url);
+			final Listing listing = FulfillmentParsingManager.parseListing(url);
+			if(listing != null) {
+				System.out.println("Adding completed listing: " + listing);
+				completedListings.add(listing);
+			}
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void handleCompletedListing(final Listing listing) {
+		System.out.println("Successfully parsed listing for " + listing.url);
+		if(!listing.canShip) {
+			System.out.println("Can't ship listing " + listing.title + "!");
+		} else if(!platformToFulfillmentIds.getOrDefault(listing.fulfillmentPlatformId, new HashSet<>()).contains(listing.itemId)) {
+			final boolean shouldDisplayListing = ListingQueue.isEmpty();
+			ListingQueue.add(listing);
+			if(shouldDisplayListing) {
+				ListingToolGUI.getController().displayNextListing();
+			}
+			SwingUtilities.invokeLater(() -> ListingToolGUI.get().urlsToParseValue.setText(Integer.toString(urlQueue.size())));
+		} else {
+			System.out.println("We already have a mapping for item id " + listing.itemId + " on fulfillment platform " + listing.fulfillmentPlatformId + " in the DB");
 		}
 	}
 

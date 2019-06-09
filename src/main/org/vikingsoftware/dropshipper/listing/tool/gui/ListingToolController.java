@@ -1,6 +1,5 @@
 package main.org.vikingsoftware.dropshipper.listing.tool.gui;
 
-import java.awt.BorderLayout;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Transparency;
@@ -50,8 +49,8 @@ import main.org.vikingsoftware.dropshipper.listing.tool.types.DocumentAdapter;
 public class ListingToolController {
 
 	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("###.##");
-	private static final String BASE_EBAY_SEARCH_URL = "https://www.ebay.com/sch/i.html?_nkw=";
-	private static final String BASE_EBAY_SEARCH_URL_SOLD_ITEMS = "https://www.ebay.com/sch/i.html?LH_Sold=1&LH_Complete=1&_nkw=";
+	private static final String BASE_EBAY_SEARCH_URL = "https://www.m.ebay.com/sch/i.html?_nkw=";
+	private static final String BASE_EBAY_SEARCH_URL_SOLD_ITEMS = "https://www.m.ebay.com/sch/i.html?LH_Sold=1&LH_Complete=1&_nkw=";
 
 	private final ListingToolGUI gui = ListingToolGUI.get();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -59,16 +58,15 @@ public class ListingToolController {
 	private JList<BufferedImage> imageList;
 	private DefaultListModel<BufferedImage> imagesModel;
 	private DefaultComboBoxModel<EbayCategory> categoryModel;
-	private SwtBrowserCanvas browser;
+	private RecentSalesRenderer recentSalesRenderer;
 	private Listing currentListingClone;
 	private double originalListingPrice;
-	private int updateCounter = 2;
 
 	public void setup() {
 		SwingUtilities.invokeLater(() -> {
 			addListeners();
 			addImageList();
-			addRecentSalesBrowser();
+			addRecentSalesRenderer();
 			addCategoryModel();
 		});
 	}
@@ -121,12 +119,10 @@ public class ListingToolController {
         gui.shippingPriceInput.getDocument().addDocumentListener(new DocumentAdapter() {
         	@Override
         	public void insertUpdate(DocumentEvent evt) {
-        		updateCounter = 2;
         		updateMarginWithPrice();
         	}
         	@Override
 			public void removeUpdate(DocumentEvent evt) {
-        		updateCounter = 2;
         		updateMarginWithPrice();
         	}
         });
@@ -204,17 +200,9 @@ public class ListingToolController {
 		imagesModel.remove(imageList.getSelectedIndex());
 	}
 
-	private void addRecentSalesBrowser() {
-		browser = new SwtBrowserCanvas();
-		browser.setFocusable(false);
-		gui.recentSalesPanel.setLayout(new BorderLayout());
-		gui.recentSalesPanel.add(browser, BorderLayout.CENTER);
-		gui.recentSalesPanel.setFocusable(false);
-		if(browser.initialise()) {
-			browser.setUrl("http://www.google.com");
-		}
-		gui.recentSalesPanel.revalidate();
-		gui.recentSalesPanel.repaint();
+	private void addRecentSalesRenderer() {
+		recentSalesRenderer = new RecentSalesRenderer();
+		recentSalesRenderer.get("http://www.google.com");
 	}
 
 	@SuppressWarnings("unchecked")
@@ -239,6 +227,7 @@ public class ListingToolController {
 
 	private void setGUI(final Listing listing) {
 		SwingUtilities.invokeLater(() -> {
+			originalListingPrice = listing.price;
 			currentListingClone = listing.clone();
 			updateRecentSoldItemsBrowser();
 			gui.listingTitleInput.setText(listing.title);
@@ -251,7 +240,6 @@ public class ListingToolController {
 			}
 
 			addImages(listing.pictures);
-			originalListingPrice = listing.price;
 			updateListingPriceWithMargin();
 			updateCategoryModel(listing);
 		});
@@ -259,16 +247,15 @@ public class ListingToolController {
 
 	private void clearGUI() {
 		SwingUtilities.invokeLater(() -> {
+			originalListingPrice = 0;
 			gui.listingTitleInput.setText("");
 			gui.descRawInput.setText("");
 			gui.descHtmlView.setText("");
 			gui.listingPriceInput.setText("");
 			gui.profitMarginInput.setText("");
 			gui.brandInput.setText("");
-			browser.setUrl("http://www.google.com");
+			recentSalesRenderer.get("http://www.google.com");
 			categoryModel.removeAllElements();
-
-			originalListingPrice = 0;
 			updateListingPriceWithMargin();
 		});
 	}
@@ -285,7 +272,9 @@ public class ListingToolController {
 		try {
 			if(ListingQueue.peek() != null) {
 				final String baseUrl = gui.soldItemsCheckbox.isSelected() ? BASE_EBAY_SEARCH_URL_SOLD_ITEMS : BASE_EBAY_SEARCH_URL;
-				browser.setUrl(baseUrl + URLEncoder.encode(ListingQueue.peek().title, "UTF-8"));
+				final String url = baseUrl + URLEncoder.encode(ListingQueue.peek().title, "UTF-8");
+				System.out.println("Setting recent sold items browser to url: " + url);
+				recentSalesRenderer.get(url);
 			}
 		} catch (final UnsupportedEncodingException e) {
 			e.printStackTrace();
@@ -303,29 +292,35 @@ public class ListingToolController {
 		try {
 			final String listingPriceTxt = gui.listingPriceInput.getText().isEmpty() ? "0.00" : gui.listingPriceInput.getText().replace("$", "");
 			final String shippingPriceTxt = gui.shippingPriceInput.getText().isEmpty() ? "0.00" : gui.shippingPriceInput.getText().replace("$", "");
-			final double currentPrice = Double.parseDouble(listingPriceTxt) + Double.parseDouble(shippingPriceTxt);
-			final String margin = DECIMAL_FORMAT.format(((currentPrice - (originalListingPrice * 1.20)) / currentPrice) * 100);
-			gui.profitMarginInput.setText(margin + "%");
+			final double revenue = Double.parseDouble(listingPriceTxt) + Double.parseDouble(shippingPriceTxt);
+			final double grossProfit = revenue - (originalListingPrice * 1.20);
+			final double marginPercentage = (grossProfit / revenue) * 100;
+			
+			System.out.println("listing price: " + listingPriceTxt);
+			System.out.println("shipping price: " + shippingPriceTxt);
+			System.out.println("cost of goods sold: " + (originalListingPrice * 1.20));
+			System.out.println("revenue: " + revenue);
+			System.out.println("gross profit: " + grossProfit);
+			System.out.println("margin: " + grossProfit / revenue);
+			final String marginString = DECIMAL_FORMAT.format(marginPercentage);
+			gui.profitMarginInput.setText(marginString + "%");
 		} catch(final Exception e) {
 			//swallow exception
 		}
 	}
 
     private void updateListingPriceWithMargin() {
-    	if(updateCounter <= 0) {
-	    	try {
-	    		final String marginText = gui.profitMarginInput.getText().isEmpty() ? "0.00" : gui.profitMarginInput.getText().replace("%", "");
-		    	final String shippingPriceTxt = gui.shippingPriceInput.getText().isEmpty() ? "0.00" : gui.shippingPriceInput.getText().replace("$", "");
-		    	final double price = originalListingPrice * (1.20 + (Double.parseDouble(marginText) / 100))
-		    			- (!shippingPriceTxt.isEmpty() ? Double.parseDouble(shippingPriceTxt) : 0);
-		    	final String priceWithMargin = DECIMAL_FORMAT.format(price);
-		    	gui.listingPriceInput.setText("$" + priceWithMargin);
-	    	} catch(final Exception e) {
-	    		//swallow exception
-	    	}
+    	try {
+    		final String marginText = gui.profitMarginInput.getText().isEmpty() ? "0.00" : gui.profitMarginInput.getText().replace("%", "");
+	    	final String shippingPriceTxt = gui.shippingPriceInput.getText().isEmpty() ? "0.00" : gui.shippingPriceInput.getText().replace("$", "");
+	    	final double margin = 1.00 - Double.parseDouble(marginText) / 100;
+	    	final double ourCost = originalListingPrice * 1.20;
+	    	final double buyersCost = (ourCost / margin) - Double.parseDouble(shippingPriceTxt);
+	    	final String priceWithMargin = DECIMAL_FORMAT.format(buyersCost);
+	    	gui.listingPriceInput.setText("$" + priceWithMargin);
+    	} catch(final Exception e) {
+    		//swallow exception
     	}
-
-    	updateCounter--;
     }
 
 	private void publishListing() {
