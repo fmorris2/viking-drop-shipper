@@ -50,8 +50,8 @@ import main.org.vikingsoftware.dropshipper.listing.tool.types.DocumentAdapter;
 public class ListingToolController {
 
 	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("###.##");
-	private static final String BASE_EBAY_SEARCH_URL = "https://www.ebay.com/sch/i.html?_nkw=";
-	private static final String BASE_EBAY_SEARCH_URL_SOLD_ITEMS = "https://www.ebay.com/sch/i.html?LH_Sold=1&LH_Complete=1&_nkw=";
+	private static final String BASE_EBAY_SEARCH_URL = "https://www.m.ebay.com/sch/i.html?_nkw=";
+	private static final String BASE_EBAY_SEARCH_URL_SOLD_ITEMS = "https://www.m.ebay.com/sch/i.html?LH_Sold=1&LH_Complete=1&_nkw=";
 
 	private final ListingToolGUI gui = ListingToolGUI.get();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -59,7 +59,7 @@ public class ListingToolController {
 	private JList<BufferedImage> imageList;
 	private DefaultListModel<BufferedImage> imagesModel;
 	private DefaultComboBoxModel<EbayCategory> categoryModel;
-	private SwtBrowserCanvas browser;
+	private RecentSalesRenderer recentSalesRenderer;
 	private Listing currentListingClone;
 	private double originalListingPrice;
 	private int updateCounter = 2;
@@ -68,7 +68,7 @@ public class ListingToolController {
 		SwingUtilities.invokeLater(() -> {
 			addListeners();
 			addImageList();
-			addRecentSalesBrowser();
+			addRecentSalesRenderer();
 			addCategoryModel();
 		});
 	}
@@ -204,15 +204,12 @@ public class ListingToolController {
 		imagesModel.remove(imageList.getSelectedIndex());
 	}
 
-	private void addRecentSalesBrowser() {
-		browser = new SwtBrowserCanvas();
-		browser.setFocusable(false);
+	private void addRecentSalesRenderer() {
+		recentSalesRenderer = new RecentSalesRenderer();
 		gui.recentSalesPanel.setLayout(new BorderLayout());
-		gui.recentSalesPanel.add(browser, BorderLayout.CENTER);
-		gui.recentSalesPanel.setFocusable(false);
-		if(browser.initialise()) {
-			browser.setUrl("http://www.google.com");
-		}
+		gui.recentSalesPanel.add(recentSalesRenderer, BorderLayout.CENTER);
+		recentSalesRenderer.renderUrl("http://www.google.com");
+		System.out.println("browser initializes successfully");
 		gui.recentSalesPanel.revalidate();
 		gui.recentSalesPanel.repaint();
 	}
@@ -265,7 +262,7 @@ public class ListingToolController {
 			gui.listingPriceInput.setText("");
 			gui.profitMarginInput.setText("");
 			gui.brandInput.setText("");
-			browser.setUrl("http://www.google.com");
+			recentSalesRenderer.renderUrl("http://www.google.com");
 			categoryModel.removeAllElements();
 
 			originalListingPrice = 0;
@@ -285,7 +282,9 @@ public class ListingToolController {
 		try {
 			if(ListingQueue.peek() != null) {
 				final String baseUrl = gui.soldItemsCheckbox.isSelected() ? BASE_EBAY_SEARCH_URL_SOLD_ITEMS : BASE_EBAY_SEARCH_URL;
-				browser.setUrl(baseUrl + URLEncoder.encode(ListingQueue.peek().title, "UTF-8"));
+				final String url = baseUrl + URLEncoder.encode(ListingQueue.peek().title, "UTF-8");
+				System.out.println("Setting recent sold items browser to url: " + url);
+				recentSalesRenderer.renderUrl(url);
 			}
 		} catch (final UnsupportedEncodingException e) {
 			e.printStackTrace();

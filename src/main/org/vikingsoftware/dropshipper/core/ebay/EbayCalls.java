@@ -126,6 +126,7 @@ public class EbayCalls {
 				System.out.println("Variations: " + variations.getVariationLength());
 				itemToRevise.setVariations(variations);
 			}
+			System.out.println("Setting stock for listing id " + listingId + " to " + itemToRevise.getQuantity());
 			call.setItemToBeRevised(itemToRevise);
 			final int fees = call.reviseFixedPriceItem().getFee().length;
 			System.out.println("fees: " + fees);

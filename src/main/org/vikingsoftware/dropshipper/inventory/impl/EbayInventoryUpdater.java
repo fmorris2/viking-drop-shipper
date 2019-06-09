@@ -1,6 +1,7 @@
 package main.org.vikingsoftware.dropshipper.inventory.impl;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			final List<FulfillmentListing> fulfillmentListings = FulfillmentManager.get().getListingsForMarketplaceListing(listing.id);
 			for(final FulfillmentListing fulfillmentListing : fulfillmentListings) {
 				System.out.println("Compiling inventory counts for fulfillment listing " + fulfillmentListing.id);
-				final Collection<SkuInventoryEntry> entries = /*Collections.singletonList(new SkuInventoryEntry(null, 0));*/FulfillmentStockManager.getStock(listing, fulfillmentListing).get();
+				final Collection<SkuInventoryEntry> entries = Collections.singletonList(new SkuInventoryEntry(null, 0));//FulfillmentStockManager.getStock(listing, fulfillmentListing).get();
 				System.out.println("SkuInventoryEntries: " + entries.size());
 				for(final SkuInventoryEntry entry : entries) {
 					int currentStock = skuStocks.getOrDefault(entry.sku, 0);

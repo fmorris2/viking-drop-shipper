@@ -48,17 +48,17 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 
 	public LoginWebDriver() {
 		super(new Settings.Builder()
-				.headless(true)
+				.headless(false)
 				.build()
 		);
-
 	}
 
 	public boolean getReady(final FulfillmentAccount account) {
 		this.account = account;
 		try {
 			manage().timeouts().implicitlyWait(DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
-
+			manage().window().maximize();
+			
 			final Object loginLock = loginLocks.computeIfAbsent(account, acc -> new Object());
 			synchronized(loginLock) {
 				if(sessionCookies.computeIfAbsent(account, acc -> new HashSet<>()).isEmpty()) {

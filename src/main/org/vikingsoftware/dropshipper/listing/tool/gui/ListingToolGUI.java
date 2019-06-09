@@ -7,6 +7,8 @@ package main.org.vikingsoftware.dropshipper.listing.tool.gui;
 
 import java.awt.Dimension;
 
+import javax.swing.ScrollPaneConstants;
+
 /**
  *
  * @author Bren
@@ -27,6 +29,9 @@ public class ListingToolGUI extends javax.swing.JFrame {
         descRawScrollPane.setMinimumSize(new Dimension(667, 252));
         descHtmlScrollPane.setMinimumSize(new Dimension(667, 400));
         recentSalesScrollPane.setMinimumSize(new Dimension(335, recentSalesPanel.getHeight()));
+        recentSalesScrollPane.setMaximumSize(new Dimension(335, 800));
+        recentSalesScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        recentSalesScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         platformDropdown.setEnabled(false);
         setTitle(TITLE);
     }

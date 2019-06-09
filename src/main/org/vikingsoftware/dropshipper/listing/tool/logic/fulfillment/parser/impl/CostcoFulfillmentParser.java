@@ -59,6 +59,18 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 			final Supplier<WebElement> titleEl = () -> driver.findElement(By.cssSelector("#product-details h1"));
 			listing.title = driver.waitForTextToAppear(titleEl, 30_000).trim();
 			System.out.println("Listing Title: " + listing.title);
+			
+			driver.setImplicitWait(1);
+			try {
+				final WebElement twoDayImage = driver.findElement(By.cssSelector(".col-xs-5 > a:nth-child(1) > img:nth-child(1)"));
+				if(twoDayImage.getAttribute("alt").contains("2-day")) {
+					System.out.println("listing is 2-day!");
+					listing.canShip = false;
+					return listing;
+				}
+			} catch(final Exception e) {
+				//swallow
+			}
 
 			try {
 				driver.findElement(By.id("add-to-cart-btn"));
@@ -85,9 +97,12 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 				//swallow
 			}
 
+			System.out.println("Making description pretty...");
 			makeDescriptionPretty(listing);
+			System.out.println("\tdone.");
 
 			//see if you can get price the same way the inventory updater parses count
+			driver.setImplicitWait(1);
 			final double price = Double.parseDouble(driver.findElement(By.cssSelector("meta[property=\"product:price:amount\"]")).getAttribute("content"));
 			listing.price = price;
 
@@ -116,6 +131,8 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 			return listing;
 		} catch(final Exception e) {
 			e.printStackTrace();
+		} finally {
+			driver.resetImplicitWait();
 		}
 		return null;
 	}
