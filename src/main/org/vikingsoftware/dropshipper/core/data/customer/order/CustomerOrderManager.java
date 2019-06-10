@@ -19,7 +19,7 @@ public class CustomerOrderManager {
 			final Statement st = VSDSDBManager.get().createStatement();
 			final ResultSet results = st.executeQuery("SELECT * FROM customer_order"
 					+ " LEFT JOIN processed_orders ON customer_order.id=processed_orders.customer_order_id"
-					+ " WHERE processed_orders.customer_order_id IS NULL");
+					+ " WHERE processed_orders.customer_order_id IS NULL AND is_cancelled=0");
 
 			while(results.next()) {
 				toExecute.add(buildOrderFromResultSet(results));
