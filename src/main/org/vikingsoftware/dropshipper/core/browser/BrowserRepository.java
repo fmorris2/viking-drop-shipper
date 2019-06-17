@@ -52,14 +52,15 @@ public final class BrowserRepository {
 		}
 	}
 
-	public void replace(final DriverSupplier<?> supplier) {
-		final WebDriverQueue<?> queue = queueCache.get(supplier.getClass());
+	public void replace(final Class<? extends DriverSupplier<?>> supplierClass) {
+		final WebDriverQueue<?> queue = queueCache.get(supplierClass);
 		if(queue != null) {
-			queue.replace(supplier);
+			queue.replace(supplierClass);
 		}
 	}
 
 	public void replaceAll() {
+		System.out.println("Replacing all WebDrivers in BrowserRepository.");
 		for(final WebDriverQueue<? extends WebDriver> queue : queueCache.values()) {
 			queue.replaceAll();
 		}

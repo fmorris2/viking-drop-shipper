@@ -85,7 +85,7 @@ public class Marketplace {
 			.listingId(results.getString("listing_id"))
 			.listingTitle(results.getString("listing_title"))
 			.active(results.getBoolean("active"))
-			.last_inventory_update(results.getInt("last_inventory_update"))
+			.currentEbayInventory(results.getInt("current_ebay_inventory"))
 			.fulfillmentQuantityMultiplier(results.getInt("fulfillment_quantity_multiplier"))
 		.build();
 	}

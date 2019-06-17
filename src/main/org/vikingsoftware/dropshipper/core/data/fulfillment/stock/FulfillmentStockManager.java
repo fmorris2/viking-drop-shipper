@@ -21,20 +21,24 @@ public class FulfillmentStockManager {
 
 	public static Future<Collection<SkuInventoryEntry>> getStock(final MarketplaceListing marketListing, final FulfillmentListing fulfillmentListing) {
 		FulfillmentAccount account = null;
-		switch(FulfillmentPlatforms.getById(fulfillmentListing.fulfillment_platform_id)) {
-			case ALI_EXPRESS:
-				 account = FulfillmentAccountManager.get().peekAccount(FulfillmentPlatforms.ALI_EXPRESS);
-				return AliExpressFulfillmentStockChecker.get().getStock(account, marketListing, fulfillmentListing);
-			case SAMS_CLUB:
-				account = FulfillmentAccountManager.get().peekAccount(FulfillmentPlatforms.SAMS_CLUB);
-				return SamsClubFulfillmentStockChecker.get().getStock(account, marketListing, fulfillmentListing);
-			case COSTCO:
-				account = FulfillmentAccountManager.get().peekAccount(FulfillmentPlatforms.COSTCO);
-				return CostcoFulfillmentStockChecker.get().getStock(account, marketListing, fulfillmentListing);
-			case AMAZON:
-				break;
-			default:
-				break;
+		try {
+			switch(FulfillmentPlatforms.getById(fulfillmentListing.fulfillment_platform_id)) {
+				case ALI_EXPRESS:
+					 account = FulfillmentAccountManager.get().peekAccount(FulfillmentPlatforms.ALI_EXPRESS);
+					return AliExpressFulfillmentStockChecker.get().getStock(account, marketListing, fulfillmentListing);
+				case SAMS_CLUB:
+					account = FulfillmentAccountManager.get().peekAccount(FulfillmentPlatforms.SAMS_CLUB);
+					return SamsClubFulfillmentStockChecker.get().getStock(account, marketListing, fulfillmentListing);
+				case COSTCO:
+					account = FulfillmentAccountManager.get().peekAccount(FulfillmentPlatforms.COSTCO);
+					return CostcoFulfillmentStockChecker.get().getStock(account, marketListing, fulfillmentListing);
+				case AMAZON:
+					break;
+				default:
+					break;
+			}
+		} catch(final Exception e) {
+			e.printStackTrace();
 		}
 
 		return new FutureTask<>(() -> Collections.emptyList());

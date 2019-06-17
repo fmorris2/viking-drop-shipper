@@ -10,10 +10,12 @@ import com.ebay.sdk.ApiContext;
 import com.ebay.sdk.TimeFilter;
 import com.ebay.sdk.call.AddFixedPriceItemCall;
 import com.ebay.sdk.call.CompleteSaleCall;
+import com.ebay.sdk.call.GetApiAccessRulesCall;
 import com.ebay.sdk.call.GetSellerTransactionsCall;
 import com.ebay.sdk.call.GetSuggestedCategoriesCall;
 import com.ebay.sdk.call.ReviseFixedPriceItemCall;
 import com.ebay.soap.eBLBaseComponents.AmountType;
+import com.ebay.soap.eBLBaseComponents.ApiAccessRuleType;
 import com.ebay.soap.eBLBaseComponents.BuyerPaymentMethodCodeType;
 import com.ebay.soap.eBLBaseComponents.BuyerRequirementDetailsType;
 import com.ebay.soap.eBLBaseComponents.CategoryType;
@@ -130,6 +132,7 @@ public class EbayCalls {
 			System.out.println("Setting stock for listing id " + listingId + " to " + itemToRevise.getQuantity());
 			call.setItemToBeRevised(itemToRevise);
 			final int fees = call.reviseFixedPriceItem().getFee().length;
+			System.out.println("fees: " + fees);
 			return fees > 0;
 		} catch(final Exception e) {
 			e.printStackTrace();
@@ -146,6 +149,26 @@ public class EbayCalls {
 		}
 
 		return false;
+	}
+	
+	public static void main(final String[] args) {
+		checkAPIAccessRules();
+	}
+	
+	public static void checkAPIAccessRules() {
+		try { 
+			final ApiContext api = EbayApiContextManager.getLiveContext();
+			final GetApiAccessRulesCall call = new GetApiAccessRulesCall(api);
+			call.getApiAccessRules();
+			final ApiAccessRuleType[] accessRules = call.getReturnedApiAccessRules();
+			for(final ApiAccessRuleType rule : accessRules) {
+				System.out.println("Rule: " + rule.getCallName());
+				System.out.println("\tDaily Hard Limit: " + rule.getDailyHardLimit());
+				System.out.println("\tDaily Usage: " + rule.getDailyUsage());
+			}
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static boolean setShipmentTrackingInfo(final ProcessedOrder order, final TrackingEntry entry) {

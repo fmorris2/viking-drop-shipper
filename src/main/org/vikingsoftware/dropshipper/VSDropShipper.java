@@ -37,14 +37,12 @@ public class VSDropShipper {
 			}
 
 			try {
-				Runtime.getRuntime().exec("TASKKILL /IM chrome.exe /F");
-				Runtime.getRuntime().exec("TASKKILL /IM chromedriver.exe /F");
-				Runtime.getRuntime().exec("TASKKILL /IM conhost.exe /F");
 				SkuMappingManager.clear();
 				BrowserRepository.get().replaceAll();
 			} catch(final Exception e) {
 				e.printStackTrace();
 			}
+			System.out.println("Sleeping between cycles...");
 			Thread.sleep(CYCLE_TIME_MS);
 		}
 	}

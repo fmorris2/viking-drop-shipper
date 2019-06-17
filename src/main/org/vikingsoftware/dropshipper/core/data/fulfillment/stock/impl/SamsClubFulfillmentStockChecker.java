@@ -4,6 +4,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.AbstractFulfillmentStockChecker;
+import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
 
 public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChecker<SamsClubWebDriver> {
@@ -37,7 +38,7 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 	}
 
 	@Override
-	protected Class<?> getDriverSupplierClass() {
+	protected Class<? extends DriverSupplier<?>> getDriverSupplierClass() {
 		return SamsClubDriverSupplier.class;
 	}
 }

@@ -36,15 +36,14 @@ public abstract class AbstractFulfillmentParser<T extends LoginWebDriver> implem
 					return listing;
 				}
 			}
-		} catch(final TimeoutException e) {
-			e.printStackTrace();
-			BrowserRepository.get().replace(supplier);
-			supplier = null;
 		} catch(final Exception e) {
+			supplier = null;
 			e.printStackTrace();
 		} finally {
 			if(supplier != null) {
 				BrowserRepository.get().relinquish(supplier);
+			} else {
+				BrowserRepository.get().replace(this.getDriverSupplierClass());
 			}
 		}
 		return null;

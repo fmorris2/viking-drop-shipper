@@ -214,4 +214,14 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 
 		return false;
 	}
+	
+	@Override
+	public void close() {
+		try {
+			System.out.println("Closed JBrowserDriver!");
+			super.close();
+		} catch(final Exception e) {
+			//swallow
+		}
+	}
 }

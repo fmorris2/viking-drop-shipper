@@ -19,7 +19,7 @@ import main.org.vikingsoftware.dropshipper.inventory.AutomaticInventoryUpdater;
 
 public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 
-	//576 seconds minimum between updates for a specific listing. eBay caps revisions at 150 per day for a listing
+	//1000 seconds minimum between updates for a specific listing. eBay caps revisions at 150 per day for a listing
 	private static final int MIN_UPDATE_TIME_THRESH = 576_000;
 
 	private static final Map<String, Long> updateCache = new HashMap<>();
@@ -31,7 +31,12 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 
 	@Override
 	public RunnableFuture<Boolean> updateInventory(final MarketplaceListing listing) {
-		return new FutureTask<>(() -> updateImpl(listing));
+		return new FutureTask<>(() -> {
+			System.out.println("about to run updateImpl in EbayInventoryUpdater...");
+			final boolean success = updateImpl(listing);
+			System.out.println("done running updateImpl in EbayInventoryUpdater: " + success);
+			return success;
+		});
 	}
 
 	private boolean updateImpl(final MarketplaceListing listing) {
@@ -81,7 +86,8 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			 * we sent to eBay was 0. This if statement cuts down on extra unnecessary
 			 * processing
 			 */
-			if(!listing.active && listing.last_inventory_update == 0) {
+			if(!listing.active && listing.current_ebay_inventory == 0) {
+				System.out.println("No need to send updated for inactive listing.");
 				return true;
 			}
 			
@@ -90,12 +96,26 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 					.stream()
 					.map(entry -> new SkuInventoryEntry(entry.getKey(), entry.getValue()))
 					.collect(Collectors.toList());
-
-			if(EbayCalls.updateInventory(listing.listingId, entries)) {
-				listing.setLastInventoryUpdate(entries.stream().map(entry -> entry.stock).count());
-			} else {
-				listing.setLastInventoryUpdate(0);
+			
+			final long parsedStock = entries.stream().map(entry -> entry.stock).count();
+			
+			if(listing.current_ebay_inventory > 0 && parsedStock > 0) {
+				System.out.println("eBay still has inventory - No need to update.");
+				return true;
+			} else if(listing.current_ebay_inventory <= 0 && parsedStock == 0) {
+				System.out.println("Parsed stock was 0 and eBay inventory is currently 0. No need to update");
+				return true;
 			}
+			
+			if(EbayCalls.updateInventory(listing.listingId, entries)) {
+				System.out.println("successfully sent inventory update to ebay - Updating our DB with last inv update.");
+				listing.setCurrentEbayInventory(parsedStock);
+			} else {
+				System.out.println("did not send inventory update to ebay successfully - Updating our DB accordingly.");
+				listing.setCurrentEbayInventory(0);
+			}
+			
+			System.out.println("Our DB has been updated.");
 			updateCache.put(listing.listingId, System.currentTimeMillis());
 			return true;
 		} catch(final Exception e) {

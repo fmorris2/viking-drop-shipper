@@ -72,8 +72,8 @@ public abstract class AbstractOrderExecutionStrategy<T extends LoginWebDriver> i
 	}
 
 	protected ProcessedOrder restart(final CustomerOrder order, final FulfillmentListing listing) throws Exception {
-		driver.quit();
-		BrowserRepository.get().replace(driverSupplier);
+		BrowserRepository.get().replace(this.getDriverSupplierClass());
+		driver.close();
 		driverSupplier = BrowserRepository.get().request(getDriverSupplierClass());
 		return executeOrder(order, listing);
 	}
