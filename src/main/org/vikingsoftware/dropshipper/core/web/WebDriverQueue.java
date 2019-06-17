@@ -45,6 +45,7 @@ public class WebDriverQueue<T extends WebDriver> {
 
 	@SuppressWarnings("unchecked")
 	public void relinquish(final DriverSupplier<?> supplier) {
+		assert supplier != null;
 		try {
 			System.out.println("Attempting to reqlinquish " + supplier);
 			webDrivers.addFirst((DriverSupplier<T>)supplier);
@@ -54,7 +55,8 @@ public class WebDriverQueue<T extends WebDriver> {
 		}
 	}
 
-	public void replace(final DriverSupplier<?> supplier) {
+	public void replace(final Class<? extends DriverSupplier<?>> supplier) {
+		assert supplier != null;
 		try {
 			System.out.println("Attempting to replace " + supplier);
 			webDrivers.add(driverSupplier.get());
@@ -64,6 +66,9 @@ public class WebDriverQueue<T extends WebDriver> {
 	}
 
 	public void replaceAll() {
+		for(final DriverSupplier<? extends WebDriver> driver : webDrivers) {
+			driver.get().close();
+		}
 		webDrivers.clear();
 		populateWebDrivers();
 	}

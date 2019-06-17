@@ -27,9 +27,11 @@ public class CostcoOrderTrackingHandler extends AbstractOrderTrackingHandler<Cos
 
 	@Override
 	protected TrackingEntry parseTrackingInfo(CostcoWebDriver driver, ProcessedOrder order) {
-		driver.get(BASE_ORDER_DETAILS_URL + order.fulfillment_transaction_id);
+		final String url = BASE_ORDER_DETAILS_URL + order.fulfillment_transaction_id;
+		System.out.println("Parsing tracking info from url: " + url);
+		driver.get(url);
 		final WebElement trackingNumEl = driver.findElement(By.cssSelector(TRACKING_NUM_SELECTOR));
-		final String trackingNum = trackingNumEl.getText();
+		final String trackingNum = trackingNumEl.getAttribute("innerText").toUpperCase();
 		final TrackingNumber carrierDetails = TrackingNumber.parse(trackingNum);
 		if(!carrierDetails.isCourierRecognized()) {
 			throw new UnknownTrackingIdException("Unknown courier for tracking number: " + trackingNum);

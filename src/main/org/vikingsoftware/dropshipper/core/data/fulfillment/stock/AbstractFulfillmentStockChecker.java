@@ -22,7 +22,7 @@ public abstract class AbstractFulfillmentStockChecker<T extends LoginWebDriver> 
 
 	protected FulfillmentAccount account;
 
-	protected abstract Class<?> getDriverSupplierClass();
+	protected abstract Class<? extends DriverSupplier<?>> getDriverSupplierClass();
 	protected abstract int parseItemStock(final T driver);
 
 	@Override
@@ -48,12 +48,10 @@ public abstract class AbstractFulfillmentStockChecker<T extends LoginWebDriver> 
 				parseAndAddSkuInventoryEntries(driver, marketListing, fulfillmentListing, entries);
 				return entries;
 			} else {
-				System.out.println("failed to get " + driver + " ready!");
-				driver.quit();
-				System.out.println("\tsuccessfully quit web driver.");
-				BrowserRepository.get().replace(supplier);
-				System.out.println("\tsuccessfully replaced driver supplier");
 				supplier = null;
+				System.out.println("failed to get " + driver + " ready!");
+				driver.close();
+				System.out.println("\tsuccessfully quit web driver.");
 			}
 		} catch(final Exception e) {
 			e.printStackTrace();
@@ -63,6 +61,9 @@ public abstract class AbstractFulfillmentStockChecker<T extends LoginWebDriver> 
 		} finally {
 			if(supplier != null) {
 				BrowserRepository.get().relinquish(supplier);
+			} else {
+				BrowserRepository.get().replace(getDriverSupplierClass());
+				System.out.println("\tsuccessfully replaced driver supplier");
 			}
 		}
 

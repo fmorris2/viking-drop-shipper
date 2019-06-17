@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.AbstractFulfillmentStockChecker;
 import main.org.vikingsoftware.dropshipper.core.utils.CostcoUtils;
+import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.costco.CostcoWebDriver;
 
 public class CostcoFulfillmentStockChecker extends AbstractFulfillmentStockChecker<CostcoWebDriver> {
@@ -42,7 +43,7 @@ public class CostcoFulfillmentStockChecker extends AbstractFulfillmentStockCheck
 	}
 
 	@Override
-	protected Class<?> getDriverSupplierClass() {
+	protected Class<? extends DriverSupplier<?>> getDriverSupplierClass() {
 		return CostcoDriverSupplier.class;
 	}
 }

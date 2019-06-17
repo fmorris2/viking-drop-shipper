@@ -11,7 +11,7 @@ public class MarketplaceListing {
 	public final String listingId;
 	public final String listingTitle;
 	public final boolean active;
-	public final int last_inventory_update;
+	public final int current_ebay_inventory;
 	public final int fulfillment_quantity_multiplier;
 
 	private MarketplaceListing(final Builder builder) {
@@ -20,7 +20,7 @@ public class MarketplaceListing {
 		this.listingId = builder.listingId;
 		this.listingTitle = builder.listingTitle;
 		this.active = builder.active;
-		this.last_inventory_update = builder.last_inventory_update;
+		this.current_ebay_inventory = builder.current_ebay_inventory;
 		this.fulfillment_quantity_multiplier = builder.fulfillment_quantity_multiplier;
 	}
 	
@@ -37,17 +37,34 @@ public class MarketplaceListing {
 		return false;
 	}
 	
-	public boolean setLastInventoryUpdate(final long amount) {
+	public static boolean setCurrentEbayInventory(final String listingId, final long amount) {
 		try {
 			final Statement st = VSDSDBManager.get().createStatement();
-			st.execute("UPDATE marketplace_listing SET last_inventory_update=" + amount
-					+ " WHERE id=" + this.id);
+			st.execute("UPDATE marketplace_listing SET current_ebay_inventory=" + amount
+					+ " WHERE listing_id=" + listingId);
 			return true;
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
 		
 		return false;
+	}
+	
+	public static boolean decrementCurrentEbayInventory(final int marketplaceListingId) {
+		try {
+			final Statement st = VSDSDBManager.get().createStatement();
+			st.execute("UPDATE marketplace_listing SET current_ebay_inventory=(current_ebay_inventory-1)"
+					+ " WHERE id=" + marketplaceListingId);
+			return true;
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
+	public boolean setCurrentEbayInventory(final long amount) {
+		return setCurrentEbayInventory(this.listingId, amount);
 	}
 
 	public static class Builder {
@@ -56,7 +73,7 @@ public class MarketplaceListing {
 		private String listingId;
 		private String listingTitle;
 		private boolean active;
-		private int last_inventory_update;
+		private int current_ebay_inventory;
 		private int fulfillment_quantity_multiplier;
 
 		public Builder id(final int id) {
@@ -84,8 +101,8 @@ public class MarketplaceListing {
 			return this;
 		}
 		
-		public Builder last_inventory_update(final int lastUpdate) {
-			this.last_inventory_update = lastUpdate;
+		public Builder currentEbayInventory(final int currentInv) {
+			this.current_ebay_inventory = currentInv;
 			return this;
 		}
 		

@@ -7,8 +7,10 @@ import java.util.Collection;
 
 import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplace;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.order.parser.strategy.OrderParsingStrategy;
 
@@ -62,6 +64,11 @@ public class OrderParser implements CycleParticipant {
 
 			final int numRows = prepared.executeBatch().length;
 			System.out.println("Executed batch of " + numRows + " insert queries.");
+			
+			for(final CustomerOrder newOrder : newOrders) {
+				System.out.println("decrementing current ebay inventory for marketplace listing id: " + newOrder.marketplace_listing_id);
+				MarketplaceListing.decrementCurrentEbayInventory(newOrder.marketplace_listing_id);
+			}
 		} catch (final SQLException e) {
 			e.printStackTrace();
 		}

@@ -43,14 +43,16 @@ public abstract class AbstractOrderTrackingHandler<T extends LoginWebDriver> imp
 		} finally {
 			if(supplier != null) {
 				BrowserRepository.get().relinquish(supplier);
+			} else {
+				BrowserRepository.get().replace(this.getDriverSupplierClass());
 			}
 		}
 		return null;
 	}
 
 	protected TrackingEntry restart(final ProcessedOrder order, final DriverSupplier<T> supplier) {
-		supplier.get().quit();
-		BrowserRepository.get().replace(supplier);
+		BrowserRepository.get().replace(this.getDriverSupplierClass());
+		supplier.get().close();
 		return getTrackingInfoImpl(order);
 	}
 }

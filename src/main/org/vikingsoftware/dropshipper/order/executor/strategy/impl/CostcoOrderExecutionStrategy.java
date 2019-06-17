@@ -1,5 +1,7 @@
 package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -409,6 +411,14 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 			return placeOrder(builder);
 		}
 		driver.setImplicitWait(90);
+		
+		try(final FileWriter fW = new FileWriter("last-order-page.html");
+			final BufferedWriter bW = new BufferedWriter(fW);) {
+			bW.write(driver.getPageSource());
+			bW.flush();
+		} catch(final Exception e) {
+			//swallow
+		}
 
 		//parse transaction id....
 		try {
@@ -448,7 +458,7 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 				System.out.println("Removing invalid item from cart: " + itemNum);
 				final int oldNumCartItems = getNumCartItems();
 				try {
-					item.findElement(By.className("remove-link")).click();
+					item.findElement(By.className("remove-link")).findElement(By.tagName("a")).click();
 				} catch(final WebDriverException e) {
 					if(!(e instanceof NoSuchElementException)) {
 						Thread.sleep(1000);

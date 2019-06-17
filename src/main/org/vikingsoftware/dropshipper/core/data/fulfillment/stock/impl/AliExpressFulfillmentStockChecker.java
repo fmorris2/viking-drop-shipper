@@ -5,6 +5,7 @@ import org.openqa.selenium.WebElement;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.AbstractFulfillmentStockChecker;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
+import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.aliexpress.AliExpressWebDriver;
 
 public class AliExpressFulfillmentStockChecker extends AbstractFulfillmentStockChecker<AliExpressWebDriver> {
@@ -24,7 +25,7 @@ public class AliExpressFulfillmentStockChecker extends AbstractFulfillmentStockC
 	}
 
 	@Override
-	protected Class<?> getDriverSupplierClass() {
+	protected Class<? extends DriverSupplier<?>> getDriverSupplierClass() {
 		return AliExpressDriverSupplier.class;
 	}
 
