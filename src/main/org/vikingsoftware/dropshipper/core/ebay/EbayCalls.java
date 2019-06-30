@@ -103,6 +103,27 @@ public class EbayCalls {
 			DBLogging.high(EbayCalls.class, "Failed to insert unknown transaction mappings into DB", e);
 		}
 	}
+	
+	public static boolean updatePrice(final String listingId, final double price) {
+		try {
+			final ApiContext api = EbayApiContextManager.getLiveContext();
+			final ReviseFixedPriceItemCall call = new ReviseFixedPriceItemCall(api);
+			final ItemType itemToRevise = new ItemType();
+			itemToRevise.setItemID(listingId);
+			
+			final AmountType priceType = new AmountType();
+			priceType.setCurrencyID(CurrencyCodeType.USD);
+			priceType.setValue(price);
+			itemToRevise.setStartPrice(priceType);
+			
+			call.setItemToBeRevised(itemToRevise);
+			return true;
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
 
 	public static boolean updateInventory(final String listingId, final List<SkuInventoryEntry> invEntries) {
 		try {

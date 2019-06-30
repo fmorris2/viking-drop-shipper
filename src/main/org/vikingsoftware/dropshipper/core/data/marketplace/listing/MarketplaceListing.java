@@ -12,6 +12,7 @@ public class MarketplaceListing {
 	public final String listingTitle;
 	public final boolean active;
 	public final int current_ebay_inventory;
+	public final double target_margin;
 	public final int fulfillment_quantity_multiplier;
 
 	private MarketplaceListing(final Builder builder) {
@@ -21,6 +22,7 @@ public class MarketplaceListing {
 		this.listingTitle = builder.listingTitle;
 		this.active = builder.active;
 		this.current_ebay_inventory = builder.current_ebay_inventory;
+		this.target_margin = builder.target_margin;
 		this.fulfillment_quantity_multiplier = builder.fulfillment_quantity_multiplier;
 	}
 	
@@ -74,6 +76,7 @@ public class MarketplaceListing {
 		private String listingTitle;
 		private boolean active;
 		private int current_ebay_inventory;
+		private double target_margin;
 		private int fulfillment_quantity_multiplier;
 
 		public Builder id(final int id) {
@@ -103,6 +106,11 @@ public class MarketplaceListing {
 		
 		public Builder currentEbayInventory(final int currentInv) {
 			this.current_ebay_inventory = currentInv;
+			return this;
+		}
+		
+		public Builder targetMargin(final double margin) {
+			this.target_margin = margin;
 			return this;
 		}
 		
