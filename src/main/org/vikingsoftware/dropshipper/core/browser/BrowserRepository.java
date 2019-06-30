@@ -14,6 +14,7 @@ import main.org.vikingsoftware.dropshipper.core.web.WebDriverQueue;
 public final class BrowserRepository {
 
 	private static BrowserRepository instance;
+	private static Object instanceLock = new Object();
 
 	private final Map<Class<? extends DriverSupplier<?>>, WebDriverQueue<? extends WebDriver>> queueCache = new HashMap<>();
 
@@ -23,12 +24,14 @@ public final class BrowserRepository {
 		queueCache.put(CostcoDriverSupplier.class, new WebDriverQueue<>(() -> new CostcoDriverSupplier()));
 	}
 
-	public synchronized static BrowserRepository get() {
-		if(instance == null) {
-			instance = new BrowserRepository();
+	public static BrowserRepository get() {
+		synchronized(instanceLock) {
+			if(instance == null) {
+				instance = new BrowserRepository();
+			}
+	
+			return instance;
 		}
-
-		return instance;
 	}
 
 	@SuppressWarnings("unchecked")

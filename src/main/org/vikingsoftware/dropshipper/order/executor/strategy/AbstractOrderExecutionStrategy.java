@@ -66,9 +66,12 @@ public abstract class AbstractOrderExecutionStrategy<T extends LoginWebDriver> i
 
 	@Override
 	public void finishExecution() {
-		BrowserRepository.get().relinquish(driverSupplier);
+		if(driverSupplier != null) {
+			BrowserRepository.get().relinquish(driverSupplier);
+			driverSupplier = null;
+		}
+		
 		driver = null;
-		driverSupplier = null;
 	}
 
 	protected ProcessedOrder restart(final CustomerOrder order, final FulfillmentListing listing) throws Exception {

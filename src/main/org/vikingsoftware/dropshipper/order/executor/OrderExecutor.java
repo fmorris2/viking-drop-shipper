@@ -42,35 +42,38 @@ public class OrderExecutor implements CycleParticipant {
 		final List<ProcessedOrder> successfulOrders = new ArrayList<>();
 		final List<ProcessedOrder> failedOrders = new ArrayList<>();
 		final FulfillmentManager manager = FulfillmentManager.get();
-		manager.prepareForFulfillment();
-
-		for(final CustomerOrder order : ordersToExecute) {
-			final List<FulfillmentListing> fulfillmentListings = manager.getListingsForOrder(order);
-			for(final FulfillmentListing listing : fulfillmentListings) {
-				if(FulfillmentManager.isFrozen(listing.fulfillment_platform_id)) {
-					System.out.println("Fulfillment manager " + manager + " is frozen.");
-					continue;
-				}
-				final ProcessedOrder processedOrder = manager.fulfill(order, listing);
-
-				if(processedOrder.fulfillment_transaction_id == null) { //TODO LOG UNSUCCESSFUL ORDER
-					System.out.println("Failed to fulfill order.");
-					failedOrders.add(processedOrder);
-				} else {
-					System.out.println("Successful order from " + FulfillmentPlatforms.getById(listing.fulfillment_platform_id) + "!");
-					successfulOrders.add(processedOrder);
-					break;
+		try {
+			manager.prepareForFulfillment();
+	
+			for(final CustomerOrder order : ordersToExecute) {
+				final List<FulfillmentListing> fulfillmentListings = manager.getListingsForOrder(order);
+				for(final FulfillmentListing listing : fulfillmentListings) {
+					if(FulfillmentManager.isFrozen(listing.fulfillment_platform_id)) {
+						System.out.println("Fulfillment manager " + manager + " is frozen.");
+						continue;
+					}
+					final ProcessedOrder processedOrder = manager.fulfill(order, listing);
+	
+					if(processedOrder.fulfillment_transaction_id == null) { //TODO LOG UNSUCCESSFUL ORDER
+						System.out.println("Failed to fulfill order.");
+						failedOrders.add(processedOrder);
+					} else {
+						System.out.println("Successful order from " + FulfillmentPlatforms.getById(listing.fulfillment_platform_id) + "!");
+						successfulOrders.add(processedOrder);
+						break;
+					}
 				}
 			}
+	
+			//save to DB
+			System.out.println("Saving successful orders to DB");
+			insertSuccessfulOrdersIntoDB(successfulOrders);
+	
+			System.out.println("Saving failed orders to DB");
+			insertFailedOrdersIntoDB(failedOrders);
+		} finally {
+			manager.endFulfillment();
 		}
-
-		//save to DB
-		System.out.println("Saving successful orders to DB");
-		insertSuccessfulOrdersIntoDB(successfulOrders);
-
-		System.out.println("Saving failed orders to DB");
-		insertFailedOrdersIntoDB(failedOrders);
-		manager.endFulfillment();
 	}
 
 	private void insertSuccessfulOrdersIntoDB(final Collection<ProcessedOrder> successfulOrders) {
