@@ -58,6 +58,11 @@ public final class CostcoUtils {
 			}
 		}
 		
+		if(pageSource.contains("<img class=\"pdp-bad\" src=\"/wcsstore/CostcoGLOBALSAS/images/Grocery_Badge.svg\" alt=\"2-Day Delivery\">")) {
+			System.out.println("Two day shipping detected.");
+			return true;
+		}
+		
 		return false;
 	}
 	
