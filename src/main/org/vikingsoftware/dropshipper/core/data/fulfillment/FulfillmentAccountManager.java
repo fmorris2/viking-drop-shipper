@@ -2,6 +2,7 @@ package main.org.vikingsoftware.dropshipper.core.data.fulfillment;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -14,7 +15,7 @@ public class FulfillmentAccountManager {
 
 	private static FulfillmentAccountManager instance;
 
-	private final Map<FulfillmentPlatforms, Queue<FulfillmentAccount>> accounts = new ConcurrentHashMap<>();
+	private final Map<FulfillmentPlatforms, LinkedList<FulfillmentAccount>> accounts = new ConcurrentHashMap<>();
 
 	private FulfillmentAccountManager() {
 		//intentionally empty
@@ -29,9 +30,20 @@ public class FulfillmentAccountManager {
 		return instance;
 	}
 
-	public synchronized FulfillmentAccount getAndRotateAccount(final FulfillmentPlatforms platform) {
-		final FulfillmentAccount account = accounts.computeIfAbsent(platform, plat -> new PriorityQueue<>()).poll();
+	public synchronized FulfillmentAccount getAndRotateEnabledAccount(final FulfillmentPlatforms platform) {
+		return getAndRotateAccount(platform, true);
+	}
+	
+	private synchronized FulfillmentAccount getAndRotateAccount(final FulfillmentPlatforms platform,
+			final boolean enabled) {
+		final FulfillmentAccount account = accounts.computeIfAbsent(platform, plat -> new LinkedList<>())
+				.stream()
+				.filter(acc -> acc.is_enabled || !enabled)
+				.findFirst()
+				.orElse(null);
+		
 		if(account != null) {
+			accounts.get(platform).remove(account);
 			accounts.get(platform).add(account);
 		}
 
@@ -39,7 +51,7 @@ public class FulfillmentAccountManager {
 	}
 
 	public FulfillmentAccount getAccountById(final int id) {
-		for(final Map.Entry<FulfillmentPlatforms, Queue<FulfillmentAccount>> entry : accounts.entrySet()) {
+		for(final Map.Entry<FulfillmentPlatforms, LinkedList<FulfillmentAccount>> entry : accounts.entrySet()) {
 			for(final FulfillmentAccount acc : entry.getValue()) {
 				if(acc.id == id) {
 					return acc;
@@ -49,23 +61,32 @@ public class FulfillmentAccountManager {
 
 		return null;
 	}
-
-	public FulfillmentAccount peekAccount(final FulfillmentPlatforms platform) {
-		return accounts.computeIfAbsent(platform, plat -> new PriorityQueue<>()).peek();
+	
+	public FulfillmentAccount peekEnabledAccount(final FulfillmentPlatforms platform) {
+		return peekAccount(platform, true);
+	}
+	
+	private FulfillmentAccount peekAccount(final FulfillmentPlatforms platform, final boolean enabled) {
+		return accounts.computeIfAbsent(platform, plat -> new LinkedList<>())
+			.stream()
+			.filter(acc -> acc.is_enabled || !enabled)
+			.findFirst()
+			.orElse(null);
 	}
 
 	private void load() {
 		try {
 			final Statement st = VSDSDBManager.get().createStatement();
-			final ResultSet res = st.executeQuery("SELECT * FROM fulfillment_accounts WHERE is_enabled = 1");
+			final ResultSet res = st.executeQuery("SELECT * FROM fulfillment_accounts");
 			while(res.next()) {
 				final int id = res.getInt("id");
 				final int plat_id = res.getInt("fulfillment_platform_id");
 				final String username = res.getString("username");
 				final String password = res.getString("password");
+				final boolean is_enabled = res.getBoolean("is_enabled");
 				final FulfillmentPlatforms platform = FulfillmentPlatforms.getById(plat_id);
-				final FulfillmentAccount account = new FulfillmentAccount(id, plat_id, username, password);
-				final Queue<FulfillmentAccount> queue = accounts.getOrDefault(platform, new PriorityQueue<>());
+				final FulfillmentAccount account = new FulfillmentAccount(id, plat_id, username, password, is_enabled);
+				final LinkedList<FulfillmentAccount> queue = accounts.getOrDefault(platform, new LinkedList<>());
 				queue.add(account);
 				accounts.put(platform, queue);
 			}
