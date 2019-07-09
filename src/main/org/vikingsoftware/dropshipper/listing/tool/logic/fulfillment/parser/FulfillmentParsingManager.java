@@ -9,8 +9,8 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser
 
 public class FulfillmentParsingManager {
 
-	private static final FulfillmentAccount aliExpressAccount = FulfillmentAccountManager.get().peekAccount(FulfillmentPlatforms.ALI_EXPRESS);
-	private static final FulfillmentAccount costcoAccount = FulfillmentAccountManager.get().peekAccount(FulfillmentPlatforms.COSTCO);
+	private static final FulfillmentAccount aliExpressAccount = FulfillmentAccountManager.get().peekEnabledAccount(FulfillmentPlatforms.ALI_EXPRESS);
+	private static final FulfillmentAccount costcoAccount = FulfillmentAccountManager.get().peekEnabledAccount(FulfillmentPlatforms.COSTCO);
 
 	private FulfillmentParsingManager() {
 

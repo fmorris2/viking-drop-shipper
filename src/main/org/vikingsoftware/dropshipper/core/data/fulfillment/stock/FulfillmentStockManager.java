@@ -24,13 +24,13 @@ public class FulfillmentStockManager {
 		try {
 			switch(FulfillmentPlatforms.getById(fulfillmentListing.fulfillment_platform_id)) {
 				case ALI_EXPRESS:
-					 account = FulfillmentAccountManager.get().peekAccount(FulfillmentPlatforms.ALI_EXPRESS);
+					 account = FulfillmentAccountManager.get().peekEnabledAccount(FulfillmentPlatforms.ALI_EXPRESS);
 					return AliExpressFulfillmentStockChecker.get().getStock(account, marketListing, fulfillmentListing);
 				case SAMS_CLUB:
-					account = FulfillmentAccountManager.get().peekAccount(FulfillmentPlatforms.SAMS_CLUB);
+					account = FulfillmentAccountManager.get().peekEnabledAccount(FulfillmentPlatforms.SAMS_CLUB);
 					return SamsClubFulfillmentStockChecker.get().getStock(account, marketListing, fulfillmentListing);
 				case COSTCO:
-					account = FulfillmentAccountManager.get().peekAccount(FulfillmentPlatforms.COSTCO);
+					account = FulfillmentAccountManager.get().peekEnabledAccount(FulfillmentPlatforms.COSTCO);
 					return CostcoFulfillmentStockChecker.get().getStock(account, marketListing, fulfillmentListing);
 				case AMAZON:
 					break;

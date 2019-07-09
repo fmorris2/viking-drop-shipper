@@ -12,7 +12,7 @@ public class TestCostcoWebDriverLogin {
 
 	@Test
 	public void testSingleLogin() {
-		final FulfillmentAccount account = FulfillmentAccountManager.get().getAndRotateAccount(FulfillmentPlatforms.COSTCO);
+		final FulfillmentAccount account = FulfillmentAccountManager.get().getAndRotateEnabledAccount(FulfillmentPlatforms.COSTCO);
 		Assert.assertTrue(new CostcoWebDriver().getReady(account));
 	}
 

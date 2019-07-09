@@ -12,7 +12,7 @@ public class TestSamsClubWebDriverLogin {
 
 	@Test
 	public void testSingleLogin() {
-		final FulfillmentAccount account = FulfillmentAccountManager.get().getAndRotateAccount(FulfillmentPlatforms.SAMS_CLUB);
+		final FulfillmentAccount account = FulfillmentAccountManager.get().getAndRotateEnabledAccount(FulfillmentPlatforms.SAMS_CLUB);
 		Assert.assertTrue(new SamsClubWebDriver().getReady(account));
 	}
 
