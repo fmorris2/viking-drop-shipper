@@ -103,7 +103,7 @@ public class FulfillmentManager {
 		final FulfillmentPlatforms applicablePlatform = FulfillmentPlatforms.getById(listing.fulfillment_platform_id);
 		System.out.println("Applicable fulfillment platform for order " + order.id + ": " + applicablePlatform);
 		final OrderExecutionStrategy strategy = strategies.get(applicablePlatform);
-		final FulfillmentAccount account = FulfillmentAccountManager.get().getAndRotateAccount(applicablePlatform);
+		final FulfillmentAccount account = FulfillmentAccountManager.get().getAndRotateEnabledAccount(applicablePlatform);
 		return strategy.order(order, account, listing);
 	}
 

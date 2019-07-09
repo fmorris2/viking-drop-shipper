@@ -12,7 +12,7 @@ public class TestAliExpressWebDriverLogin {
 
 	@Test
 	public void testSingleLogin() {
-		final FulfillmentAccount account = FulfillmentAccountManager.get().getAndRotateAccount(FulfillmentPlatforms.ALI_EXPRESS);
+		final FulfillmentAccount account = FulfillmentAccountManager.get().getAndRotateEnabledAccount(FulfillmentPlatforms.ALI_EXPRESS);
 		Assert.assertTrue(new AliExpressWebDriver().getReady(account));
 	}
 
