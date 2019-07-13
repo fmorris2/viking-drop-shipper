@@ -3,6 +3,7 @@ package main.org.vikingsoftware.dropshipper.core.data.marketplace.listing;
 import java.sql.Statement;
 
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
 
 public class MarketplaceListing {
 
@@ -14,6 +15,8 @@ public class MarketplaceListing {
 	public final int current_ebay_inventory;
 	public final double target_margin;
 	public final int fulfillment_quantity_multiplier;
+	
+	private double current_price;
 
 	private MarketplaceListing(final Builder builder) {
 		this.id = builder.id;
@@ -23,6 +26,7 @@ public class MarketplaceListing {
 		this.active = builder.active;
 		this.current_ebay_inventory = builder.current_ebay_inventory;
 		this.target_margin = builder.target_margin;
+		this.current_price = builder.current_price;
 		this.fulfillment_quantity_multiplier = builder.fulfillment_quantity_multiplier;
 	}
 	
@@ -65,6 +69,18 @@ public class MarketplaceListing {
 		return false;
 	}
 	
+	public double getCurrentPrice() throws Exception {
+		if(current_price == 0) {
+			current_price = EbayCalls.getPrice(listingId);
+			
+			//update our DB
+			VSDSDBManager.get().createStatement().execute("UPDATE marketplace_listing SET current_price="+current_price
+					+ " WHERE id="+id);
+		}
+		
+		return current_price;
+	}
+	
 	public boolean setCurrentEbayInventory(final long amount) {
 		return setCurrentEbayInventory(this.listingId, amount);
 	}
@@ -77,6 +93,7 @@ public class MarketplaceListing {
 		private boolean active;
 		private int current_ebay_inventory;
 		private double target_margin;
+		private double current_price;
 		private int fulfillment_quantity_multiplier;
 
 		public Builder id(final int id) {
@@ -111,6 +128,11 @@ public class MarketplaceListing {
 		
 		public Builder targetMargin(final double margin) {
 			this.target_margin = margin;
+			return this;
+		}
+		
+		public Builder currentPrice(final double price) {
+			this.current_price = price;
 			return this;
 		}
 		

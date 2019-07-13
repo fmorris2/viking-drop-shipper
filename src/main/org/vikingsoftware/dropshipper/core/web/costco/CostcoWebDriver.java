@@ -20,7 +20,6 @@ public class CostcoWebDriver extends LoginWebDriver {
 			get("https://www.costco.com/LogonForm");
 			findElement(By.id("LogonForm")); //waits for logon form to be visible
 			System.out.println("Logging in with account: " + account.username);
-
 			js("document.getElementById('logonId').value='"+account.username+"';");
 			js("document.getElementById('logonPassword').value='"+account.password+"';");
 			getKeyboard().sendKeys(Keys.ESCAPE);

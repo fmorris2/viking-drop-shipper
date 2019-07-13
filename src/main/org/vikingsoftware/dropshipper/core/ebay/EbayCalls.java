@@ -11,6 +11,7 @@ import com.ebay.sdk.TimeFilter;
 import com.ebay.sdk.call.AddFixedPriceItemCall;
 import com.ebay.sdk.call.CompleteSaleCall;
 import com.ebay.sdk.call.GetApiAccessRulesCall;
+import com.ebay.sdk.call.GetItemCall;
 import com.ebay.sdk.call.GetSellerTransactionsCall;
 import com.ebay.sdk.call.GetSuggestedCategoriesCall;
 import com.ebay.sdk.call.ReviseFixedPriceItemCall;
@@ -124,6 +125,23 @@ public class EbayCalls {
 		
 		return false;
 	}
+	
+	public static double getPrice(String listingId) throws Exception {
+		final ApiContext api = EbayApiContextManager.getLiveContext();
+		final GetItemCall call = new GetItemCall(api);
+		final ItemType item = call.getItem(listingId);
+		
+		final double price = item.getStartPrice().getValue();
+		final double shippingPrice = item.getShippingDetails().getShippingServiceOptions()[0].getShippingServiceCost().getValue();
+		
+		final double totalPrice = price + shippingPrice;
+		
+		if(totalPrice <= 0) {
+			throw new RuntimeException("Could not parse eBay price for listing " + listingId);
+		}
+		
+		return totalPrice;
+	}
 
 	public static boolean updateInventory(final String listingId, final List<SkuInventoryEntry> invEntries) {
 		try {
@@ -172,7 +190,7 @@ public class EbayCalls {
 		return false;
 	}
 	
-	public static void main(final String[] args) {
+	public static void main(final String[] args) throws Exception {
 		checkAPIAccessRules();
 	}
 	

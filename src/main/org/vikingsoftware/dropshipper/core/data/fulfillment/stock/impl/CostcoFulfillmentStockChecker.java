@@ -47,4 +47,9 @@ public class CostcoFulfillmentStockChecker extends AbstractFulfillmentStockCheck
 	protected Class<? extends DriverSupplier<?>> getDriverSupplierClass() {
 		return CostcoDriverSupplier.class;
 	}
+
+	@Override
+	protected double parseItemPrice(CostcoWebDriver driver) {
+		return 0;
+	}
 }

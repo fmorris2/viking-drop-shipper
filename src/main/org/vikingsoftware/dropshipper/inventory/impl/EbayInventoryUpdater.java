@@ -12,6 +12,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentMana
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.FulfillmentStockManager;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
+import main.org.vikingsoftware.dropshipper.core.data.misc.Pair;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
@@ -47,9 +48,9 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			}
 
 			System.out.println("Updating inventory for eBay listing " + listing);
-			final Map<String, Integer> skuStocks = new HashMap<>();
+			final Map<String, Pair<Integer, Double>> skuStocks = new HashMap<>();
 			if(!listing.active) {
-				skuStocks.put(null, 0);
+				skuStocks.put(null, new Pair<>(0, 0D));
 			} else {
 				final List<FulfillmentListing> fulfillmentListings = FulfillmentManager.get().getListingsForMarketplaceListing(listing.id);
 				for(final FulfillmentListing fulfillmentListing : fulfillmentListings) {
@@ -58,9 +59,12 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 							FulfillmentStockManager.getStock(listing, fulfillmentListing).get();
 					System.out.println("SkuInventoryEntries: " + entries.size());
 					for(final SkuInventoryEntry entry : entries) {
-						int currentStock = skuStocks.getOrDefault(entry.sku, 0);
+						final Pair<Integer, Double> data = skuStocks.getOrDefault(entry.sku, new Pair<>(0, 0D));
+						int currentStock = data.left;
 						currentStock += entry.stock;
-						skuStocks.put(entry.sku, currentStock);
+						
+						final double maxPrice = entry.price > data.right ? entry.price : data.right;
+						skuStocks.put(entry.sku, new Pair<>(currentStock, maxPrice));
 					}
 				}
 			}
@@ -78,7 +82,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 		return false;
 	}
 
-	private boolean sendInventoryUpdateToEbay(final MarketplaceListing listing, final Map<String, Integer> skuStocks) {
+	private boolean sendInventoryUpdateToEbay(final MarketplaceListing listing, final Map<String, Pair<Integer, Double>> skuStocks) {
 		try {
 			/*
 			 * There is no need to continue sending updates to eBay & our DB
@@ -94,8 +98,10 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			System.out.println("Sending " + skuStocks.size() + " item stock updates to eBay");
 			final List<SkuInventoryEntry> entries = skuStocks.entrySet()
 					.stream()
-					.map(entry -> new SkuInventoryEntry(entry.getKey(), entry.getValue()))
+					.map(entry -> new SkuInventoryEntry(entry.getKey(), entry.getValue().left, entry.getValue().right))
 					.collect(Collectors.toList());
+			
+			autoPrice(listing, entries);
 			
 			final long parsedStock = entries.stream().map(entry -> entry.stock).count();
 			
@@ -123,6 +129,15 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 		}
 
 		return false;
+	}
+	
+	private void autoPrice(final MarketplaceListing listing, final Collection<SkuInventoryEntry> entries) {
+		try {
+			final double currentPrice = listing.getCurrentPrice();
+		} catch(final Exception e) {
+			e.printStackTrace();
+			System.out.println("Failed to execute auto pricing for listing " + listing);
+		}
 	}
 
 	private boolean isOnCooldown(final MarketplaceListing listing) {

@@ -24,6 +24,7 @@ public abstract class AbstractFulfillmentStockChecker<T extends LoginWebDriver> 
 
 	protected abstract Class<? extends DriverSupplier<?>> getDriverSupplierClass();
 	protected abstract int parseItemStock(final T driver);
+	protected abstract double parseItemPrice(final T driver);
 
 	@Override
 	public Future<Collection<SkuInventoryEntry>> getStock(final FulfillmentAccount account,
@@ -45,6 +46,7 @@ public abstract class AbstractFulfillmentStockChecker<T extends LoginWebDriver> 
 			driver = supplier.get();
 			if(driver.getReady(account)) {
 				System.out.println("Successfully prepared " + driver);
+				System.out.println("Parsing stock for fulfillment listing: " + fulfillmentListing.listing_url);
 				parseAndAddSkuInventoryEntries(driver, marketListing, fulfillmentListing, entries);
 				return entries;
 			} else {
@@ -82,11 +84,11 @@ public abstract class AbstractFulfillmentStockChecker<T extends LoginWebDriver> 
 			for(final SkuMapping mapping : mappings) {
 				System.out.println("selecting order options for SKU Mapping " + mapping);
 				if(driver.selectOrderOptions(mapping, fulfillmentListing)) {
-					entries.add(new SkuInventoryEntry(mapping.item_sku, parseItemStock(driver)));
+					entries.add(new SkuInventoryEntry(mapping.item_sku, parseItemStock(driver), parseItemPrice(driver)));
 				}
 			}
 		} else {
-			entries.add(new SkuInventoryEntry(null, parseItemStock(driver)));
+			entries.add(new SkuInventoryEntry(null, parseItemStock(driver), parseItemPrice(driver)));
 		}
 	}
 }
