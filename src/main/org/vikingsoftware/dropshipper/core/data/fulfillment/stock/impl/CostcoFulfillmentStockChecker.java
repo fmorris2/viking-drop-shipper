@@ -50,6 +50,16 @@ public class CostcoFulfillmentStockChecker extends AbstractFulfillmentStockCheck
 
 	@Override
 	protected double parseItemPrice(CostcoWebDriver driver) {
-		return 0;
+		double price = -1;
+		final String pageSource = driver.getPageSource();
+		
+		final Pattern pattern = Pattern.compile("product:price:amount\" content=\"(.*)\"");
+		final Matcher matcher = pattern.matcher(pageSource);
+		if(matcher.find()) {
+			price = Double.parseDouble(matcher.group(1));
+			System.out.println("Parsed price: " + price);
+		}
+		
+		return price;
 	}
 }

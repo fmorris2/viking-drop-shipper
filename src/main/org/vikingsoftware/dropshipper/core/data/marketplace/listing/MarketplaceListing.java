@@ -1,7 +1,9 @@
 package main.org.vikingsoftware.dropshipper.core.data.marketplace.listing;
 
+import java.sql.SQLException;
 import java.sql.Statement;
 
+import main.org.vikingsoftware.dropshipper.core.data.misc.Pair;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
 
@@ -17,6 +19,7 @@ public class MarketplaceListing {
 	public final int fulfillment_quantity_multiplier;
 	
 	private double current_price;
+	private double current_shipping_cost;
 
 	private MarketplaceListing(final Builder builder) {
 		this.id = builder.id;
@@ -27,6 +30,7 @@ public class MarketplaceListing {
 		this.current_ebay_inventory = builder.current_ebay_inventory;
 		this.target_margin = builder.target_margin;
 		this.current_price = builder.current_price;
+		this.current_shipping_cost = builder.current_shipping_cost;
 		this.fulfillment_quantity_multiplier = builder.fulfillment_quantity_multiplier;
 	}
 	
@@ -69,16 +73,25 @@ public class MarketplaceListing {
 		return false;
 	}
 	
-	public double getCurrentPrice() throws Exception {
+	public Pair<Double, Double> getCurrentPrice() throws Exception {
 		if(current_price == 0) {
-			current_price = EbayCalls.getPrice(listingId);
+			final Pair<Double, Double> priceInfo = EbayCalls.getPrice(listingId);
+			current_price = priceInfo.left;
+			current_shipping_cost = priceInfo.right;
 			
 			//update our DB
 			VSDSDBManager.get().createStatement().execute("UPDATE marketplace_listing SET current_price="+current_price
-					+ " WHERE id="+id);
+					+ ",current_shipping_cost="+current_shipping_cost+" WHERE id="+id);
 		}
 		
-		return current_price;
+		return new Pair<>(current_price, current_shipping_cost);
+	}
+	
+	public void updatePrice(final double newPrice) throws SQLException {
+		if(EbayCalls.updatePrice(listingId, newPrice)) {
+			VSDSDBManager.get().createStatement().execute("UPDATE marketplace_listing SET current_price="+newPrice
+					+ " WHERE id="+id);
+		}
 	}
 	
 	public boolean setCurrentEbayInventory(final long amount) {
@@ -94,6 +107,7 @@ public class MarketplaceListing {
 		private int current_ebay_inventory;
 		private double target_margin;
 		private double current_price;
+		private double current_shipping_cost;
 		private int fulfillment_quantity_multiplier;
 
 		public Builder id(final int id) {
@@ -133,6 +147,11 @@ public class MarketplaceListing {
 		
 		public Builder currentPrice(final double price) {
 			this.current_price = price;
+			return this;
+		}
+		
+		public Builder currentShippingCost(final double shipping) {
+			this.current_shipping_cost = shipping;
 			return this;
 		}
 		

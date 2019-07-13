@@ -16,12 +16,14 @@ import main.org.vikingsoftware.dropshipper.core.data.misc.Pair;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
+import main.org.vikingsoftware.dropshipper.core.utils.PriceUtils;
 import main.org.vikingsoftware.dropshipper.inventory.AutomaticInventoryUpdater;
 
 public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 
 	//1000 seconds minimum between updates for a specific listing. eBay caps revisions at 150 per day for a listing
 	private static final int MIN_UPDATE_TIME_THRESH = 576_000;
+	private static final double MARGIN_TOLERANCE = 0.1;
 
 	private static final Map<String, Long> updateCache = new HashMap<>();
 
@@ -63,8 +65,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 						int currentStock = data.left;
 						currentStock += entry.stock;
 						
-						final double maxPrice = entry.price > data.right ? entry.price : data.right;
-						skuStocks.put(entry.sku, new Pair<>(currentStock, maxPrice));
+						skuStocks.put(entry.sku, new Pair<>(currentStock, entry.price));
 					}
 				}
 			}
@@ -133,7 +134,30 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 	
 	private void autoPrice(final MarketplaceListing listing, final Collection<SkuInventoryEntry> entries) {
 		try {
-			final double currentPrice = listing.getCurrentPrice();
+			System.out.println("Beginning auto-pricing for listing " + listing);
+			final Pair<Double,Double> currentPriceInfo = listing.getCurrentPrice();
+			final double maxFulfillmentPrice = entries.stream().mapToDouble(entry -> entry.price).max().getAsDouble();
+			
+			if(maxFulfillmentPrice <= 0) {
+				return;
+			}
+			
+			final double currentProfitMargin = PriceUtils.getMarginPercentage(maxFulfillmentPrice, currentPriceInfo.left + currentPriceInfo.right);
+			
+			System.out.println("\tcurrent ebay price: " + currentPriceInfo.left + " w/ " + currentPriceInfo.right + " shipping");
+			System.out.println("\tmax fulfillment price: " + maxFulfillmentPrice);
+			System.out.println("\tcurrent profit margin: " + currentProfitMargin);
+			System.out.println("\ttarget profit margin: " + listing.target_margin);
+			
+			if(Math.abs(currentProfitMargin - listing.target_margin) > MARGIN_TOLERANCE) {
+				System.out.println("\tAdjusting pricing to fulfill target margin...");
+				final double targetPrice = PriceUtils.getPriceFromMargin(maxFulfillmentPrice, currentPriceInfo.right, listing.target_margin);
+				System.out.println("\t\tNew target price: " + targetPrice);
+				listing.updatePrice(targetPrice);
+			} else {
+				System.out.println("\tMargin is accurate - No need to update price...");
+			}
+			
 		} catch(final Exception e) {
 			e.printStackTrace();
 			System.out.println("Failed to execute auto pricing for listing " + listing);

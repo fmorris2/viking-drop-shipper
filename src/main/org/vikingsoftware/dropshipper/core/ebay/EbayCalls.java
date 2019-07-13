@@ -22,6 +22,7 @@ import com.ebay.soap.eBLBaseComponents.BuyerRequirementDetailsType;
 import com.ebay.soap.eBLBaseComponents.CategoryType;
 import com.ebay.soap.eBLBaseComponents.CountryCodeType;
 import com.ebay.soap.eBLBaseComponents.CurrencyCodeType;
+import com.ebay.soap.eBLBaseComponents.FeesType;
 import com.ebay.soap.eBLBaseComponents.ItemType;
 import com.ebay.soap.eBLBaseComponents.ListingDurationCodeType;
 import com.ebay.soap.eBLBaseComponents.ListingTypeCodeType;
@@ -45,6 +46,7 @@ import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrde
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
+import main.org.vikingsoftware.dropshipper.core.data.misc.Pair;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
@@ -118,6 +120,7 @@ public class EbayCalls {
 			itemToRevise.setStartPrice(priceType);
 			
 			call.setItemToBeRevised(itemToRevise);
+			call.reviseFixedPriceItem();
 			return true;
 		} catch(final Exception e) {
 			e.printStackTrace();
@@ -126,7 +129,7 @@ public class EbayCalls {
 		return false;
 	}
 	
-	public static double getPrice(String listingId) throws Exception {
+	public static Pair<Double, Double> getPrice(String listingId) throws Exception {
 		final ApiContext api = EbayApiContextManager.getLiveContext();
 		final GetItemCall call = new GetItemCall(api);
 		final ItemType item = call.getItem(listingId);
@@ -134,13 +137,11 @@ public class EbayCalls {
 		final double price = item.getStartPrice().getValue();
 		final double shippingPrice = item.getShippingDetails().getShippingServiceOptions()[0].getShippingServiceCost().getValue();
 		
-		final double totalPrice = price + shippingPrice;
-		
-		if(totalPrice <= 0) {
+		if(price + shippingPrice <= 0) {
 			throw new RuntimeException("Could not parse eBay price for listing " + listingId);
 		}
 		
-		return totalPrice;
+		return new Pair<>(price, shippingPrice);
 	}
 
 	public static boolean updateInventory(final String listingId, final List<SkuInventoryEntry> invEntries) {

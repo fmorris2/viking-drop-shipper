@@ -39,6 +39,7 @@ import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
+import main.org.vikingsoftware.dropshipper.core.utils.PriceUtils;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.EbayCategory;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingImage;
@@ -292,16 +293,9 @@ public class ListingToolController {
 		try {
 			final String listingPriceTxt = gui.listingPriceInput.getText().isEmpty() ? "0.00" : gui.listingPriceInput.getText().replace("$", "");
 			final String shippingPriceTxt = gui.shippingPriceInput.getText().isEmpty() ? "0.00" : gui.shippingPriceInput.getText().replace("$", "");
-			final double revenue = Double.parseDouble(listingPriceTxt) + Double.parseDouble(shippingPriceTxt);
-			final double grossProfit = revenue - (originalListingPrice * 1.20);
-			final double marginPercentage = (grossProfit / revenue) * 100;
+			final double sellPrice = Double.parseDouble(listingPriceTxt) + Double.parseDouble(shippingPriceTxt);
+			final double marginPercentage = PriceUtils.getMarginPercentage(originalListingPrice, sellPrice);
 			
-			System.out.println("listing price: " + listingPriceTxt);
-			System.out.println("shipping price: " + shippingPriceTxt);
-			System.out.println("cost of goods sold: " + (originalListingPrice * 1.20));
-			System.out.println("revenue: " + revenue);
-			System.out.println("gross profit: " + grossProfit);
-			System.out.println("margin: " + grossProfit / revenue);
 			final String marginString = DECIMAL_FORMAT.format(marginPercentage);
 			gui.profitMarginInput.setText(marginString + "%");
 		} catch(final Exception e) {
@@ -313,10 +307,10 @@ public class ListingToolController {
     	try {
     		final String marginText = gui.profitMarginInput.getText().isEmpty() ? "0.00" : gui.profitMarginInput.getText().replace("%", "");
 	    	final String shippingPriceTxt = gui.shippingPriceInput.getText().isEmpty() ? "0.00" : gui.shippingPriceInput.getText().replace("$", "");
-	    	final double margin = 1.00 - Double.parseDouble(marginText) / 100;
-	    	final double ourCost = originalListingPrice * 1.20;
-	    	final double buyersCost = (ourCost / margin) - Double.parseDouble(shippingPriceTxt);
-	    	final String priceWithMargin = DECIMAL_FORMAT.format(buyersCost);
+	    	final double shippingPrice = Double.parseDouble(shippingPriceTxt);
+	    	final double margin = Double.parseDouble(marginText);
+	    	final double priceFromMargin = PriceUtils.getPriceFromMargin(originalListingPrice, shippingPrice, margin);
+	    	final String priceWithMargin = DECIMAL_FORMAT.format(priceFromMargin);
 	    	gui.listingPriceInput.setText("$" + priceWithMargin);
     	} catch(final Exception e) {
     		//swallow exception

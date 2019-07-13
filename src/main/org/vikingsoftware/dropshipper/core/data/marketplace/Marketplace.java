@@ -87,6 +87,7 @@ public class Marketplace {
 			.active(results.getBoolean("active"))
 			.currentEbayInventory(results.getInt("current_ebay_inventory"))
 			.currentPrice(results.getDouble("current_price"))
+			.currentShippingCost(results.getDouble("current_shipping_cost"))
 			.targetMargin(results.getDouble("target_margin"))
 			.fulfillmentQuantityMultiplier(results.getInt("fulfillment_quantity_multiplier"))
 		.build();
