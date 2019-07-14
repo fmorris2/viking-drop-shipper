@@ -41,4 +41,9 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 	protected Class<? extends DriverSupplier<?>> getDriverSupplierClass() {
 		return SamsClubDriverSupplier.class;
 	}
+
+	@Override
+	protected double parseItemPrice(SamsClubWebDriver driver) {
+		return 0;
+	}
 }

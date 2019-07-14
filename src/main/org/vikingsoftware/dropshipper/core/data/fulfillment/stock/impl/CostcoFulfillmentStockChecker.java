@@ -30,6 +30,7 @@ public class CostcoFulfillmentStockChecker extends AbstractFulfillmentStockCheck
 		final String pageSource = driver.getPageSource();
 		
 		if(CostcoUtils.isTwoDayShipping(pageSource) || CostcoUtils.getListingLimitPerMember(pageSource) != -1) {
+			System.out.println("LISTING IS 2 DAY SHIPPING: " + driver.getCurrentUrl());
 			return 0;
 		}
 		
@@ -45,5 +46,20 @@ public class CostcoFulfillmentStockChecker extends AbstractFulfillmentStockCheck
 	@Override
 	protected Class<? extends DriverSupplier<?>> getDriverSupplierClass() {
 		return CostcoDriverSupplier.class;
+	}
+
+	@Override
+	protected double parseItemPrice(CostcoWebDriver driver) {
+		double price = -1;
+		final String pageSource = driver.getPageSource();
+		
+		final Pattern pattern = Pattern.compile("product:price:amount\" content=\"(.*)\"");
+		final Matcher matcher = pattern.matcher(pageSource);
+		if(matcher.find()) {
+			price = Double.parseDouble(matcher.group(1));
+			System.out.println("Parsed price: " + price);
+		}
+		
+		return price;
 	}
 }

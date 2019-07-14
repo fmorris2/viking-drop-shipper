@@ -11,6 +11,7 @@ import com.ebay.sdk.TimeFilter;
 import com.ebay.sdk.call.AddFixedPriceItemCall;
 import com.ebay.sdk.call.CompleteSaleCall;
 import com.ebay.sdk.call.GetApiAccessRulesCall;
+import com.ebay.sdk.call.GetItemCall;
 import com.ebay.sdk.call.GetSellerTransactionsCall;
 import com.ebay.sdk.call.GetSuggestedCategoriesCall;
 import com.ebay.sdk.call.ReviseFixedPriceItemCall;
@@ -21,6 +22,7 @@ import com.ebay.soap.eBLBaseComponents.BuyerRequirementDetailsType;
 import com.ebay.soap.eBLBaseComponents.CategoryType;
 import com.ebay.soap.eBLBaseComponents.CountryCodeType;
 import com.ebay.soap.eBLBaseComponents.CurrencyCodeType;
+import com.ebay.soap.eBLBaseComponents.FeesType;
 import com.ebay.soap.eBLBaseComponents.ItemType;
 import com.ebay.soap.eBLBaseComponents.ListingDurationCodeType;
 import com.ebay.soap.eBLBaseComponents.ListingTypeCodeType;
@@ -44,6 +46,7 @@ import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrde
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
+import main.org.vikingsoftware.dropshipper.core.data.misc.Pair;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
@@ -103,6 +106,43 @@ public class EbayCalls {
 			DBLogging.high(EbayCalls.class, "Failed to insert unknown transaction mappings into DB", e);
 		}
 	}
+	
+	public static boolean updatePrice(final String listingId, final double price) {
+		try {
+			final ApiContext api = EbayApiContextManager.getLiveContext();
+			final ReviseFixedPriceItemCall call = new ReviseFixedPriceItemCall(api);
+			final ItemType itemToRevise = new ItemType();
+			itemToRevise.setItemID(listingId);
+			
+			final AmountType priceType = new AmountType();
+			priceType.setCurrencyID(CurrencyCodeType.USD);
+			priceType.setValue(price);
+			itemToRevise.setStartPrice(priceType);
+			
+			call.setItemToBeRevised(itemToRevise);
+			call.reviseFixedPriceItem();
+			return true;
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
+	public static Pair<Double, Double> getPrice(String listingId) throws Exception {
+		final ApiContext api = EbayApiContextManager.getLiveContext();
+		final GetItemCall call = new GetItemCall(api);
+		final ItemType item = call.getItem(listingId);
+		
+		final double price = item.getStartPrice().getValue();
+		final double shippingPrice = item.getShippingDetails().getShippingServiceOptions()[0].getShippingServiceCost().getValue();
+		
+		if(price + shippingPrice <= 0) {
+			throw new RuntimeException("Could not parse eBay price for listing " + listingId);
+		}
+		
+		return new Pair<>(price, shippingPrice);
+	}
 
 	public static boolean updateInventory(final String listingId, final List<SkuInventoryEntry> invEntries) {
 		try {
@@ -151,7 +191,7 @@ public class EbayCalls {
 		return false;
 	}
 	
-	public static void main(final String[] args) {
+	public static void main(final String[] args) throws Exception {
 		checkAPIAccessRules();
 	}
 	

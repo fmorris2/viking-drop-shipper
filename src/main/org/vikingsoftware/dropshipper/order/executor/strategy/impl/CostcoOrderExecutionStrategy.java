@@ -44,9 +44,13 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 			throws Exception {
 
 		enterQtyFailures = 0;
+		System.out.println("Loading fulfillment URL: " + fulfillmentListing.listing_url);
 		driver.get(fulfillmentListing.listing_url);
+		System.out.println("\tdone.");
 
+		System.out.println("Entering quantity...");
 		enterQuantity(order);
+		System.out.println("\tdone.");
 		addToCart();
 		waitForAddedToCartModal();
 

@@ -43,4 +43,9 @@ public class AliExpressFulfillmentStockChecker extends AbstractFulfillmentStockC
 
 		return 0;
 	}
+
+	@Override
+	protected double parseItemPrice(AliExpressWebDriver driver) {
+		return 0;
+	}
 }
