@@ -36,6 +36,6 @@ public final class PriceUtils {
     		currentPrice = (floor + ceil) / 2;
     	}
     	
-    	return currentPrice;
+    	return currentPrice - sellShippingCost;
     }
 }
