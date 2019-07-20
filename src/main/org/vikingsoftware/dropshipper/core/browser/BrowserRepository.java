@@ -49,10 +49,6 @@ public final class BrowserRepository {
 	}
 
 	public void relinquish(final DriverSupplier<?> supplier) {
-		if(supplier == null) {
-			return;
-		}
-
 		final WebDriverQueue<?> queue = queueCache.get(supplier.getClass());
 		if(queue != null) {
 			queue.relinquish(supplier);
