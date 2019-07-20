@@ -61,12 +61,31 @@ public final class SamsClubMetaDataParser {
 				.getAsDouble();
 	}
 	
+	public boolean isFreeShipping() {
+		final JsonObject moneybox = metaData.get("moneybox").getAsJsonObject();
+		
+		return moneybox.get("shippingIncluded").getAsBoolean()
+				|| moneybox.get("shippingFree").getAsBoolean()
+				|| moneybox.get("shippingFreeEligible").getAsBoolean();
+	}
+	
 	public String getBrand() {
 		return internalProduct.get("brandName").getAsString();
 	}
 	
 	public boolean isAvailableOnline() {
 		return internalProduct.has("inStockOnline") && internalProduct.get("inStockOnline").getAsBoolean();
+	}
+	
+	public boolean hasMinPurchaseQty() {
+		return internalProduct.get("onlineInventory")
+				.getAsJsonObject()
+				.get("minPurchaseQuantity")
+				.getAsInt() > 1;
+	}
+	
+	public boolean hasVariations() {
+		return internalProduct.get("skuOptions").getAsJsonArray().size() > 1;
 	}
 	
 	public List<ListingImage> getImages() {

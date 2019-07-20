@@ -36,9 +36,26 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 			final String pageSource = driver.getPageSource();
 			metaDataParser.parse(pageSource);
 			
-			System.out.println("Checking if listing is available to order online");
+			if(metaDataParser.hasVariations()) {
+				System.out.println("\tListing has multiple variations. Skipping...");
+				listing.canShip = false;
+				return listing;
+			}
+			
 			if(!metaDataParser.isAvailableOnline()) {
 				System.out.println("\tListing is not available online. Skipping...");
+				listing.canShip = false;
+				return listing;
+			}
+			
+			if(!metaDataParser.isFreeShipping()) {
+				System.out.println("\tListing is not free shipping. Skipping...");
+				listing.canShip = false;
+				return listing;
+			}
+			
+			if(metaDataParser.hasMinPurchaseQty()) {
+				System.out.println("\tListing has a min purchase quantity of > 1. Skipping...");
 				listing.canShip = false;
 				return listing;
 			}
