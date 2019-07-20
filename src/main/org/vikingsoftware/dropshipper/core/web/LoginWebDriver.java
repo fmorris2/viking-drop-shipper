@@ -57,6 +57,7 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 		this.account = account;
 		try {
 			manage().timeouts().implicitlyWait(DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);
+			manage().timeouts().pageLoadTimeout(30, TimeUnit.SECONDS);
 			manage().window().maximize();
 			
 			if(account == null) {
