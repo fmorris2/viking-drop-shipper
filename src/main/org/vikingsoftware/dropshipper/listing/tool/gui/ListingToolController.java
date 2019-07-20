@@ -355,13 +355,14 @@ public class ListingToolController {
 	private boolean insertMarketplaceListing(final Listing listing, final String listingId) {
 		try {
 			final String query = "INSERT INTO marketplace_listing(marketplace_id, listing_id, listing_title,"
-					+ " fulfillment_quantity_multiplier, active) VALUES(?,?,?,?,?)";
+					+ " fulfillment_quantity_multiplier, active, target_margin) VALUES(?,?,?,?,?,?)";
 			final PreparedStatement statement = VSDSDBManager.get().createPreparedStatement(query);
 			statement.setInt(1, Marketplaces.EBAY.getMarketplaceId());
 			statement.setString(2, listingId);
 			statement.setString(3, listing.title);
 			statement.setInt(4, 1);
 			statement.setInt(5, 1);
+			statement.setDouble(6, listing.targetProfitMargin);
 			statement.execute();
 			return true;
 		} catch(final Exception e) {
