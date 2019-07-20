@@ -10,7 +10,6 @@ import java.util.concurrent.RunnableFuture;
 import java.util.stream.Collectors;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.FulfillmentStockManager;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;

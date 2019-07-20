@@ -61,6 +61,18 @@ public final class SamsClubMetaDataParser {
 				.getAsDouble();
 	}
 	
+	public int getStock() {
+		return internalProduct.get("onlineInventory")
+				.getAsJsonObject()
+				.get("availableToSellQuantity")
+				.getAsInt();
+	}
+	
+	public boolean passesAllListingConditions() {
+		return isFreeShipping() && isAvailableOnline()
+				&& !hasMinPurchaseQty() && !hasVariations();
+	}
+	
 	public boolean isFreeShipping() {
 		final JsonObject moneybox = metaData.get("moneybox").getAsJsonObject();
 		
