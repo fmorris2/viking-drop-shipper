@@ -1,10 +1,7 @@
 package main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.impl;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -19,14 +16,13 @@ import javax.swing.SwingUtilities;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
-import org.w3c.dom.Document;
-import org.w3c.tidy.Tidy;
 
 import com.ebay.soap.eBLBaseComponents.ShippingServiceCodeType;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.CostcoDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.utils.CostcoUtils;
+import main.org.vikingsoftware.dropshipper.core.utils.ListingUtils;
 import main.org.vikingsoftware.dropshipper.core.web.costco.CostcoWebDriver;
 import main.org.vikingsoftware.dropshipper.listing.tool.gui.ListingToolGUI;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
@@ -88,7 +84,7 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 			System.out.println("\tdone.");
 
 			System.out.println("Making description pretty...");
-			makeDescriptionPretty(listing);
+			ListingUtils.makeDescriptionPretty(listing);
 			System.out.println("\tdone.");
 
 			//see if you can get price the same way the inventory updater parses count
@@ -154,32 +150,6 @@ public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWeb
 		}
 
 		return pics;
-	}
-
-	private void makeDescriptionPretty(final Listing listing) {
-		final Tidy tidy = new Tidy();
-		tidy.setXHTML(true);
-		tidy.setIndentContent(true);
-		tidy.setPrintBodyOnly(true);
-		tidy.setTidyMark(false);
-
-		final Document htmlDom = tidy.parseDOM(new ByteArrayInputStream(listing.description.getBytes()), null);
-		final OutputStream out = new ByteArrayOutputStream();
-		tidy.pprint(htmlDom, out);
-
-		String replacedDesc = out.toString();
-		replacedDesc = replacedDesc.replaceAll("<!DOCTYPE[^>]*(>?)", "");
-		replacedDesc = replacedDesc.replaceAll("<\\/*html.*>", "");
-		replacedDesc = replacedDesc.replaceAll("<head>(?:.|\\n|\\r)+?<\\/head>", "");
-		replacedDesc = replacedDesc.replaceAll("<\\/*body>", "");
-		replacedDesc = replacedDesc.replaceAll("(\\\"\\s*|;\\s*)(max-)*width\\:\\s*([1-9]\\d{3,}|9[3-9]\\d|9[4-9]{2})(px|%)(\\s*!important)*", "\1\2width:923px!important");
-		replacedDesc = replacedDesc.replaceAll("width=\"([1-9]\\d{3,}|9[3-9]\\d|9[4-9]{2})\"", "width=\"923\"");
-		replacedDesc = replacedDesc.replaceAll("height=\"\\d+\"", "");
-
-		listing.description =
-				"<div style=\"font-family: Helvetica; max-width: 923px\">" +
-						replacedDesc +
-				"</div>";
 	}
 
 	private Map<String, String> getSpecifications() {
