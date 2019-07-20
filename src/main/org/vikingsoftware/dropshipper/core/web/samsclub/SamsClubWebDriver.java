@@ -19,12 +19,15 @@ public class SamsClubWebDriver extends LoginWebDriver {
 			get("https://www.samsclub.com/sams/account/signin/login.jsp");
 
 			System.out.println("Logging in with account: " + account.username);
-			findElement(By.id("txtLoginEmailID")).sendKeys(account.username);
-			findElement(By.id("txtLoginPwd")).sendKeys(account.password);
-			findElement(By.id("signInButton")).click();
+			System.out.println("Entering username");
+			findElement(By.id("email")).sendKeys(account.username);
+			System.out.println("Entering password");
+			findElement(By.id("password")).sendKeys(account.password);
+			findElement(By.className("sc-btn-primary")).click();
 			
+			System.out.println("Logging in...");
 			get("https://www.samsclub.com/account/summary");
-
+			System.out.println("Verifying log in was successful...");
 			//verify we logged in successfully
 			findElement(By.className("sc-account-member-membership-title"));
 			return true;
