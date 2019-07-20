@@ -1,5 +1,6 @@
 package main.org.vikingsoftware.dropshipper.inventory.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.concurrent.RunnableFuture;
 import java.util.stream.Collectors;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.FulfillmentStockManager;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
@@ -56,9 +58,16 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			} else {
 				final List<FulfillmentListing> fulfillmentListings = FulfillmentManager.get().getListingsForMarketplaceListing(listing.id);
 				for(final FulfillmentListing fulfillmentListing : fulfillmentListings) {
-					System.out.println("Compiling inventory counts for fulfillment listing " + fulfillmentListing.id);
-					final Collection<SkuInventoryEntry> entries = //Collections.singletonList(new SkuInventoryEntry(null, 0));
-							FulfillmentStockManager.getStock(listing, fulfillmentListing).get();
+					Collection<SkuInventoryEntry> entries = new ArrayList<>();
+					if(FulfillmentManager.isFrozen(fulfillmentListing.fulfillment_platform_id)) {
+						System.out.println("Fulfillment platform is frozen for fulfillment listing " + fulfillmentListing.id
+								+ ". Setting stock to 0.");
+						entries.add(new SkuInventoryEntry(null, 0, 0D));
+					} else {
+						System.out.println("Compiling inventory counts for fulfillment listing " + fulfillmentListing.id);
+						entries = //Collections.singletonList(new SkuInventoryEntry(null, 0));
+								FulfillmentStockManager.getStock(listing, fulfillmentListing).get();
+					}
 					System.out.println("SkuInventoryEntries: " + entries.size());
 					for(final SkuInventoryEntry entry : entries) {
 						final Pair<Integer, Double> data = skuStocks.getOrDefault(entry.sku, new Pair<>(0, 0D));
