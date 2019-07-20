@@ -67,11 +67,15 @@ public class FulfillmentAccountManager {
 	}
 	
 	private FulfillmentAccount peekAccount(final FulfillmentPlatforms platform, final boolean enabled) {
-		return accounts.computeIfAbsent(platform, plat -> new LinkedList<>())
+		System.out.println("Peeking fulfillment account for platform " + platform);
+		final FulfillmentAccount account = accounts.computeIfAbsent(platform, plat -> new LinkedList<>())
 			.stream()
 			.filter(acc -> acc.is_enabled || !enabled)
 			.findFirst()
 			.orElse(null);
+		
+		System.out.println("\tAccount: " + account);	
+		return account;
 	}
 
 	private void load() {

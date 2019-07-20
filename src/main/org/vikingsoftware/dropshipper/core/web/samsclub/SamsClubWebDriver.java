@@ -22,6 +22,8 @@ public class SamsClubWebDriver extends LoginWebDriver {
 			findElement(By.id("txtLoginEmailID")).sendKeys(account.username);
 			findElement(By.id("txtLoginPwd")).sendKeys(account.password);
 			findElement(By.id("signInButton")).click();
+			
+			get("https://www.samsclub.com/account/summary");
 
 			//verify we logged in successfully
 			findElement(By.className("sc-account-member-membership-title"));

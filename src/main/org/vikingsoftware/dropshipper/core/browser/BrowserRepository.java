@@ -36,9 +36,13 @@ public final class BrowserRepository {
 
 	@SuppressWarnings("unchecked")
 	public synchronized <T extends DriverSupplier<?>> T request(final Class<?> type) {
+		System.out.println("[BrowserRepository] - Request driver supplier of type " + type);
 		final WebDriverQueue<?> queue = queueCache.get(type);
 		if(queue != null) {
-			return (T)queue.request();
+			System.out.println("\trequesting...");
+			final T supplier = (T)queue.request();
+			System.out.println("\tsuccessfully requested driver supplier.");
+			return supplier;
 		}
 
 		return null;

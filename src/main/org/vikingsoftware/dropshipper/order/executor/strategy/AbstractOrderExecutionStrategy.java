@@ -69,6 +69,8 @@ public abstract class AbstractOrderExecutionStrategy<T extends LoginWebDriver> i
 		if(driverSupplier != null) {
 			BrowserRepository.get().relinquish(driverSupplier);
 			driverSupplier = null;
+		} else {
+			BrowserRepository.get().replace(getDriverSupplierClass());
 		}
 		
 		driver = null;
