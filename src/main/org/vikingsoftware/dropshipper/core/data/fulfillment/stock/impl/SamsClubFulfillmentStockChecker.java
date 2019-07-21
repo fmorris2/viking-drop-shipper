@@ -27,6 +27,7 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 	protected int parseItemStock(final SamsClubWebDriver driver) {
 		metaData.parse(driver.getPageSource());
 		
+		//TODO ENSURE TITLE MATCHES EXPECTED FULFILLMENT LISTING TITLE
 		if(!metaData.passesAllListingConditions()) {
 			System.out.println("Sams Club listing does not pass all listing conditions. Setting stock to 0.");
 			return 0;

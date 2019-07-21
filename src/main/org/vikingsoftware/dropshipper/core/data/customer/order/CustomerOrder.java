@@ -40,7 +40,7 @@ public class CustomerOrder {
 		this.fulfillment_purchase_quantity = builder.fulfillment_purchase_quantity;
 		this.marketplace_order_id = builder.marketplace_order_id;
 		this.buyer_username = builder.buyer_username;
-		this.buyer_name = builder.buyer_name;
+		this.buyer_name = builder.buyer_name.replaceAll(" {2,}", " ");
 		this.buyer_country = builder.buyer_country;
 		this.buyer_street_address = builder.buyer_street_address;
 		this.buyer_apt_suite_unit_etc = builder.buyer_apt_suite_unit_etc;

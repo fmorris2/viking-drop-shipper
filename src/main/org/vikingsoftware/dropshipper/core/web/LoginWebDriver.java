@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
@@ -50,6 +51,7 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 	public LoginWebDriver() {
 		super(new Settings.Builder()
 				.headless(true)
+				.loggerLevel(Level.SEVERE)
 				.connectionReqTimeout(DEFAULT_TIMEOUT_MS)
 				.connectTimeout(DEFAULT_TIMEOUT_MS)
 				.build()
@@ -144,6 +146,12 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 			el.sendKeys(""+character);
 			Thread.sleep(2);
 		}
+	}
+	
+	public void sleep(final long ms) {
+		try {
+			Thread.sleep(ms);
+		} catch(final InterruptedException e) {}
 	}
 
 	public void saveCurrentPageToFile(final String fileName) {
