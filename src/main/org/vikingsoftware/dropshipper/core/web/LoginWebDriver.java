@@ -29,6 +29,8 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 	public static final int DEFAULT_VISIBILITY_WAIT_SECONDS = 20;
 
 	protected static final int MAX_LOGIN_TRIES = 20;
+	
+	private static final int DEFAULT_TIMEOUT_MS = 30_000;
 
 	private static final Map<FulfillmentAccount, Set<Cookie>> sessionCookies = new ConcurrentHashMap<>();
 	private static final Map<LoginWebDriver, Set<Cookie>> cookieCache = new ConcurrentHashMap<>();
@@ -48,6 +50,8 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 	public LoginWebDriver() {
 		super(new Settings.Builder()
 				.headless(true)
+				.connectionReqTimeout(DEFAULT_TIMEOUT_MS)
+				.connectTimeout(DEFAULT_TIMEOUT_MS)
 				.build()
 		);
 	}
