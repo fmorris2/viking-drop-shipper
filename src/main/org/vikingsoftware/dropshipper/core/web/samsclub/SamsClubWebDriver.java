@@ -1,8 +1,5 @@
 package main.org.vikingsoftware.dropshipper.core.web.samsclub;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-
 import org.openqa.selenium.By;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;

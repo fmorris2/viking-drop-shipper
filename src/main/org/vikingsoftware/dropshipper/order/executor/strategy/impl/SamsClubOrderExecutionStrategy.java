@@ -2,7 +2,6 @@ package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl;
 
 import java.text.DecimalFormat;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -33,11 +32,6 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	protected ProcessedOrder executeOrderImpl(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws Exception {
 		return orderItem(order, fulfillmentListing);
 	}
-	
-	private void addToCart() {
-		//click add to cart
-		driver.findElement(By.cssSelector("button.sc-btn:nth-child(1)")).click();
-	}
 
 	private ProcessedOrder orderItem(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws InterruptedException {
 		System.out.println("Getting listing url: " + fulfillmentListing.listing_url);
@@ -54,6 +48,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 		
 		navigateToCart();
+		driver.sleep(5000);
 		try {
 			verifyCart(order, fulfillmentListing, true);
 		} catch(final OrderExecutionException e) {
@@ -321,7 +316,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		}
 		
 		try {
-			Thread.sleep(3000);
+			Thread.sleep(5000);
 		} catch(final InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -331,7 +326,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 	private void verifyCart(final CustomerOrder order, final FulfillmentListing listing, final boolean correctMistakes) {
 		//verify expected item quantity in cart
-		final int numCartItems = Integer.parseInt(driver.findElement(By.cssSelector("#orderCount")).getText());
+		final int numCartItems = Integer.parseInt(driver.findElement(By.id("orderCount")).getText());
 		if(numCartItems != order.fulfillment_purchase_quantity) {
 			if(!correctMistakes || !clearErroneousItems(order, listing)) {
 				throw new OrderExecutionException("cart items != order fulfillment quantity: " + numCartItems + " != " + order.fulfillment_purchase_quantity);
