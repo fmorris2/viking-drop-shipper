@@ -16,8 +16,7 @@ import main.org.vikingsoftware.dropshipper.order.tracking.handler.AbstractOrderT
 
 public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<SamsClubWebDriver> {
 
-	private static final String BASE_ORDER_DETAILS_URL = "https://www.samsclub.com/sams/shoppingtools/orderhistory/orderDetailsPage.jsp?orderId=";
-	private static final String EXTRA_PARAM = "&xid=account_order-details";
+	private static final String BASE_ORDER_DETAILS_URL = "https://www.samsclub.com/order/details/";
 
 	@Override
 	public boolean prepareToTrack() {
@@ -26,8 +25,8 @@ public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<S
 
 	@Override
 	protected TrackingEntry parseTrackingInfo(final SamsClubWebDriver driver, final ProcessedOrder order) {
-		driver.get(BASE_ORDER_DETAILS_URL + order.fulfillment_transaction_id + EXTRA_PARAM);
-		System.out.println("Navigating to page: " + BASE_ORDER_DETAILS_URL + order.fulfillment_transaction_id + EXTRA_PARAM);
+		driver.get(BASE_ORDER_DETAILS_URL + order.fulfillment_transaction_id);
+		System.out.println("Navigating to page: " + BASE_ORDER_DETAILS_URL + order.fulfillment_transaction_id);
 
 		final WebElement trackingNumEl = driver.findElements(By.tagName("a")).stream().filter(el -> {
 			final String href = el.getAttribute("href");

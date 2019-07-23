@@ -29,6 +29,7 @@ public class SamsClubWebDriver extends LoginWebDriver {
 
 			System.out.println("Logging in with account: " + account.username);
 			System.out.println("Entering username");
+			savePageSource();
 			setImplicitWait(1);
 			try {
 				findElement(By.id("email")).sendKeys(account.username);
@@ -45,7 +46,7 @@ public class SamsClubWebDriver extends LoginWebDriver {
 			
 			System.out.println("Logging in... " + getCurrentUrl());
 			try {
-				findElement(By.cssSelector("button.sc-primary-button:nth-child(4)")).click();
+				findElement(By.className("sc-btn-primary")).click();
 			} catch(final Exception e) {
 				findElement(By.cssSelector("#signInButton")).click();
 			}

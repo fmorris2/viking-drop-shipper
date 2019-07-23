@@ -9,6 +9,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.Select;
 
 import main.org.vikingsoftware.dropshipper.VSDropShipper;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
@@ -16,7 +17,6 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentMana
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubDriverSupplier;
-import main.org.vikingsoftware.dropshipper.core.data.misc.StateUtils;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
@@ -135,8 +135,8 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		System.out.println("\tProfit: " + df.format(order.getProfit(convertedTotal)));
 		final double profit = order.getProfit(convertedTotal);
 		if(profit < 0) {
-			throw new OrderExecutionException("WARNING! POTENTIAL FULFILLMENT AT A LOSS FOR FULFILLMENT ID " + listing.id
-					+ "! PROFIT: $" + profit);
+//			throw new OrderExecutionException("WARNING! POTENTIAL FULFILLMENT AT A LOSS FOR FULFILLMENT ID " + listing.id
+//					+ "! PROFIT: $" + profit);
 		}
 
 		System.out.println("\tPricing has been verified.");
@@ -234,19 +234,22 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		System.out.println("Entering city...");
 		clearAndSendKeys(driver.findElement(By.id("inputbox4")), order.buyer_city);
 
-		System.out.println("Selecting state...");
-		final WebElement stateBox = driver.findElement(By.cssSelector(".sc-select-box > .sc-select-current-option"));
-		stateBox.click();
-		
-		final List<WebElement> states = driver.findElements(By.cssSelector(".sc-select-dropdown-wrapper-open > .sc-select-options > .sc-select-option"));
-		final String stateToSelect = StateUtils.getStateNameFromCode(order.buyer_state_province_region);
-		for(final WebElement state : states) {
-			System.out.println("State: " + state.getText());
-			if(state.getText().equalsIgnoreCase(stateToSelect)) {
-				state.click();
-				break;
-			}
-		}
+		System.out.println("Selecting state " + order.buyer_state_province_region + "...");
+		driver.sleep(10_000);
+//		final Select stateSelection = new Select(driver.findElement(By.cssSelector(".sc-select-box > .visuallyhidden")));
+//		stateSelection.selectByValue(order.buyer_state_province_region);
+//		final WebElement stateBox = driver.findElement(By.cssSelector(".sc-select-box > .sc-select-current-option"));
+//		stateBox.click();
+//		
+//		final List<WebElement> states = driver.findElements(By.cssSelector(".sc-select-dropdown-wrapper-open > .sc-select-options > .sc-select-option"));
+//		final String stateToSelect = StateUtils.getStateNameFromCode(order.buyer_state_province_region);
+//		for(final WebElement state : states) {
+//			System.out.println("State: " + state.getText());
+//			if(state.getText().equalsIgnoreCase(stateToSelect)) {
+//				state.click();
+//				break;
+//			}
+//		}
 
 		System.out.println("Entering zip code...");
 		final String[] zipCodeParts = order.buyer_zip_postal_code.split("-");
@@ -263,11 +266,11 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		System.out.println("\tAddress has been saved.");
 	}
 
-	private void clearAndSendKeys(final WebElement el, final String str) throws InterruptedException {
+	private void clearAndSendKeys(final WebElement el, final String str) {
 		el.sendKeys(Keys.chord(Keys.CONTROL,"a", Keys.DELETE));
-		Thread.sleep(50);
+		driver.sleep(50);
 		el.sendKeys(str);
-		Thread.sleep(50);
+		driver.sleep(50);
 	}
 
 	private void verifyListingTitle(final FulfillmentListing listing) throws InterruptedException {
@@ -278,8 +281,9 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	}
 
 	private void enterQuantity(final CustomerOrder order, final WebElement orderOnlineBox) {
-		final WebElement input = orderOnlineBox.findElement(By.id("inputbox2"));
-		input.sendKeys(Integer.toString(order.fulfillment_purchase_quantity));
+		final WebElement input = orderOnlineBox.findElement(By.cssSelector(".sc-input-box-container > input"));
+		System.out.println("Fulfillment Purchase Qty: " + order.fulfillment_purchase_quantity);
+		clearAndSendKeys(input, Integer.toString(order.fulfillment_purchase_quantity));
 	}
 
 	private void clickShipThisItem(final WebElement orderOnlineBox) {
@@ -307,11 +311,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 				item.findElement(By.className("js_remove")).click();
 			} else if(Integer.parseInt(item.findElement(By.cssSelector(".nc-item-count")).getAttribute("value")) != order.fulfillment_purchase_quantity) {
 				System.out.println("Updating item to correct quantity...");
-				try {
-					clearAndSendKeys(item.findElement(By.cssSelector(".nc-item-count")), Integer.toString(order.fulfillment_purchase_quantity));
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				clearAndSendKeys(item.findElement(By.cssSelector(".nc-item-count")), Integer.toString(order.fulfillment_purchase_quantity));
 			}
 		}
 		
@@ -374,8 +374,8 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		//verify price!
 		final double total = Double.parseDouble(driver.findElement(By.id("nc-v2-est-total")).getText().substring(1));
 		if(order.getProfit(total) < 0) { //never automatically sell at a loss....
-			throw new OrderExecutionException("WARNING: POTENTIAL FULFILLMENT AT LOSS for fulfillment listing " + listing.id
-					+ "! PROFIT: $" + order.getProfit(total));
+//			throw new OrderExecutionException("WARNING: POTENTIAL FULFILLMENT AT LOSS for fulfillment listing " + listing.id
+//					+ "! PROFIT: $" + order.getProfit(total));
 		}
 
 	}

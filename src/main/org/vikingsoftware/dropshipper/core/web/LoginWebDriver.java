@@ -49,13 +49,23 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 	protected abstract boolean verifyLoggedIn();
 
 	public LoginWebDriver() {
-		super(new Settings.Builder()
-				.headless(true)
-				.loggerLevel(Level.SEVERE)
-				.connectionReqTimeout(DEFAULT_TIMEOUT_MS)
-				.connectTimeout(DEFAULT_TIMEOUT_MS)
-				.build()
+		super(getSettingsBuilder().build()
 		);
+	}
+	
+	public static Settings.Builder getSettingsBuilder() {
+		return new Settings.Builder()
+			.headless(true)
+			.loggerLevel(Level.SEVERE)
+			.connectionReqTimeout(DEFAULT_TIMEOUT_MS)
+			.connectTimeout(DEFAULT_TIMEOUT_MS);
+	}
+	
+	public void savePageSource() {
+		try(final FileWriter fW = new FileWriter("current-page-source");
+				final BufferedWriter bW = new BufferedWriter(fW);) {
+			bW.write(getPageSource());
+		} catch(final Exception e) {}
 	}
 
 	public boolean getReady(final FulfillmentAccount account) {

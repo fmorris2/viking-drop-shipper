@@ -71,6 +71,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 					for(final SkuInventoryEntry entry : entries) {
 						final Pair<Integer, Double> data = skuStocks.getOrDefault(entry.sku, new Pair<>(0, 0D));
 						int currentStock = data.left;
+						System.out.println(currentStock + " += " + entry.stock);
 						currentStock += entry.stock;
 						
 						skuStocks.put(entry.sku, new Pair<>(currentStock, entry.price));
@@ -110,9 +111,12 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 					.map(entry -> new SkuInventoryEntry(entry.getKey(), entry.getValue().left, entry.getValue().right))
 					.collect(Collectors.toList());
 			
+			System.out.println("Entries size: " + entries.size());
+			
 			autoPrice(listing, entries);
 			
-			final long parsedStock = entries.stream().map(entry -> entry.stock).count();
+			final long parsedStock = entries.stream().mapToInt(entry -> entry.stock).sum();
+			System.out.println("parsedStock: " + parsedStock);
 			
 			if(listing.current_ebay_inventory > 0 && parsedStock > 0) {
 				System.out.println("eBay still has inventory - No need to update.");
@@ -144,7 +148,8 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 		try {
 			System.out.println("Beginning auto-pricing for listing " + listing);
 			final Pair<Double,Double> currentPriceInfo = listing.getCurrentPrice();
-			final double maxFulfillmentPrice = entries.stream().mapToDouble(entry -> entry.price).max().getAsDouble();
+			final double maxFulfillmentPrice = entries.stream().mapToDouble(entry -> entry.price).max().getAsDouble() 
+					* listing.fulfillment_quantity_multiplier;
 			
 			if(maxFulfillmentPrice <= 0) {
 				return;
