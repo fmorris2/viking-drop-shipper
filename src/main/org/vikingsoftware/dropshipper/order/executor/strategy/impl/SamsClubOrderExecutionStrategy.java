@@ -9,7 +9,6 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.Select;
 
 import main.org.vikingsoftware.dropshipper.VSDropShipper;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
@@ -17,6 +16,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentMana
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubDriverSupplier;
+import main.org.vikingsoftware.dropshipper.core.data.misc.StateUtils;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
@@ -43,6 +43,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		
 		final WebElement orderOnlineBox = driver.findElement(By.cssSelector("div.sc-action-buttons div.sc-cart-qty-button.online"));
 		enterQuantity(order, orderOnlineBox);
+		driver.sleep(500);
 		clickShipThisItem(orderOnlineBox);
 		driver.sleep(2000); //wait for SLUGGISH sams club to actually add it to the cart
 
@@ -235,21 +236,8 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		clearAndSendKeys(driver.findElement(By.id("inputbox4")), order.buyer_city);
 
 		System.out.println("Selecting state " + order.buyer_state_province_region + "...");
-		driver.sleep(10_000);
-//		final Select stateSelection = new Select(driver.findElement(By.cssSelector(".sc-select-box > .visuallyhidden")));
-//		stateSelection.selectByValue(order.buyer_state_province_region);
-//		final WebElement stateBox = driver.findElement(By.cssSelector(".sc-select-box > .sc-select-current-option"));
-//		stateBox.click();
-//		
-//		final List<WebElement> states = driver.findElements(By.cssSelector(".sc-select-dropdown-wrapper-open > .sc-select-options > .sc-select-option"));
-//		final String stateToSelect = StateUtils.getStateNameFromCode(order.buyer_state_province_region);
-//		for(final WebElement state : states) {
-//			System.out.println("State: " + state.getText());
-//			if(state.getText().equalsIgnoreCase(stateToSelect)) {
-//				state.click();
-//				break;
-//			}
-//		}
+		final String fullState = StateUtils.getStateNameFromCode(order.buyer_state_province_region);
+		driver.js("document.querySelector('div.sc-select-option[aria-label=\""+fullState+"\"]').click()");
 
 		System.out.println("Entering zip code...");
 		final String[] zipCodeParts = order.buyer_zip_postal_code.split("-");
@@ -281,9 +269,9 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	}
 
 	private void enterQuantity(final CustomerOrder order, final WebElement orderOnlineBox) {
-		final WebElement input = orderOnlineBox.findElement(By.cssSelector(".sc-input-box-container > input"));
+		final WebElement input = orderOnlineBox.findElement(By.id("inputbox2"));
 		System.out.println("Fulfillment Purchase Qty: " + order.fulfillment_purchase_quantity);
-		clearAndSendKeys(input, Integer.toString(order.fulfillment_purchase_quantity));
+		input.sendKeys(Integer.toString(order.fulfillment_purchase_quantity));
 	}
 
 	private void clickShipThisItem(final WebElement orderOnlineBox) {
