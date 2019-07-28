@@ -1,6 +1,7 @@
 package main.org.vikingsoftware.dropshipper.core.utils;
 
 import java.awt.image.BufferedImage;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -8,6 +9,7 @@ import java.util.regex.Pattern;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
 
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingImage;
 
@@ -26,7 +28,9 @@ public final class SamsClubMetaDataParser {
 	
 	public void parse(final String pageSource) {
 		final String jsonString = getMetaDataJsonString(pageSource);
-		this.metaData = parser.parse(jsonString)
+		final JsonReader reader = new JsonReader(new StringReader(jsonString));
+		reader.setLenient(true);
+		this.metaData = parser.parse(reader)
 				.getAsJsonObject()
 				.get("product")
 				.getAsJsonObject();
