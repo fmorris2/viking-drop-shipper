@@ -48,10 +48,17 @@ public class OrderExecutor implements CycleParticipant {
 			for(final CustomerOrder order : ordersToExecute) {
 				final List<FulfillmentListing> fulfillmentListings = manager.getListingsForOrder(order);
 				for(final FulfillmentListing listing : fulfillmentListings) {
+					
 					if(FulfillmentManager.isFrozen(listing.fulfillment_platform_id)) {
 						System.out.println("Fulfillment manager " + manager + " is frozen.");
 						continue;
 					}
+					
+					if(!FulfillmentManager.get().shouldFulfill(order, listing)) {
+						System.out.println("We are waiting on fulfilling customer order " + order.id + " w/ platform " + listing.fulfillment_platform_id);
+						continue;
+					}
+					
 					final ProcessedOrder processedOrder = manager.fulfill(order, listing);
 	
 					if(processedOrder.fulfillment_transaction_id == null) { //TODO LOG UNSUCCESSFUL ORDER

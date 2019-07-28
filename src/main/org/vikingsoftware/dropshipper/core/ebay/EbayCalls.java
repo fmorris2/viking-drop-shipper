@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import com.ebay.sdk.ApiContext;
 import com.ebay.sdk.TimeFilter;
@@ -22,7 +23,6 @@ import com.ebay.soap.eBLBaseComponents.BuyerRequirementDetailsType;
 import com.ebay.soap.eBLBaseComponents.CategoryType;
 import com.ebay.soap.eBLBaseComponents.CountryCodeType;
 import com.ebay.soap.eBLBaseComponents.CurrencyCodeType;
-import com.ebay.soap.eBLBaseComponents.FeesType;
 import com.ebay.soap.eBLBaseComponents.ItemType;
 import com.ebay.soap.eBLBaseComponents.ListingDurationCodeType;
 import com.ebay.soap.eBLBaseComponents.ListingTypeCodeType;
@@ -129,6 +129,24 @@ public class EbayCalls {
 		return false;
 	}
 	
+	public static boolean updateHandlingTime(final String listingId, final int handlingDays) {
+		try {
+			final ApiContext api = EbayApiContextManager.getLiveContext();
+			final ReviseFixedPriceItemCall call = new ReviseFixedPriceItemCall(api);
+			final ItemType itemToRevise = new ItemType();
+			itemToRevise.setItemID(listingId);
+			itemToRevise.setDispatchTimeMax(handlingDays);
+			
+			call.setItemToBeRevised(itemToRevise);
+			call.reviseFixedPriceItem();
+			return true;
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
 	public static Pair<Double, Double> getPrice(String listingId) throws Exception {
 		final ApiContext api = EbayApiContextManager.getLiveContext();
 		final GetItemCall call = new GetItemCall(api);
@@ -192,7 +210,12 @@ public class EbayCalls {
 	}
 	
 	public static void main(final String[] args) throws Exception {
-		checkAPIAccessRules();
+		//checkAPIAccessRules();
+		MarketplaceLoader.loadMarketplaces();
+		final Set<MarketplaceListing> listings = Marketplaces.EBAY.getMarketplace().getMarketplaceListings();
+		for(final MarketplaceListing listing : listings) {
+			updateHandlingTime(listing.listingId, 3);
+		}
 	}
 	
 	public static void checkAPIAccessRules() {

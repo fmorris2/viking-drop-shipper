@@ -49,13 +49,12 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 	protected abstract boolean verifyLoggedIn();
 
 	public LoginWebDriver() {
-		super(getSettingsBuilder().build()
-		);
+		super(getSettingsBuilder().build());
 	}
 	
 	public static Settings.Builder getSettingsBuilder() {
 		return new Settings.Builder()
-			.headless(false)
+			.headless(true)
 			.loggerLevel(Level.SEVERE)
 			.connectionReqTimeout(DEFAULT_TIMEOUT_MS)
 			.connectTimeout(DEFAULT_TIMEOUT_MS);
@@ -94,6 +93,10 @@ public abstract class LoginWebDriver extends JBrowserDriver {
 		}
 
 		return false;
+	}
+	
+	public WebElement findElementNormal(final By by) {
+		return super.findElement(by);
 	}
 
 	@Override

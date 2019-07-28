@@ -2,10 +2,10 @@ package main.org.vikingsoftware.dropshipper.core.data.fulfillment;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
@@ -64,6 +64,37 @@ public class FulfillmentAccountManager {
 	
 	public FulfillmentAccount peekEnabledAccount(final FulfillmentPlatforms platform) {
 		return peekAccount(platform, true);
+	}
+	
+	public int getNumProcessedOrdersForAccount(final int id) {
+		try {
+			final Statement st = VSDSDBManager.get().createStatement();
+			final ResultSet res = st.executeQuery("SELECT COUNT(*) FROM processed_orders WHERE fulfillment_account_id="+id);
+			if(res.next()) {
+				return res.getInt(1);
+			}
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return -1;
+	}
+	
+	public LocalDateTime getMostRecentProcessedOrderForAccount(final int id) {
+		try {
+			final Statement st = VSDSDBManager.get().createStatement();
+			final ResultSet res = st.executeQuery("SELECT creation_timestamp FROM processed_orders WHERE "
+					+ "fulfillment_account_id="+id + " ORDER BY creation_timestamp DESC LIMIT 1");
+			
+			if(res.next()) {
+				final Timestamp timestamp = res.getTimestamp(1);
+				return timestamp.toLocalDateTime();
+			}
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 	
 	private FulfillmentAccount peekAccount(final FulfillmentPlatforms platform, final boolean enabled) {

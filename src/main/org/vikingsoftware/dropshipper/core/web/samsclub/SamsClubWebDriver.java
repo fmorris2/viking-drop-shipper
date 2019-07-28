@@ -1,6 +1,7 @@
 package main.org.vikingsoftware.dropshipper.core.web.samsclub;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
@@ -12,6 +13,8 @@ public class SamsClubWebDriver extends LoginWebDriver {
 	
 	private int loginAttempts = 0;
 	
+	private WebElement usernameEl, passwordEl, buttonEl;
+	
 	@Override
 	public boolean selectOrderOptions(SkuMapping skuMapping, FulfillmentListing listing) {
 		return false;
@@ -20,6 +23,10 @@ public class SamsClubWebDriver extends LoginWebDriver {
 	@Override
 	protected boolean prepareForExecutionViaLoginImpl() {
 		try {
+			usernameEl = null;
+			passwordEl = null;
+			buttonEl = null;
+			
 			if(loginAttempts++ > MAX_LOGIN_ATTEMPTS) {
 				return false;
 			}
@@ -28,37 +35,60 @@ public class SamsClubWebDriver extends LoginWebDriver {
 			get("https://www.samsclub.com/sams/account/signin/login.jsp");
 
 			System.out.println("Logging in with account: " + account.username);
-			System.out.println("Entering username");
 			savePageSource();
-			setImplicitWait(1);
-			try {
-				findElement(By.id("email")).sendKeys(account.username);
-			} catch (Exception e) {
-				findElement(By.id("txtLoginEmailID")).sendKeys(account.username);
+			
+			findUsernameEl();
+			findPasswordEl();
+			findButtonEl();
+			
+			if(usernameEl != null && passwordEl != null && buttonEl != null) {
+				System.out.println("Logging in... " + getCurrentUrl());
+				
+				usernameEl.sendKeys(account.username);
+				passwordEl.sendKeys(account.password);
+				buttonEl.click();
+				sleep(4000);
+				
+				return true;
 			}
 			
-			System.out.println("Entering password");
-			try {
-				findElement(By.id("password")).sendKeys(account.password);
-			} catch (final Exception e) {
-				findElement(By.id("txtLoginPwd")).sendKeys(account.password);
-			}
-			
-			System.out.println("Logging in... " + getCurrentUrl());
-			try {
-				findElement(By.className("sc-btn-primary")).click();
-			} catch(final Exception e) {
-				findElement(By.cssSelector("#signInButton")).click();
-			}
-			
-			sleep(4000);
-			return verifyLoggedIn();
+			return false;
 		} catch(final Exception e) {
 			e.printStackTrace();
 			return prepareForExecutionViaLoginImpl();
 		} finally {
 			loginAttempts = 0;
 		}
+	}
+	
+	private void findUsernameEl() {
+		System.out.println("Finding username el");
+		try {
+			usernameEl = findElementNormal(By.id("email"));
+		} catch (Exception e) {
+			usernameEl = findElementNormal(By.id("txtLoginEmailID"));
+		}
+		System.out.println("Found username el.");
+	}
+	
+	private void findPasswordEl() {
+		System.out.println("Finding password el");
+		try {
+			passwordEl = findElementNormal(By.id("password"));
+		} catch (final Exception e) {
+			passwordEl = findElementNormal(By.id("txtLoginPwd"));
+		}
+		System.out.println("Found password el.");
+	}
+	
+	private void findButtonEl() {
+		System.out.println("Finding button el");
+		try {
+			buttonEl = findElementNormal(By.className("sc-btn-primary"));
+		} catch(final Exception e) {
+			buttonEl = findElementNormal(By.cssSelector("#signInButton"));
+		}
+		System.out.println("Found button el.");
 	}
 
 	@Override

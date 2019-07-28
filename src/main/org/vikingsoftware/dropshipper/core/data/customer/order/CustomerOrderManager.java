@@ -84,6 +84,7 @@ public class CustomerOrderManager {
 			.buyer_city(results.getString("buyer_city"))
 			.buyer_zip_postal_code(results.getString("buyer_zip_postal_code"))
 			.buyer_phone_number(results.getString("buyer_phone_number"))
+			.date_parsed(results.getTimestamp("date_parsed"))
 			.build();
 	}
 }
