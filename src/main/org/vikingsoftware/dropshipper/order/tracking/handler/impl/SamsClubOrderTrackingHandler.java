@@ -1,5 +1,8 @@
 package main.org.vikingsoftware.dropshipper.order.tracking.handler.impl;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
@@ -17,6 +20,8 @@ import main.org.vikingsoftware.dropshipper.order.tracking.handler.AbstractOrderT
 public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<SamsClubWebDriver> {
 
 	private static final String BASE_ORDER_DETAILS_URL = "https://www.samsclub.com/order/details/";
+	private static final String TRACKING_NUM_PATTERN_STR = "tracking.+=(\\d+)";
+	private static final Pattern TRACKING_NUM_PATTERN = Pattern.compile(TRACKING_NUM_PATTERN_STR);
 
 	@Override
 	public boolean prepareToTrack() {
@@ -40,12 +45,16 @@ public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<S
 
 		String trackingNum = null;
 		if(trackingNumEl != null) {
-			trackingNum = trackingNumEl.getText();
+			final Matcher matcher = TRACKING_NUM_PATTERN.matcher(trackingNumEl.getAttribute("href"));
+			if(matcher.find()) {
+				trackingNum = matcher.group(1);
+			}
 		} else {
 			throw new RuntimeException("Could not parse tracking number from page for order " + order.id);
 		}
 
 		final TrackingNumber carrierDetails = TrackingNumber.parse(trackingNum);
+		driver.savePageSource();
 		if(!carrierDetails.isCourierRecognized()) {
 			throw new UnknownTrackingIdException("Unknown courier for tracking number: " + trackingNum);
 		}
