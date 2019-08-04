@@ -32,6 +32,7 @@ public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<S
 	protected TrackingEntry parseTrackingInfo(final SamsClubWebDriver driver, final ProcessedOrder order) {
 		driver.get(BASE_ORDER_DETAILS_URL + order.fulfillment_transaction_id);
 		System.out.println("Navigating to page: " + BASE_ORDER_DETAILS_URL + order.fulfillment_transaction_id);
+		driver.savePageSource();
 
 		final WebElement trackingNumEl = driver.findElements(By.tagName("a")).stream().filter(el -> {
 			final String href = el.getAttribute("href");

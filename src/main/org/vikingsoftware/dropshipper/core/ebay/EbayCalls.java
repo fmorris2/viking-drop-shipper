@@ -58,7 +58,7 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 
 public class EbayCalls {
 
-	private static final int FAKE_MAX_QUANTITY = 1;
+	public static final int FAKE_MAX_QUANTITY = 1;
 	private static final int MIN_AVAILABLE_FULFILLMENT_QTY = 50;
 
 	private EbayCalls() {}
