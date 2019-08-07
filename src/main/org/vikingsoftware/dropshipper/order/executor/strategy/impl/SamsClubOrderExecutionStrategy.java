@@ -298,7 +298,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			}
 		}
 		
-		driver.sleep(1000);
+		driver.sleep(3000);
 		verifyCart(order, listing, false);
 		return true;
 	}
