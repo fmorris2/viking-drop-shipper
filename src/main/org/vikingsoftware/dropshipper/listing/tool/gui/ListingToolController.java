@@ -71,6 +71,10 @@ public class ListingToolController {
 			addCategoryModel();
 		});
 	}
+	
+	public void startCrawler() {
+		System.out.println("Starting Crawler");
+	}
 
 	private void addListeners() {
 		gui.fulfillmentsPanelInput.addKeyListener(createFulfillmentUrlKeyAdapter());
@@ -423,12 +427,16 @@ public class ListingToolController {
 			@Override
 			public void keyReleased(final KeyEvent e) {
 				if(e.getKeyCode() == KeyEvent.VK_ENTER) {
-					System.out.println("Attempting to add fulfillment URL to queue: " + gui.fulfillmentsPanelInput.getText());
-					FulfillmentListingParserWorker.instance().addUrlToQueue(gui.fulfillmentsPanelInput.getText());
-					SwingUtilities.invokeLater(() -> gui.fulfillmentsPanelInput.setText(""));
+					addFulfillmentURLToQueue(gui.fulfillmentsPanelInput.getText());
 				}
 			}
 		};
+	}
+	
+	private void addFulfillmentURLToQueue(final String url) {
+		System.out.println("Attempting to add fulfillment URL to queue: " + gui.fulfillmentsPanelInput.getText());
+		FulfillmentListingParserWorker.instance().addUrlToQueue(gui.fulfillmentsPanelInput.getText());
+		SwingUtilities.invokeLater(() -> gui.fulfillmentsPanelInput.setText(""));
 	}
 
 	private void importFile() {

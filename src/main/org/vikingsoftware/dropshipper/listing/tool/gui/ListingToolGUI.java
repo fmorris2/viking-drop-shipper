@@ -7,8 +7,6 @@ package main.org.vikingsoftware.dropshipper.listing.tool.gui;
 
 import java.awt.Dimension;
 
-import javax.swing.ScrollPaneConstants;
-
 /**
  *
  * @author Bren
@@ -48,6 +46,10 @@ public class ListingToolGUI extends javax.swing.JFrame {
 
     public static ListingToolController getController() {
     	return controller;
+    }
+    
+    public void startCrawler() {
+    	controller.startCrawler();
     }
 
     /**

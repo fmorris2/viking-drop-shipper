@@ -92,6 +92,10 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 				+ " " + addressEl.findElement(By.className("sc-address-street-one")).getText()
 				+ " " + addressEl.findElement(By.className("sc-address-city-state")).getText();
 		
+		try {
+			detailsStr += addressEl.findElement(By.className("sc-address-street-two")).getText();
+		} catch(final Exception e) {}
+		
 		detailsStr = detailsStr.toLowerCase();
 		
 		System.out.println("\tDetails String: " + detailsStr);
