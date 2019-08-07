@@ -16,8 +16,8 @@ public class VSDropShipper {
 	private static final CycleParticipant[] MODULES = {
 		new OrderParser(),
 		new OrderExecutor(),
-		new InventoryUpdater()
-		//new OrderTracking()
+		new InventoryUpdater(),
+		new OrderTracking()
 	};
 
 	public static void main(final String[] args) throws InterruptedException {
