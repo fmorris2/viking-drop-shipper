@@ -239,13 +239,8 @@ public class ListingToolController {
 			gui.descRawInput.setText(listing.description);
 			gui.descHtmlView.setText(listing.description);
 			gui.brandInput.setText(listing.brand);
-			gui.listingPriceInput.setText("$" + listing.price);
-			if(gui.profitMarginInput.getText().isEmpty()) {
-				gui.profitMarginInput.setText("-20%");
-			}
-
-			addImages(listing.pictures);
 			updateListingPriceWithMargin();
+			addImages(listing.pictures);
 			updateCategoryModel(listing);
 		});
 	}
