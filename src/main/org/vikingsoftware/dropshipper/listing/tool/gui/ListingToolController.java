@@ -40,6 +40,7 @@ import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.Marketp
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
 import main.org.vikingsoftware.dropshipper.core.utils.PriceUtils;
+import main.org.vikingsoftware.dropshipper.crawler.FulfillmentListingCrawler;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.EbayCategory;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingImage;
@@ -55,6 +56,7 @@ public class ListingToolController {
 
 	private final ListingToolGUI gui = ListingToolGUI.get();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
+	private final FulfillmentListingCrawler crawler = new FulfillmentListingCrawler();
 
 	private JList<BufferedImage> imageList;
 	private DefaultListModel<BufferedImage> imagesModel;
@@ -74,6 +76,7 @@ public class ListingToolController {
 	
 	public void startCrawler() {
 		System.out.println("Starting Crawler");
+		crawler.start(this::addFulfillmentURLToQueue);
 	}
 
 	private void addListeners() {
@@ -429,8 +432,8 @@ public class ListingToolController {
 	}
 	
 	private void addFulfillmentURLToQueue(final String url) {
-		System.out.println("Attempting to add fulfillment URL to queue: " + gui.fulfillmentsPanelInput.getText());
-		FulfillmentListingParserWorker.instance().addUrlToQueue(gui.fulfillmentsPanelInput.getText());
+		System.out.println("Attempting to add fulfillment URL to queue: " + url);
+		FulfillmentListingParserWorker.instance().addUrlToQueue(url);
 		SwingUtilities.invokeLater(() -> gui.fulfillmentsPanelInput.setText(""));
 	}
 
