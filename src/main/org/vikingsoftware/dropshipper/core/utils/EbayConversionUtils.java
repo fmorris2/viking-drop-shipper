@@ -12,37 +12,47 @@ public class EbayConversionUtils {
 	private EbayConversionUtils(){}
 
 	public static CustomerOrder convertTransactionTypeToCustomerOrder(final String listingId, final TransactionType transaction) {
-		if(transaction == null) {
-			return null;
+		try {
+			if(transaction == null) {
+				return null;
+			}
+	
+			final int dbListingId = Marketplaces.EBAY.getMarketplace().getMarketplaceListingIndex(listingId);
+	
+			if(dbListingId == -1) {
+				return null;
+			}
+	
+			final UserType buyer = transaction.getBuyer();
+			final AddressType addr = buyer.getBuyerInfo().getShippingAddress();
+			final ItemType item = transaction.getItem();
+			
+			if(transaction.getAmountPaid() == null) { //awaiting ebay payment
+				return null;
+			}
+	
+			return new CustomerOrder.Builder()
+				.marketplace_listing_id(dbListingId)
+				.sku(item.getSKU())
+				.sell_listing_price(transaction.getAmountPaid().getValue() - transaction.getActualShippingCost().getValue())
+				.sell_shipping(transaction.getActualShippingCost().getValue())
+				.sell_total(transaction.getAmountPaid().getValue())
+				.quantity(transaction.getQuantityPurchased())
+				.marketplace_order_id(transaction.getTransactionID())
+				.buyer_username(buyer.getUserID())
+				.buyer_name(buyer.getUserFirstName() + " " + buyer.getUserLastName())
+				.buyer_country(addr.getCountryName())
+				.buyer_street_address(addr.getStreet1())
+				.buyer_apt_suite_unit_etc(addr.getStreet2())
+				.buyer_state_province_region(addr.getStateOrProvince())
+				.buyer_city(addr.getCityName())
+				.buyer_zip_postal_code(addr.getPostalCode())
+				.buyer_phone_number(addr.getPhone())
+				.build();
+		} catch(final Exception e) {
+			e.printStackTrace();
 		}
-
-		final int dbListingId = Marketplaces.EBAY.getMarketplace().getMarketplaceListingIndex(listingId);
-
-		if(dbListingId == -1) {
-			return null;
-		}
-
-		final UserType buyer = transaction.getBuyer();
-		final AddressType addr = buyer.getBuyerInfo().getShippingAddress();
-		final ItemType item = transaction.getItem();
-
-		return new CustomerOrder.Builder()
-			.marketplace_listing_id(dbListingId)
-			.sku(item.getSKU())
-			.sell_listing_price(transaction.getAmountPaid().getValue() - transaction.getActualShippingCost().getValue())
-			.sell_shipping(transaction.getActualShippingCost().getValue())
-			.sell_total(transaction.getAmountPaid().getValue())
-			.quantity(transaction.getQuantityPurchased())
-			.marketplace_order_id(transaction.getTransactionID())
-			.buyer_username(buyer.getUserID())
-			.buyer_name(buyer.getUserFirstName() + " " + buyer.getUserLastName())
-			.buyer_country(addr.getCountryName())
-			.buyer_street_address(addr.getStreet1())
-			.buyer_apt_suite_unit_etc(addr.getStreet2())
-			.buyer_state_province_region(addr.getStateOrProvince())
-			.buyer_city(addr.getCityName())
-			.buyer_zip_postal_code(addr.getPostalCode())
-			.buyer_phone_number(addr.getPhone())
-			.build();
+		
+		return null;
 	}
 }
