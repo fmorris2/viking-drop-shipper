@@ -60,7 +60,7 @@ public final class SamsClubMetaDataParser {
 				.get(0)
 				.getAsJsonObject();
 				
-		final JsonObject priceObj = pricingOptions.has("msrpPrice") ? pricingOptions.get("msrpPrice").getAsJsonObject()
+		final JsonObject priceObj = pricingOptions.has("listPrice") ? pricingOptions.get("listPrice").getAsJsonObject()
 				: pricingOptions.get("finalPrice").getAsJsonObject();
  		
 		return priceObj
