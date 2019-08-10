@@ -53,17 +53,14 @@ public final class SamsClubMetaDataParser {
 	}
 	
 	public double getPrice() {
-		final JsonObject pricingOptions = metaData.get("selectedSku")
+		return metaData.get("selectedSku")
 				.getAsJsonObject()
 				.get("pricingOptions")
 				.getAsJsonArray()
 				.get(0)
-				.getAsJsonObject();
-				
-		final JsonObject priceObj = pricingOptions.has("listPrice") ? pricingOptions.get("listPrice").getAsJsonObject()
-				: pricingOptions.get("finalPrice").getAsJsonObject();
- 		
-		return priceObj
+				.getAsJsonObject()
+				.get("listPrice")
+				.getAsJsonObject()
 				.get("currencyAmount")
 				.getAsDouble();
 	}
