@@ -33,7 +33,11 @@ public class FulfillmentListingCrawler {
 	
 	private void runCrawlStrategy(final FulfillmentListingCrawlerStrategy strategy) {
 		while(isCrawling) {
-			strategy.crawl();
+			try {
+				strategy.crawl();
+			} catch(final Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	

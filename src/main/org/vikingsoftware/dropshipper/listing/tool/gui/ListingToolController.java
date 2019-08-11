@@ -18,8 +18,10 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.sql.PreparedStatement;
 import java.text.DecimalFormat;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -57,6 +59,7 @@ public class ListingToolController {
 	private final ListingToolGUI gui = ListingToolGUI.get();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	private final FulfillmentListingCrawler crawler = new FulfillmentListingCrawler();
+	private final Set<String> publishedItemIds = new HashSet<>();
 
 	private JList<BufferedImage> imageList;
 	private DefaultListModel<BufferedImage> imagesModel;
@@ -220,6 +223,11 @@ public class ListingToolController {
 	}
 
 	public void displayNextListing() {
+		if(ListingQueue.peek() != null && publishedItemIds.contains(ListingQueue.peek().itemId)) {
+			ListingQueue.poll();
+			displayNextListing();
+			return;
+		}
 		displayListing(ListingQueue.peek());
 	}
 
@@ -326,6 +334,7 @@ public class ListingToolController {
 		if(publishedEbayListingItemId.isPresent()) {
 			System.out.println("Successfully published eBay listing: " + toPublish.title);
 			connectListingInDB(toPublish, publishedEbayListingItemId.get());
+			publishedItemIds.add(toPublish.itemId);
 		} else {
 			System.out.println("Failed to publish eBay listing for listing: " + toPublish.title);
 		}
@@ -432,9 +441,11 @@ public class ListingToolController {
 	}
 	
 	private void addFulfillmentURLToQueue(final String url) {
-		System.out.println("Attempting to add fulfillment URL to queue: " + url);
-		FulfillmentListingParserWorker.instance().addUrlToQueue(url);
-		SwingUtilities.invokeLater(() -> gui.fulfillmentsPanelInput.setText(""));
+		if(url != null && !url.isEmpty()) {
+			System.out.println("Attempting to add fulfillment URL to queue: " + url);
+			FulfillmentListingParserWorker.instance().addUrlToQueue(url);
+			SwingUtilities.invokeLater(() -> gui.fulfillmentsPanelInput.setText(""));
+		}
 	}
 
 	private void importFile() {

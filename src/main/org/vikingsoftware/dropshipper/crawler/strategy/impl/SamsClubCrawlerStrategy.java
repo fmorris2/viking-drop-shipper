@@ -1,16 +1,16 @@
 package main.org.vikingsoftware.dropshipper.crawler.strategy.impl;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubDriverSupplier;
-import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
+import main.org.vikingsoftware.dropshipper.core.web.DefaultWebDriver;
 import main.org.vikingsoftware.dropshipper.crawler.strategy.FulfillmentListingCrawlerStrategy;
 
 public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
@@ -21,15 +21,18 @@ public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
 	private static final String SUB_CATEGORY_PAGE_SUBSTRING = "/b/";
 	private static final String PRODUCT_PAGE_SUBSTRING = "/p/";
 	
-	private final SamsClubDriverSupplier supplier = BrowserRepository.get().request(SamsClubDriverSupplier.class);
-	private final SamsClubWebDriver driver = supplier.get();
 	private final Set<String> visitedUrls = new HashSet<>();
 	
+	private DefaultWebDriver driver = null;
+	
 	public void crawl() {
-		System.out.println("[SamsClubCrawlerStrategy] - crawl");
-
-		crawlCategoryPage(ALL_CATEGORIES_URL);
-		visitedUrls.clear();
+		try {
+			driver = new DefaultWebDriver();
+			System.out.println("[SamsClubCrawlerStrategy] - crawl");
+			crawlCategoryPage(ALL_CATEGORIES_URL);
+		} finally {
+			driver.close();
+		}
 	}
 	
 	private void crawlCategoryPage(final String url) {
@@ -37,8 +40,9 @@ public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
 		visitedUrls.add(url);
 		driver.get(url);
 		
-		final Set<String> linksOnPage = parseAllLinksOnPage();
-		
+		final List<String> linksOnPage = new ArrayList<>(parseAllLinksOnPage());
+		Collections.shuffle(linksOnPage);
+				
 		visitedUrls.addAll(linksOnPage);
 		
 		for(final String link : linksOnPage) {
@@ -82,10 +86,12 @@ public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
 	}
 	
 	private void crawlSubCategoryPage(final String url) {
+		System.out.println("[SamsClubCrawlerStrategy] - Attempting to crawl sub category page");
 		driver.get(url);
 		try {
+			System.out.println("[SamsClubCrawlerStrategy] - Clicking online only...");
 			driver.findElement(By.id("filter-online-id")).click();
-			driver.sleep(2000); //wait for sluggish sams club front-end to update
+			driver.sleep(3000); //wait for sluggish sams club front-end to update
 			
 			parseProductsOnCurrentPage();
 			
@@ -94,7 +100,7 @@ public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
 				final WebElement nextButton = driver.findElement(By.cssSelector(".sc-pagination-next > a:nth-child(1)"));
 				System.out.println("[SamsClubCrawlerStrategy] - Navigating to next page of products...");
 				nextButton.click();
-				driver.sleep(2000); //sluggish sams club front end
+				driver.sleep(3000); //sluggish sams club front end
 				parseProductsOnCurrentPage();
 			} catch(final Exception e) {}
 		} catch(final Exception e) {
@@ -103,10 +109,11 @@ public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
 	}
 	
 	private void parseProductsOnCurrentPage() {
+		System.out.println("[SamsClubCrawlerStrategy] - Parsing products on current page");
 		final Set<String> links = parseAllLinksOnPage();
 		visitedUrls.addAll(links);
 		
-		for(final String url : visitedUrls) {
+		for(final String url : links) {
 			if(getPageTypeForUrl(url) == PageType.PRODUCT) {
 				System.out.println("[SamsClubCrawlerStrategy] - Found product url: " + url);
 				urlFound(url);

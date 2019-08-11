@@ -28,6 +28,7 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.AbstractOrder
 
 public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrategy<SamsClubWebDriver> {
 
+	private static final String FAKE_PHONE_NUMBER = "(916) 245-0125";
 	@Override
 	protected ProcessedOrder executeOrderImpl(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws Exception {
 		return orderItem(order, fulfillmentListing);
@@ -246,7 +247,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"postalCode\"]")), zipCodeParts[0]);
 		
 		System.out.println("Entering phone number...");
-		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"phone\"]")), order.buyer_phone_number == null ? VSDropShipper.VS_PHONE_NUM : order.buyer_phone_number);
+		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"phone\"]")), FAKE_PHONE_NUMBER);
 
 		System.out.println("Clicking save...");
 		final WebElement saveButton = driver.findElement(By.cssSelector(".sc-address-form-action-buttons > button:nth-child(2)"));
