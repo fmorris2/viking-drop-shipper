@@ -36,6 +36,8 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 	private final ExecutorService threadPool = Executors.newFixedThreadPool(ThreadUtils.NUM_THREADS);
 	private final Queue<String> urlQueue = new ConcurrentLinkedQueue<>();
 	private final Queue<Listing> completedListings = new ConcurrentLinkedQueue<>();
+	
+	private int urlsToParse = 0;
 
 	private FulfillmentListingParserWorker() {
 		loadPreExistingFulfillmentURLs();
@@ -61,7 +63,8 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 	public void addUrlToQueue(final String url) {
 		if(!preExistingFulfillmentURLs.contains(url)) {
 			urlQueue.add(url);
-			SwingUtilities.invokeLater(() -> ListingToolGUI.get().urlsToParseValue.setText(Integer.toString(urlQueue.size())));
+			urlsToParse++;
+			updateUrlsToParse();
 		} else {
 			System.out.println("We already have the fulfillment URL " + url + " in the DB... Skipping...");
 		}
@@ -85,7 +88,7 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 			try {
 				if(!urlQueue.isEmpty()) {
 					final String url = urlQueue.poll();
-					threadPool.submit(() -> parse(url));
+					threadPool.execute(() -> parse(url));
 				}
 				
 				while(!completedListings.isEmpty()) {
@@ -109,6 +112,9 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
+		
+		urlsToParse--;
+		updateUrlsToParse();
 	}
 	
 	private void handleCompletedListing(final Listing listing) {
@@ -127,7 +133,7 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 			if(shouldDisplayListing) {
 				ListingToolGUI.getController().displayNextListing();
 			}
-			SwingUtilities.invokeLater(() -> ListingToolGUI.get().urlsToParseValue.setText(Integer.toString(urlQueue.size())));
+			updateUrlsToParse();
 		} else {
 			System.out.println("We already have a mapping for item id " + listing.itemId + " on fulfillment platform " + listing.fulfillmentPlatformId + " in the DB");
 		}
@@ -136,7 +142,7 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 	private void loadPreExistingFulfillmentURLs() {
 		try {
 			final Statement st = VSDSDBManager.get().createStatement();
-			final ResultSet res = st.executeQuery("SELECT fulfillment_platform_id,item_id,listing_url FROM fulfillment_listing");
+			final ResultSet res = st.executeQuery("SELECT fulfillment_platform_id,item_id,listing_url,listing_title FROM fulfillment_listing");
 			while(res.next()) {
 				preExistingFulfillmentURLs.add(res.getString("listing_url"));
 				final Set<String> ids = platformToFulfillmentIds.getOrDefault(res.getInt("fulfillment_platform_id"), new HashSet<>());
@@ -151,5 +157,9 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private void updateUrlsToParse() {
+		SwingUtilities.invokeLater(() -> ListingToolGUI.get().urlsToParseValue.setText(Integer.toString(urlsToParse)));
 	}
 }

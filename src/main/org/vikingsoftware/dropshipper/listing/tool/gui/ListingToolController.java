@@ -224,6 +224,7 @@ public class ListingToolController {
 
 	public void displayNextListing() {
 		if(ListingQueue.peek() != null && publishedItemIds.contains(ListingQueue.peek().itemId)) {
+			System.out.println("Skipping already published item id: " + ListingQueue.peek().itemId);
 			ListingQueue.poll();
 			displayNextListing();
 			return;
