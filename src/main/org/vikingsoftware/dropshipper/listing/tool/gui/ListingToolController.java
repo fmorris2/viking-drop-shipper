@@ -1,5 +1,6 @@
 package main.org.vikingsoftware.dropshipper.listing.tool.gui;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Transparency;
@@ -98,6 +99,17 @@ public class ListingToolController {
         		});
         	}
         });
+        
+        gui.listingTitleInput.getDocument().addDocumentListener(new DocumentAdapter() {
+        	@Override
+        	public void insertUpdate(DocumentEvent e) {
+        		checkListingTitleLength();
+        	}
+        	
+        	public void removeUpdate(DocumentEvent e) {
+        		checkListingTitleLength();
+        	};
+        });
 
         gui.skipListingBtn.addActionListener(e -> {
         	ListingQueue.poll();
@@ -145,6 +157,14 @@ public class ListingToolController {
         	ListingQueue.replaceFirst(currentListingClone);
         });
 
+	}
+	
+	private void checkListingTitleLength() {
+		if(gui.listingTitleInput.getText().length() > 80) {
+			gui.listingTitleInput.setForeground(Color.RED);
+		} else {
+			gui.listingTitleInput.setForeground(Color.BLACK);
+		}
 	}
 
 	private void addImageList() {
