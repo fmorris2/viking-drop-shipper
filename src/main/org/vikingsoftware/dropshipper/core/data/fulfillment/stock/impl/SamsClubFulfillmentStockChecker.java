@@ -1,14 +1,14 @@
 package main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.AbstractFulfillmentStockChecker;
+import main.org.vikingsoftware.dropshipper.core.utils.SamsClubMetaDataParser;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
 
 public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChecker<SamsClubWebDriver> {
 
+	private static final SamsClubMetaDataParser metaData = new SamsClubMetaDataParser();
+	
 	private static SamsClubFulfillmentStockChecker instance;
 
 	private SamsClubFulfillmentStockChecker() {
@@ -25,16 +25,15 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 
 	@Override
 	protected int parseItemStock(final SamsClubWebDriver driver) {
-		System.out.println("SamsClubFulfillmentStockChecker#parseItemStock");
-		int stock = 0;
-		final String pageSource = driver.getPageSource();
-		final Pattern pattern = Pattern.compile("availableToSellQuantity\":(\\d+),");
-		final Matcher matcher = pattern.matcher(pageSource);
-		if(matcher.find()) {
-			stock = Integer.parseInt(matcher.group(1));
-			System.out.println("Parsed stock: " + stock);
+		metaData.parse(driver.getPageSource());
+		
+		//TODO ENSURE TITLE MATCHES EXPECTED FULFILLMENT LISTING TITLE
+		if(!metaData.passesAllListingConditions()) {
+			System.out.println("Sams Club listing does not pass all listing conditions. Setting stock to 0.");
+			return 0;
 		}
-		return stock;
+		
+		return metaData.getStock();
 	}
 
 	@Override
@@ -44,6 +43,7 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 
 	@Override
 	protected double parseItemPrice(SamsClubWebDriver driver) {
-		return 0;
+		metaData.parse(driver.getPageSource());
+		return metaData.getPrice();
 	}
 }

@@ -1,5 +1,6 @@
 package main.org.vikingsoftware.dropshipper.listing.tool.gui;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Transparency;
@@ -18,8 +19,10 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.sql.PreparedStatement;
 import java.text.DecimalFormat;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -40,6 +43,7 @@ import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.Marketp
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
 import main.org.vikingsoftware.dropshipper.core.utils.PriceUtils;
+import main.org.vikingsoftware.dropshipper.crawler.FulfillmentListingCrawler;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.EbayCategory;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingImage;
@@ -55,6 +59,8 @@ public class ListingToolController {
 
 	private final ListingToolGUI gui = ListingToolGUI.get();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
+	private final FulfillmentListingCrawler crawler = new FulfillmentListingCrawler();
+	private final Set<String> publishedItemIds = new HashSet<>();
 
 	private JList<BufferedImage> imageList;
 	private DefaultListModel<BufferedImage> imagesModel;
@@ -70,6 +76,11 @@ public class ListingToolController {
 			addRecentSalesRenderer();
 			addCategoryModel();
 		});
+	}
+	
+	public void startCrawler() {
+		System.out.println("Starting Crawler");
+		crawler.start(this::addFulfillmentURLToQueue);
 	}
 
 	private void addListeners() {
@@ -87,6 +98,17 @@ public class ListingToolController {
         			SwingUtilities.invokeLater(() -> gui.descHtmlView.setText(gui.descRawInput.getText()));
         		});
         	}
+        });
+        
+        gui.listingTitleInput.getDocument().addDocumentListener(new DocumentAdapter() {
+        	@Override
+        	public void insertUpdate(DocumentEvent e) {
+        		checkListingTitleLength();
+        	}
+        	
+        	public void removeUpdate(DocumentEvent e) {
+        		checkListingTitleLength();
+        	};
         });
 
         gui.skipListingBtn.addActionListener(e -> {
@@ -135,6 +157,14 @@ public class ListingToolController {
         	ListingQueue.replaceFirst(currentListingClone);
         });
 
+	}
+	
+	private void checkListingTitleLength() {
+		if(gui.listingTitleInput.getText().length() > 80) {
+			gui.listingTitleInput.setForeground(Color.RED);
+		} else {
+			gui.listingTitleInput.setForeground(Color.BLACK);
+		}
 	}
 
 	private void addImageList() {
@@ -213,6 +243,12 @@ public class ListingToolController {
 	}
 
 	public void displayNextListing() {
+		if(ListingQueue.peek() != null && publishedItemIds.contains(ListingQueue.peek().itemId)) {
+			System.out.println("Skipping already published item id: " + ListingQueue.peek().itemId);
+			ListingQueue.poll();
+			displayNextListing();
+			return;
+		}
 		displayListing(ListingQueue.peek());
 	}
 
@@ -235,13 +271,8 @@ public class ListingToolController {
 			gui.descRawInput.setText(listing.description);
 			gui.descHtmlView.setText(listing.description);
 			gui.brandInput.setText(listing.brand);
-			gui.listingPriceInput.setText("$" + listing.price);
-			if(gui.profitMarginInput.getText().isEmpty()) {
-				gui.profitMarginInput.setText("-20%");
-			}
-
-			addImages(listing.pictures);
 			updateListingPriceWithMargin();
+			addImages(listing.pictures);
 			updateCategoryModel(listing);
 		});
 	}
@@ -324,6 +355,7 @@ public class ListingToolController {
 		if(publishedEbayListingItemId.isPresent()) {
 			System.out.println("Successfully published eBay listing: " + toPublish.title);
 			connectListingInDB(toPublish, publishedEbayListingItemId.get());
+			publishedItemIds.add(toPublish.itemId);
 		} else {
 			System.out.println("Failed to publish eBay listing for listing: " + toPublish.title);
 		}
@@ -355,13 +387,14 @@ public class ListingToolController {
 	private boolean insertMarketplaceListing(final Listing listing, final String listingId) {
 		try {
 			final String query = "INSERT INTO marketplace_listing(marketplace_id, listing_id, listing_title,"
-					+ " fulfillment_quantity_multiplier, active) VALUES(?,?,?,?,?)";
+					+ " fulfillment_quantity_multiplier, active, target_margin) VALUES(?,?,?,?,?,?)";
 			final PreparedStatement statement = VSDSDBManager.get().createPreparedStatement(query);
 			statement.setInt(1, Marketplaces.EBAY.getMarketplaceId());
 			statement.setString(2, listingId);
 			statement.setString(3, listing.title);
 			statement.setInt(4, 1);
 			statement.setInt(5, 1);
+			statement.setDouble(6, listing.targetProfitMargin);
 			statement.execute();
 			return true;
 		} catch(final Exception e) {
@@ -422,12 +455,18 @@ public class ListingToolController {
 			@Override
 			public void keyReleased(final KeyEvent e) {
 				if(e.getKeyCode() == KeyEvent.VK_ENTER) {
-					System.out.println("Attempting to add fulfillment URL to queue: " + gui.fulfillmentsPanelInput.getText());
-					FulfillmentListingParserWorker.instance().addUrlToQueue(gui.fulfillmentsPanelInput.getText());
-					SwingUtilities.invokeLater(() -> gui.fulfillmentsPanelInput.setText(""));
+					addFulfillmentURLToQueue(gui.fulfillmentsPanelInput.getText());
 				}
 			}
 		};
+	}
+	
+	private void addFulfillmentURLToQueue(final String url) {
+		if(url != null && !url.isEmpty()) {
+			System.out.println("Attempting to add fulfillment URL to queue: " + url);
+			FulfillmentListingParserWorker.instance().addUrlToQueue(url);
+			SwingUtilities.invokeLater(() -> gui.fulfillmentsPanelInput.setText(""));
+		}
 	}
 
 	private void importFile() {

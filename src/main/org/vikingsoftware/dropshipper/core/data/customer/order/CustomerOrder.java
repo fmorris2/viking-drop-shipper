@@ -1,6 +1,8 @@
 package main.org.vikingsoftware.dropshipper.core.data.customer.order;
 
+import java.sql.Timestamp;
 import java.text.DecimalFormat;
+import java.time.LocalDateTime;
 
 public class CustomerOrder {
 
@@ -27,6 +29,7 @@ public class CustomerOrder {
 	public final String buyer_city;
 	public final String buyer_zip_postal_code;
 	public final String buyer_phone_number;
+	public final LocalDateTime date_parsed;
 
 	private CustomerOrder(final Builder builder) {
 		this.id = builder.id;
@@ -40,7 +43,7 @@ public class CustomerOrder {
 		this.fulfillment_purchase_quantity = builder.fulfillment_purchase_quantity;
 		this.marketplace_order_id = builder.marketplace_order_id;
 		this.buyer_username = builder.buyer_username;
-		this.buyer_name = builder.buyer_name;
+		this.buyer_name = builder.buyer_name.replaceAll(" {2,}", " ");
 		this.buyer_country = builder.buyer_country;
 		this.buyer_street_address = builder.buyer_street_address;
 		this.buyer_apt_suite_unit_etc = builder.buyer_apt_suite_unit_etc;
@@ -48,6 +51,7 @@ public class CustomerOrder {
 		this.buyer_city = builder.buyer_city;
 		this.buyer_zip_postal_code = builder.buyer_zip_postal_code;
 		this.buyer_phone_number = builder.buyer_phone_number;
+		this.date_parsed = builder.date_parsed;
 	}
 
 	public String getFirstName() {
@@ -85,6 +89,7 @@ public class CustomerOrder {
 		private String buyer_city;
 		private String buyer_zip_postal_code;
 		private String buyer_phone_number;
+		private LocalDateTime date_parsed;
 
 		public Builder id(final int id) {
 			this.id = id;
@@ -178,6 +183,11 @@ public class CustomerOrder {
 
 		public Builder buyer_phone_number(final String num) {
 			this.buyer_phone_number = num;
+			return this;
+		}
+		
+		public Builder date_parsed(final Timestamp timestamp) {
+			this.date_parsed = timestamp.toLocalDateTime();
 			return this;
 		}
 

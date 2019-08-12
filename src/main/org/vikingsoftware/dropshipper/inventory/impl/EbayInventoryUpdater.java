@@ -1,5 +1,6 @@
 package main.org.vikingsoftware.dropshipper.inventory.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -56,13 +57,21 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			} else {
 				final List<FulfillmentListing> fulfillmentListings = FulfillmentManager.get().getListingsForMarketplaceListing(listing.id);
 				for(final FulfillmentListing fulfillmentListing : fulfillmentListings) {
-					System.out.println("Compiling inventory counts for fulfillment listing " + fulfillmentListing.id);
-					final Collection<SkuInventoryEntry> entries = //Collections.singletonList(new SkuInventoryEntry(null, 0));
-							FulfillmentStockManager.getStock(listing, fulfillmentListing).get();
+					Collection<SkuInventoryEntry> entries = new ArrayList<>();
+					if(FulfillmentManager.isFrozen(fulfillmentListing.fulfillment_platform_id)) {
+						System.out.println("Fulfillment platform is frozen for fulfillment listing " + fulfillmentListing.id
+								+ ". Setting stock to 0.");
+						entries.add(new SkuInventoryEntry(null, 0, 0D));
+					} else {
+						System.out.println("Compiling inventory counts for fulfillment listing " + fulfillmentListing.id);
+						entries = //Collections.singletonList(new SkuInventoryEntry(null, 0));
+								FulfillmentStockManager.getStock(listing, fulfillmentListing).get();
+					}
 					System.out.println("SkuInventoryEntries: " + entries.size());
 					for(final SkuInventoryEntry entry : entries) {
 						final Pair<Integer, Double> data = skuStocks.getOrDefault(entry.sku, new Pair<>(0, 0D));
 						int currentStock = data.left;
+						System.out.println(currentStock + " += " + entry.stock);
 						currentStock += entry.stock;
 						
 						skuStocks.put(entry.sku, new Pair<>(currentStock, entry.price));
@@ -102,9 +111,12 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 					.map(entry -> new SkuInventoryEntry(entry.getKey(), entry.getValue().left, entry.getValue().right))
 					.collect(Collectors.toList());
 			
+			System.out.println("Entries size: " + entries.size());
+			
 			autoPrice(listing, entries);
 			
-			final long parsedStock = entries.stream().map(entry -> entry.stock).count();
+			final long parsedStock = entries.stream().mapToInt(entry -> entry.stock).sum();
+			System.out.println("parsedStock: " + parsedStock);
 			
 			if(listing.current_ebay_inventory > 0 && parsedStock > 0) {
 				System.out.println("eBay still has inventory - No need to update.");
@@ -116,7 +128,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			
 			if(EbayCalls.updateInventory(listing.listingId, entries)) {
 				System.out.println("successfully sent inventory update to ebay - Updating our DB with last inv update.");
-				listing.setCurrentEbayInventory(parsedStock);
+				listing.setCurrentEbayInventory(Math.min(EbayCalls.FAKE_MAX_QUANTITY, parsedStock));
 			} else {
 				System.out.println("did not send inventory update to ebay successfully - Updating our DB accordingly.");
 				listing.setCurrentEbayInventory(0);
@@ -136,7 +148,8 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 		try {
 			System.out.println("Beginning auto-pricing for listing " + listing);
 			final Pair<Double,Double> currentPriceInfo = listing.getCurrentPrice();
-			final double maxFulfillmentPrice = entries.stream().mapToDouble(entry -> entry.price).max().getAsDouble();
+			final double maxFulfillmentPrice = entries.stream().mapToDouble(entry -> entry.price).max().getAsDouble() 
+					* listing.fulfillment_quantity_multiplier;
 			
 			if(maxFulfillmentPrice <= 0) {
 				return;
