@@ -10,7 +10,6 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 
-import main.org.vikingsoftware.dropshipper.VSDropShipper;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
@@ -19,6 +18,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.Sams
 import main.org.vikingsoftware.dropshipper.core.data.misc.StateUtils;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
+import main.org.vikingsoftware.dropshipper.core.utils.SamsClubUtils;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
@@ -177,24 +177,18 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			return processedOrder;
 		}
 		placeOrderButton.click();
+		
+		Thread.sleep(2500); //inital sleep after order button
 
-		driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
 		try {
-			//print receipt element
-			final List<WebElement> detailEls = driver.findElements(By.cssSelector(".ty_or_first > .ty_or_ff_class"));
 			String orderNum = null;
-			outer:
-			for(final WebElement detailEl : detailEls) {
-				final List<WebElement> individualDetails = detailEl.findElements(By.tagName("span"));
-				boolean numFlag = false;
-				for(final WebElement detail : individualDetails) {
-					if(numFlag) {
-						orderNum = detail.getText();
-						break outer;
-					} else if(detail.getText().toLowerCase().contains("order number")) {
-						numFlag = true;
-					}
-				}
+			final long start = System.currentTimeMillis();
+			while(orderNum == null && System.currentTimeMillis() - start < 60_000) {
+				orderNum = SamsClubUtils.getOrderNumberFromPageSource(driver.getPageSource());
+			}
+			
+			if(orderNum == null) {
+				throw new OrderExecutionException("Failed to parse order num from Sams Club receipt page!");
 			}
 
 			return new ProcessedOrder.Builder()
