@@ -60,15 +60,12 @@ public class InventoryUpdater implements CycleParticipant {
 		final List<RunnableFuture<Boolean>> updates = new ArrayList<>();
 		for(final MarketplaceListing listing : listings) {
 			final AutomaticInventoryUpdater updater = inventoryUpdaters.get(listing.marketplaceId);
-			System.out.println("About to call updateInventory for marketplace listing " + listing.id);
 			updates.add(updater.updateInventory(listing));
-			System.out.println("Done with updateInventory call for marketplace listing " + listing.id);
 		}
 
 		System.out.println("Starting inventory update tasks...");
 		for(int i = 0; i < updates.size(); i++) {
 			final int index = i;
-			System.out.println("\tstarting task #" + i);
 			taskStarter.execute(() -> updates.get(index).run());
 		}
 
