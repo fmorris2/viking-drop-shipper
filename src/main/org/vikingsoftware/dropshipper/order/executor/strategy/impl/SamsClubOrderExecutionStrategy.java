@@ -184,7 +184,10 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			String orderNum = null;
 			final long start = System.currentTimeMillis();
 			while(orderNum == null && System.currentTimeMillis() - start < 60_000) {
+				System.out.println("Attempting to parse order number from page source.");
 				orderNum = SamsClubUtils.getOrderNumberFromPageSource(driver.getPageSource());
+				driver.savePageSource();
+				Thread.sleep(500);
 			}
 			
 			if(orderNum == null) {
