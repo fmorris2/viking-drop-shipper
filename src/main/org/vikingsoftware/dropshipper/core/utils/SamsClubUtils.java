@@ -6,9 +6,11 @@ import java.util.regex.Pattern;
 public final class SamsClubUtils {
 	
 	private static final String[] orderIdPatterns = {
-		"value=\"orderId=(\\d*)&",
-		".returnOrderId\" value=\"(\\d+)\"",
-		"Order Number:&nbsp;(\\d+)</h3>"
+		"orderDetailsPage.jsp?orderId=(\\d*)&amp;",
+		"orderId=(\\d*)\"></a>",
+		"'purchaseID' : '(\\d*)',",
+		"\"order_id\":\"(\\d*)\",",
+		";ord=(\\d*);gtm=",
 	};
 	
 	private SamsClubUtils() {

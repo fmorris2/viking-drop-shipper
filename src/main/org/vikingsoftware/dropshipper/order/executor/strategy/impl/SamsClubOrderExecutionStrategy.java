@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
@@ -60,6 +61,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		//click checkout
 		System.out.println("Initial details verified. Beginning checkout process... from URL " + driver.getCurrentUrl());
 		driver.findElement(By.className("js-checkout-btn")).click();
+		driver.sleep(2000);
 		enterAddress(order);
 		driver.sleep(2000);
 		return finishCheckoutProcess(order, fulfillmentListing);
@@ -186,9 +188,11 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			while(orderNum == null && System.currentTimeMillis() - start < 60_000) {
 				System.out.println("Attempting to parse order number from page source.");
 				orderNum = SamsClubUtils.getOrderNumberFromPageSource(driver.getPageSource());
-				driver.savePageSource();
+				driver.savePageSource("last-attempted-sams-club-order.html");
 				Thread.sleep(500);
 			}
+			
+			System.out.println("orderNum: " + orderNum);
 			
 			if(orderNum == null) {
 				throw new OrderExecutionException("Failed to parse order num from Sams Club receipt page!");
@@ -212,6 +216,9 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 	private void enterAddress(final CustomerOrder order) throws InterruptedException {
 		System.out.println("Clicking change address...");
+		driver.savePageSource("pre-enter-address.html");
+		driver.setImplicitWait(5);
+		System.out.println("current url: " + driver.getCurrentUrl());
 		driver.findElement(By.cssSelector(".sc-shipping-address-change > span:nth-child(1)")).click();
 		System.out.println("\tdone.");
 		System.out.println("Clicking edit on preferred address...");
@@ -278,21 +285,37 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	private boolean clearErroneousItems(final CustomerOrder order, final FulfillmentListing listing) {
 		
 		System.out.println("Clearing erroneous items from cart.");
-		final Supplier<List<WebElement>> cartItems = () -> driver.findElements(By.className("nc-v2-cart-item"));
-		System.out.println("cartItems: " + cartItems.get().size());
+		final Supplier<List<WebElement>> cartItemsSupp = () -> driver.findElements(By.className("nc-v2-cart-item"));
+		System.out.println("cartItems: " + cartItemsSupp.get().size());
 		
-		for(final WebElement item : cartItems.get()) {
-			System.out.println("Item: " + item.getAttribute("id"));
-			if(item.getAttribute("id") == null) {
-				continue;
+		List<WebElement> cartItems = cartItemsSupp.get();
+		int attempts = 0;
+		for(int i = 0; i < cartItems.size(); i++) {
+			if(attempts >= 30) {
+				break;
 			}
-			final String itemNum = item.findElement(By.cssSelector(".item_no")).getText().split(" ")[2];
-			if(!itemNum.equals(listing.item_id)) {
-				System.out.println("Removing erroneous cart item");
-				item.findElement(By.className("js_remove")).click();
-			} else if(Integer.parseInt(item.findElement(By.cssSelector(".nc-item-count")).getAttribute("value")) != order.fulfillment_purchase_quantity) {
-				System.out.println("Updating item to correct quantity...");
-				clearAndSendKeys(item.findElement(By.cssSelector(".nc-item-count")), Integer.toString(order.fulfillment_purchase_quantity));
+			attempts++;
+			try {
+				final WebElement item = cartItems.get(i);
+				System.out.println("Item: " + item.getAttribute("id"));
+				if(item.getAttribute("id") == null) {
+					continue;
+				}
+				final String itemNum = item.findElement(By.cssSelector(".item_no")).getText().split(" ")[2];
+				if(!itemNum.equals(listing.item_id)) {
+					System.out.println("Removing erroneous cart item");
+					item.findElement(By.className("js_remove")).click();
+					driver.sleep(2000); //wait for sluggish sams club to remove the item
+					i = 0;
+					cartItems = cartItemsSupp.get();
+				} else if(Integer.parseInt(item.findElement(By.cssSelector(".nc-item-count")).getAttribute("value")) != order.fulfillment_purchase_quantity) {
+					System.out.println("Updating item to correct quantity...");
+					clearAndSendKeys(item.findElement(By.cssSelector(".nc-item-count")), Integer.toString(order.fulfillment_purchase_quantity));
+				}
+			} catch(final StaleElementReferenceException e) {
+				System.out.println("Stale element detected - Refreshing cart items collection...");
+				i = 0;
+				cartItems = cartItemsSupp.get();
 			}
 		}
 		

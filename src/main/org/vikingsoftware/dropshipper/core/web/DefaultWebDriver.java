@@ -36,7 +36,11 @@ public class DefaultWebDriver extends JBrowserDriver {
 	}
 	
 	public void savePageSource() {
-		try(final FileWriter fW = new FileWriter("current-page-source");
+		savePageSource("current-page-source");
+	}
+	
+	public void savePageSource(final String str) {
+		try(final FileWriter fW = new FileWriter(str);
 				final BufferedWriter bW = new BufferedWriter(fW);) {
 			bW.write(getPageSource());
 		} catch(final Exception e) {}
