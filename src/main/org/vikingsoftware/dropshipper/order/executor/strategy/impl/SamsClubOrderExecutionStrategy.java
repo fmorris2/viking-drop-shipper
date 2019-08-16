@@ -1,5 +1,6 @@
 package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl;
 
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -8,6 +9,7 @@ import java.util.function.Supplier;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.OutputType;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 
@@ -43,7 +45,9 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		verifyListingTitle(fulfillmentListing);
 		System.out.println("\tverified.");
 		
+		System.out.println("Finding orderOnlineBox...");
 		final WebElement orderOnlineBox = driver.findElement(By.cssSelector("div.sc-action-buttons div.sc-cart-qty-button.online"));
+		System.out.println("\tfound.");
 		clickShipThisItem(orderOnlineBox);
 		driver.sleep(2000); //wait for SLUGGISH sams club to actually add it to the cart
 	
@@ -60,8 +64,10 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 		//click checkout
 		System.out.println("Initial details verified. Beginning checkout process... from URL " + driver.getCurrentUrl());
-		driver.findElement(By.className("js-checkout-btn")).click();
-		driver.sleep(2000);
+		driver.screenshot("cart-pre-checkout.png");
+		driver.findElement(By.cssSelector(".summary .continue-btn .js-checkout-btn"));
+		driver.js("document.querySelector(\".summary .continue-btn .js-checkout-btn\").click();");
+		driver.screenshot("enter-address-page.png");
 		enterAddress(order);
 		driver.sleep(2000);
 		return finishCheckoutProcess(order, fulfillmentListing);
@@ -219,10 +225,12 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		driver.savePageSource("pre-enter-address.html");
 		driver.setImplicitWait(5);
 		System.out.println("current url: " + driver.getCurrentUrl());
-		driver.findElement(By.cssSelector(".sc-shipping-address-change > span:nth-child(1)")).click();
+		driver.findElement(By.cssSelector(".sc-shipping-address-change > span:nth-child(1)"));
+		driver.js("document.querySelector(\".sc-shipping-address-change > span:nth-child(1)\").click();");
 		System.out.println("\tdone.");
 		System.out.println("Clicking edit on preferred address...");
-		driver.findElement(By.cssSelector("button.sc-address-card-edit-action:nth-child(1) > span:nth-child(1)")).click();
+		driver.findElement(By.cssSelector("button.sc-address-card-edit-action:nth-child(1) > span:nth-child(1)"));
+		driver.js("document.querySelector(\"button.sc-address-card-edit-action:nth-child(1) > span:nth-child(1)\").click();");
 		System.out.println("\tdone.");
 		
 		driver.sleep(3000);
@@ -254,9 +262,8 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"phone\"]")), FAKE_PHONE_NUMBER);
 
 		System.out.println("Clicking save...");
-		final WebElement saveButton = driver.findElement(By.cssSelector(".sc-address-form-action-buttons > button:nth-child(2)"));
-		driver.scrollIntoView(saveButton);
-		saveButton.click();
+		driver.findElement(By.cssSelector(".sc-address-form-action-buttons > button:nth-child(2)"));
+		driver.js("document.querySelector(\".sc-address-form-action-buttons > button:nth-child(2)\").click();");
 		System.out.println("\tAddress has been saved.");
 	}
 
@@ -275,7 +282,9 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	}
 
 	private void clickShipThisItem(final WebElement orderOnlineBox) {
+		System.out.println("Clicking ship this item...");
 		orderOnlineBox.findElement(By.className("sc-btn-primary")).click();
+		System.out.println("\tdone.");
 	}
 
 	private void navigateToCart() {
@@ -302,8 +311,10 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 					continue;
 				}
 				final String itemNum = item.findElement(By.cssSelector(".item_no")).getText().split(" ")[2];
+				System.out.println("itemNum: " + itemNum + ", listing.item_id: " + listing.item_id);
 				if(!itemNum.equals(listing.item_id)) {
-					System.out.println("Removing erroneous cart item");
+					System.out.println("Removing erroneous cart item on page " + driver.getCurrentUrl());
+					driver.screenshot("remove_cart_item.png");
 					item.findElement(By.className("js_remove")).click();
 					driver.sleep(2000); //wait for sluggish sams club to remove the item
 					i = 0;

@@ -1,14 +1,19 @@
 package main.org.vikingsoftware.dropshipper.core.web;
 
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 
 import com.machinepublishers.jbrowserdriver.JBrowserDriver;
@@ -94,6 +99,49 @@ public class DefaultWebDriver extends JBrowserDriver {
 		}
 
 		return null;
+	}
+	
+	public void screenshot(final String filePath) {
+		final OutputType<File> output = new OutputType<File>() {
+		    @Override
+		    public File convertFromBase64Png(String base64Png) {
+		      return save(BYTES.convertFromBase64Png(base64Png));
+		    }
+
+		    @Override
+		    public File convertFromPngBytes(byte[] data) {
+		      return save(data);
+		    }
+
+		    private File save(byte[] data) {
+		      OutputStream stream = null;
+
+		      try {
+		        File tmpFile = new File(filePath);
+
+		        stream = new FileOutputStream(tmpFile);
+		        stream.write(data);
+
+		        return tmpFile;
+		      } catch (IOException e) {
+		        throw new WebDriverException(e);
+		      } finally {
+		        if (stream != null) {
+		          try {
+		            stream.close();
+		          } catch (IOException e) {
+		            // Nothing sane to do
+		          }
+		        }
+		      }
+		    }
+
+		    public String toString() {
+		      return "OutputType.FILE";
+		    }
+		  };
+		  
+		  getScreenshotAs(output);
 	}
 
 	public void sendKeysSlowly(final WebElement el, final String keys) throws InterruptedException {
