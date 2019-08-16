@@ -1,6 +1,5 @@
 package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl;
 
-import java.io.File;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -9,7 +8,6 @@ import java.util.function.Supplier;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.OutputType;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 
