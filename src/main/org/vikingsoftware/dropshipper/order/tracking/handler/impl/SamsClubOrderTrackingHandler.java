@@ -20,7 +20,7 @@ import main.org.vikingsoftware.dropshipper.order.tracking.handler.AbstractOrderT
 public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<SamsClubWebDriver> {
 
 	private static final String BASE_ORDER_DETAILS_URL = "https://www.samsclub.com/order/details/";
-	private static final String TRACKING_NUM_PATTERN_STR = "tracking.+=(\\d+)";
+	private static final String TRACKING_NUM_PATTERN_STR = "tracking.+=(.+)";
 	private static final Pattern TRACKING_NUM_PATTERN = Pattern.compile(TRACKING_NUM_PATTERN_STR);
 
 	@Override
@@ -46,11 +46,15 @@ public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<S
 
 		String trackingNum = null;
 		if(trackingNumEl != null) {
-			final Matcher matcher = TRACKING_NUM_PATTERN.matcher(trackingNumEl.getAttribute("href"));
+			final String href = trackingNumEl.getAttribute("href");
+			final Matcher matcher = TRACKING_NUM_PATTERN.matcher(href);
+			System.out.println("href found by regex: " + href);
 			if(matcher.find()) {
 				trackingNum = matcher.group(1);
 			}
-		} else {
+		}
+		
+		if(trackingNum == null) {
 			throw new RuntimeException("Could not parse tracking number from page for order " + order.id);
 		}
 
