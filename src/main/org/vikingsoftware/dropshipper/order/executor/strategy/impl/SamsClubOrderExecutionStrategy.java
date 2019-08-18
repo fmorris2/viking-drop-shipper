@@ -30,6 +30,8 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.AbstractOrder
 public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrategy<SamsClubWebDriver> {
 
 	private static final String FAKE_PHONE_NUMBER = "(916) 245-0125";
+	private static final int ADDRESS_CHARACTER_LIMIT = 36;
+	
 	@Override
 	protected ProcessedOrder executeOrderImpl(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws Exception {
 		return orderItem(order, fulfillmentListing);
@@ -121,14 +123,23 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			throw new OrderExecutionException("Confirmation screen details does not contain buyer name: " + detailsStr + " != " + order.buyer_name.toLowerCase());
 		}
 
-		if(!detailsStr.contains(order.buyer_street_address.toLowerCase())) {
+		final String truncatedAdd = order.buyer_street_address.length() > ADDRESS_CHARACTER_LIMIT 
+				? order.buyer_street_address.substring(0, 36)
+				: order.buyer_street_address;
+				
+		if(!detailsStr.contains(truncatedAdd.toLowerCase())) {
 			throw new OrderExecutionException("Confirmation screen street address != order street address: "
-					+ detailsStr + " != " + order.buyer_street_address);
+					+ detailsStr + " != " + truncatedAdd);
 		}
 
-		if(order.buyer_apt_suite_unit_etc != null && !detailsStr.contains(order.buyer_apt_suite_unit_etc.toLowerCase())) {
+		final String truncatedAdd2 = order.buyer_apt_suite_unit_etc != null 
+				&& order.buyer_apt_suite_unit_etc.length() > ADDRESS_CHARACTER_LIMIT
+				? order.buyer_apt_suite_unit_etc.substring(0, 36)
+				: order.buyer_apt_suite_unit_etc;
+				
+		if(truncatedAdd2 != null && !detailsStr.contains(truncatedAdd2.toLowerCase())) {
 			throw new OrderExecutionException("Confirmation screen apt / suite / unit / etc does not match: "
-					+ detailsStr + " != " + order.buyer_apt_suite_unit_etc);
+					+ detailsStr + " != " + truncatedAdd2);
 		}
 
 		//verify pricing again...
