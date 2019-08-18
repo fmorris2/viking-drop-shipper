@@ -124,7 +124,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		}
 
 		final String truncatedAdd = order.buyer_street_address.length() > ADDRESS_CHARACTER_LIMIT 
-				? order.buyer_street_address.substring(0, 36)
+				? order.buyer_street_address.substring(0, ADDRESS_CHARACTER_LIMIT)
 				: order.buyer_street_address;
 				
 		if(!detailsStr.contains(truncatedAdd.toLowerCase())) {
@@ -134,7 +134,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 		final String truncatedAdd2 = order.buyer_apt_suite_unit_etc != null 
 				&& order.buyer_apt_suite_unit_etc.length() > ADDRESS_CHARACTER_LIMIT
-				? order.buyer_apt_suite_unit_etc.substring(0, 36)
+				? order.buyer_apt_suite_unit_etc.substring(0, ADDRESS_CHARACTER_LIMIT)
 				: order.buyer_apt_suite_unit_etc;
 				
 		if(truncatedAdd2 != null && !detailsStr.contains(truncatedAdd2.toLowerCase())) {
