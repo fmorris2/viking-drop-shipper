@@ -30,7 +30,7 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.AbstractOrder
 public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrategy<SamsClubWebDriver> {
 
 	private static final String FAKE_PHONE_NUMBER = "(916) 245-0125";
-	private static final int ADDRESS_CHARACTER_LIMIT = 36;
+	private static final int ADDRESS_CHARACTER_LIMIT = 35;
 	
 	@Override
 	protected ProcessedOrder executeOrderImpl(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws Exception {
