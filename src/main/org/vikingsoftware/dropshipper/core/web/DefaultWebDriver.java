@@ -40,6 +40,27 @@ public class DefaultWebDriver extends JBrowserDriver {
 			.connectTimeout(DEFAULT_TIMEOUT_MS);
 	}
 	
+	@Override
+	public String getPageSource() {
+		final long start = System.currentTimeMillis();
+		String source = null;
+		while(source == null && System.currentTimeMillis() - start < 10_000) {
+			try {
+				source = super.getPageSource();
+			} catch(final Exception e) {
+				//swallow exception
+			}
+			
+			sleep(10);
+		}
+		
+		if(source == null) {
+			throw new RuntimeException("Failed to get page source");
+		}
+		
+		return source;
+	}
+	
 	public void savePageSource() {
 		savePageSource("current-page-source");
 	}
