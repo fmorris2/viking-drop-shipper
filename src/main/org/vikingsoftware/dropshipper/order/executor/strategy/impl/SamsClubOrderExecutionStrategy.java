@@ -163,7 +163,8 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 	private ProcessedOrder finalizeOrder(final CustomerOrder order, final FulfillmentListing listing, final double price) throws InterruptedException {
 
-		final WebElement placeOrderButton = driver.findElement(By.cssSelector(".sc-btn-primary")).findElement(By.tagName("span"));
+		final String placeOrderButtonSelector = ".sc-checkout-main .sc-btn-primary > span";
+		driver.findElement(By.cssSelector(placeOrderButtonSelector));
 
 		final WebElement orderSummary = driver.findElement(By.cssSelector(".sc-order-summary > .sc-channel-summary"));
 		final List<WebElement> tableRows = orderSummary.findElement(By.tagName("table")).findElements(By.tagName("tr"));
@@ -193,7 +194,8 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			System.out.println("TEST MODE - SUCCESS!");
 			return processedOrder;
 		}
-		placeOrderButton.click();
+		
+		driver.js("document.querySelector(\""+placeOrderButtonSelector+"\").click();");
 		
 		Thread.sleep(2500); //inital sleep after order button
 
