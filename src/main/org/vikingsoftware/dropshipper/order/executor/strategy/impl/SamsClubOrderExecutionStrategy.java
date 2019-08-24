@@ -8,9 +8,9 @@ import java.util.function.Supplier;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 
-import main.org.vikingsoftware.dropshipper.VSDropShipper;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
@@ -19,6 +19,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.Sams
 import main.org.vikingsoftware.dropshipper.core.data.misc.StateUtils;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
+import main.org.vikingsoftware.dropshipper.core.utils.SamsClubUtils;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
@@ -29,6 +30,8 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.AbstractOrder
 public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrategy<SamsClubWebDriver> {
 
 	private static final String FAKE_PHONE_NUMBER = "(916) 245-0125";
+	private static final int ADDRESS_CHARACTER_LIMIT = 35;
+	
 	@Override
 	protected ProcessedOrder executeOrderImpl(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws Exception {
 		return orderItem(order, fulfillmentListing);
@@ -42,7 +45,9 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		verifyListingTitle(fulfillmentListing);
 		System.out.println("\tverified.");
 		
+		System.out.println("Finding orderOnlineBox...");
 		final WebElement orderOnlineBox = driver.findElement(By.cssSelector("div.sc-action-buttons div.sc-cart-qty-button.online"));
+		System.out.println("\tfound.");
 		clickShipThisItem(orderOnlineBox);
 		driver.sleep(2000); //wait for SLUGGISH sams club to actually add it to the cart
 	
@@ -59,7 +64,10 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 		//click checkout
 		System.out.println("Initial details verified. Beginning checkout process... from URL " + driver.getCurrentUrl());
-		driver.findElement(By.className("js-checkout-btn")).click();
+		driver.screenshot("cart-pre-checkout.png");
+		driver.findElement(By.cssSelector(".summary .continue-btn .js-checkout-btn"));
+		driver.js("document.querySelector(\".summary .continue-btn .js-checkout-btn\").click();");
+		driver.screenshot("enter-address-page.png");
 		enterAddress(order);
 		driver.sleep(2000);
 		return finishCheckoutProcess(order, fulfillmentListing);
@@ -115,14 +123,23 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			throw new OrderExecutionException("Confirmation screen details does not contain buyer name: " + detailsStr + " != " + order.buyer_name.toLowerCase());
 		}
 
-		if(!detailsStr.contains(order.buyer_street_address.toLowerCase())) {
+		final String truncatedAdd = order.buyer_street_address.length() > ADDRESS_CHARACTER_LIMIT 
+				? order.buyer_street_address.substring(0, ADDRESS_CHARACTER_LIMIT)
+				: order.buyer_street_address;
+				
+		if(!detailsStr.contains(truncatedAdd.toLowerCase())) {
 			throw new OrderExecutionException("Confirmation screen street address != order street address: "
-					+ detailsStr + " != " + order.buyer_street_address);
+					+ detailsStr + " != " + truncatedAdd);
 		}
 
-		if(order.buyer_apt_suite_unit_etc != null && !detailsStr.contains(order.buyer_apt_suite_unit_etc.toLowerCase())) {
+		final String truncatedAdd2 = order.buyer_apt_suite_unit_etc != null 
+				&& order.buyer_apt_suite_unit_etc.length() > ADDRESS_CHARACTER_LIMIT
+				? order.buyer_apt_suite_unit_etc.substring(0, ADDRESS_CHARACTER_LIMIT)
+				: order.buyer_apt_suite_unit_etc;
+				
+		if(truncatedAdd2 != null && !detailsStr.contains(truncatedAdd2.toLowerCase())) {
 			throw new OrderExecutionException("Confirmation screen apt / suite / unit / etc does not match: "
-					+ detailsStr + " != " + order.buyer_apt_suite_unit_etc);
+					+ detailsStr + " != " + truncatedAdd2);
 		}
 
 		//verify pricing again...
@@ -146,7 +163,8 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 	private ProcessedOrder finalizeOrder(final CustomerOrder order, final FulfillmentListing listing, final double price) throws InterruptedException {
 
-		final WebElement placeOrderButton = driver.findElement(By.cssSelector(".sc-btn-primary")).findElement(By.tagName("span"));
+		final String placeOrderButtonSelector = ".sc-checkout-main .sc-btn-primary > span";
+		driver.findElement(By.cssSelector(placeOrderButtonSelector));
 
 		final WebElement orderSummary = driver.findElement(By.cssSelector(".sc-order-summary > .sc-channel-summary"));
 		final List<WebElement> tableRows = orderSummary.findElement(By.tagName("table")).findElements(By.tagName("tr"));
@@ -176,25 +194,25 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			System.out.println("TEST MODE - SUCCESS!");
 			return processedOrder;
 		}
-		placeOrderButton.click();
+		
+		driver.js("document.querySelector(\""+placeOrderButtonSelector+"\").click();");
+		
+		Thread.sleep(2500); //inital sleep after order button
 
-		driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
 		try {
-			//print receipt element
-			final List<WebElement> detailEls = driver.findElements(By.cssSelector(".ty_or_first > .ty_or_ff_class"));
 			String orderNum = null;
-			outer:
-			for(final WebElement detailEl : detailEls) {
-				final List<WebElement> individualDetails = detailEl.findElements(By.tagName("span"));
-				boolean numFlag = false;
-				for(final WebElement detail : individualDetails) {
-					if(numFlag) {
-						orderNum = detail.getText();
-						break outer;
-					} else if(detail.getText().toLowerCase().contains("order number")) {
-						numFlag = true;
-					}
-				}
+			final long start = System.currentTimeMillis();
+			while(orderNum == null && System.currentTimeMillis() - start < 60_000) {
+				System.out.println("Attempting to parse order number from page source.");
+				orderNum = SamsClubUtils.getOrderNumberFromPageSource(driver.getPageSource());
+				driver.savePageSource("last-attempted-sams-club-order.html");
+				Thread.sleep(500);
+			}
+			
+			System.out.println("orderNum: " + orderNum);
+			
+			if(orderNum == null) {
+				throw new OrderExecutionException("Failed to parse order num from Sams Club receipt page!");
 			}
 
 			return new ProcessedOrder.Builder()
@@ -215,10 +233,15 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 	private void enterAddress(final CustomerOrder order) throws InterruptedException {
 		System.out.println("Clicking change address...");
-		driver.findElement(By.cssSelector(".sc-shipping-address-change > span:nth-child(1)")).click();
+		driver.savePageSource("pre-enter-address.html");
+		driver.setImplicitWait(5);
+		System.out.println("current url: " + driver.getCurrentUrl());
+		driver.findElement(By.cssSelector(".sc-shipping-address-change > span:nth-child(1)"));
+		driver.js("document.querySelector(\".sc-shipping-address-change > span:nth-child(1)\").click();");
 		System.out.println("\tdone.");
 		System.out.println("Clicking edit on preferred address...");
-		driver.findElement(By.cssSelector("button.sc-address-card-edit-action:nth-child(1) > span:nth-child(1)")).click();
+		driver.findElement(By.cssSelector("button.sc-address-card-edit-action:nth-child(1) > span:nth-child(1)"));
+		driver.js("document.querySelector(\"button.sc-address-card-edit-action:nth-child(1) > span:nth-child(1)\").click();");
 		System.out.println("\tdone.");
 		
 		driver.sleep(3000);
@@ -250,9 +273,8 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"phone\"]")), FAKE_PHONE_NUMBER);
 
 		System.out.println("Clicking save...");
-		final WebElement saveButton = driver.findElement(By.cssSelector(".sc-address-form-action-buttons > button:nth-child(2)"));
-		driver.scrollIntoView(saveButton);
-		saveButton.click();
+		driver.findElement(By.cssSelector(".sc-address-form-action-buttons > button:nth-child(2)"));
+		driver.js("document.querySelector(\".sc-address-form-action-buttons > button:nth-child(2)\").click();");
 		System.out.println("\tAddress has been saved.");
 	}
 
@@ -271,7 +293,9 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	}
 
 	private void clickShipThisItem(final WebElement orderOnlineBox) {
+		System.out.println("Clicking ship this item...");
 		orderOnlineBox.findElement(By.className("sc-btn-primary")).click();
+		System.out.println("\tdone.");
 	}
 
 	private void navigateToCart() {
@@ -281,21 +305,39 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	private boolean clearErroneousItems(final CustomerOrder order, final FulfillmentListing listing) {
 		
 		System.out.println("Clearing erroneous items from cart.");
-		final Supplier<List<WebElement>> cartItems = () -> driver.findElements(By.className("nc-v2-cart-item"));
-		System.out.println("cartItems: " + cartItems.get().size());
+		final Supplier<List<WebElement>> cartItemsSupp = () -> driver.findElements(By.className("nc-v2-cart-item"));
+		System.out.println("cartItems: " + cartItemsSupp.get().size());
 		
-		for(final WebElement item : cartItems.get()) {
-			System.out.println("Item: " + item.getAttribute("id"));
-			if(item.getAttribute("id") == null) {
-				continue;
+		List<WebElement> cartItems = cartItemsSupp.get();
+		int attempts = 0;
+		for(int i = 0; i < cartItems.size(); i++) {
+			if(attempts >= 30) {
+				break;
 			}
-			final String itemNum = item.findElement(By.cssSelector(".item_no")).getText().split(" ")[2];
-			if(!itemNum.equals(listing.item_id)) {
-				System.out.println("Removing erroneous cart item");
-				item.findElement(By.className("js_remove")).click();
-			} else if(Integer.parseInt(item.findElement(By.cssSelector(".nc-item-count")).getAttribute("value")) != order.fulfillment_purchase_quantity) {
-				System.out.println("Updating item to correct quantity...");
-				clearAndSendKeys(item.findElement(By.cssSelector(".nc-item-count")), Integer.toString(order.fulfillment_purchase_quantity));
+			attempts++;
+			try {
+				final WebElement item = cartItems.get(i);
+				System.out.println("Item: " + item.getAttribute("id"));
+				if(item.getAttribute("id") == null) {
+					continue;
+				}
+				final String itemNum = item.findElement(By.cssSelector(".item_no")).getText().split(" ")[2];
+				System.out.println("itemNum: " + itemNum + ", listing.item_id: " + listing.item_id);
+				if(!itemNum.equals(listing.item_id)) {
+					System.out.println("Removing erroneous cart item on page " + driver.getCurrentUrl());
+					driver.screenshot("remove_cart_item.png");
+					item.findElement(By.className("js_remove")).click();
+					driver.sleep(2000); //wait for sluggish sams club to remove the item
+					i = 0;
+					cartItems = cartItemsSupp.get();
+				} else if(Integer.parseInt(item.findElement(By.cssSelector(".nc-item-count")).getAttribute("value")) != order.fulfillment_purchase_quantity) {
+					System.out.println("Updating item to correct quantity...");
+					clearAndSendKeys(item.findElement(By.cssSelector(".nc-item-count")), Integer.toString(order.fulfillment_purchase_quantity));
+				}
+			} catch(final StaleElementReferenceException e) {
+				System.out.println("Stale element detected - Refreshing cart items collection...");
+				i = 0;
+				cartItems = cartItemsSupp.get();
 			}
 		}
 		

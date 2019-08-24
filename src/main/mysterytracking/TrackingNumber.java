@@ -12,6 +12,7 @@ public class TrackingNumber {
 	}
 
 	public static TrackingNumber parse(String trackingNumber) {
+		System.out.println("TrackingNumber#parse("+trackingNumber+")");
 		final List<CourierBase> couriers = TrackingNumberParser.parse(trackingNumber);
 		if (couriers.isEmpty()) {
 			return new TrackingNumber(trackingNumber, new UnrecognizedCourier());
