@@ -214,7 +214,7 @@ public class EbayCalls {
 		MarketplaceLoader.loadMarketplaces();
 		final Set<MarketplaceListing> listings = Marketplaces.EBAY.getMarketplace().getMarketplaceListings();
 		for(final MarketplaceListing listing : listings) {
-			updateHandlingTime(listing.listingId, 3);
+			updateHandlingTime(listing.listingId, 4);
 		}
 	}
 	
@@ -301,7 +301,7 @@ public class EbayCalls {
 		item.setCountry(CountryCodeType.US);
 		item.setCurrency(CurrencyCodeType.USD);
 		item.setDescription(listing.description);
-		item.setDispatchTimeMax(2);
+		item.setDispatchTimeMax(4);
 		item.setListingDuration(ListingDurationCodeType.GTC.value());
 		item.setListingType(ListingTypeCodeType.FIXED_PRICE_ITEM);
 		item.setLocation("St. Louis, MO");
