@@ -22,7 +22,7 @@ public final class SamsClubMetaDataParser {
 	private static final String INVALID_IMAGE_URL = "https://scene7.samsclub.com/is/image/samsclub/fgsdfgsdgfsdgds";
 	private static final BufferedImage notFoundImage = ImageUtils.getImageFromUrl(INVALID_IMAGE_URL);
 	
-	private static final JsonParser parser = new JsonParser();
+	private final JsonParser parser = new JsonParser();
 	
 	private JsonObject metaData;
 	private JsonObject internalProduct;

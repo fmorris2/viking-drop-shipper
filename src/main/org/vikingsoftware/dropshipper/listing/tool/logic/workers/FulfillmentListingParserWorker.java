@@ -106,8 +106,12 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 			System.out.println("Attempting to parse listing for " + url);
 			final Listing listing = FulfillmentParsingManager.parseListing(url);
 			if(listing != null) {
-				System.out.println("Adding completed listing: " + listing);
-				completedListings.add(listing);
+				if(listing.title != null && listing.title.toLowerCase().contains("gift card")) {
+					System.out.println("Gift card detected... Skipping...");
+				} else {
+					System.out.println("Adding completed listing: " + listing);
+					completedListings.add(listing);
+				}
 			}
 		} catch(final Exception e) {
 			e.printStackTrace();

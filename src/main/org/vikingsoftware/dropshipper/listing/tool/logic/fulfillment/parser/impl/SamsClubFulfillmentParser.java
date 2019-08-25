@@ -15,8 +15,6 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.AbstractFulfillmentParser;
 
 public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClubWebDriver> {
-	
-	private final SamsClubMetaDataParser metaDataParser = new SamsClubMetaDataParser();
 
 	@Override
 	public Class<SamsClubDriverSupplier> getDriverSupplierClass() {
@@ -31,6 +29,7 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 	@Override
 	protected Listing parseListing(final String url) {
 		try {
+			final SamsClubMetaDataParser metaDataParser = new SamsClubMetaDataParser();
 			final Listing listing = new Listing();
 			listing.fulfillmentPlatformId = FulfillmentPlatforms.SAMS_CLUB.getId();
 			listing.shippingService = ShippingServiceCodeType.SHIPPING_METHOD_STANDARD;
