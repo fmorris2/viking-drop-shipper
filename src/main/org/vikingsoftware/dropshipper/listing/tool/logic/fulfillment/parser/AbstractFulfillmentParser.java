@@ -2,8 +2,6 @@ package main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parse
 
 import javax.swing.SwingUtilities;
 
-import org.openqa.selenium.TimeoutException;
-
 import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
@@ -15,14 +13,20 @@ public abstract class AbstractFulfillmentParser<T extends LoginWebDriver> implem
 
 	protected T driver;
 
-	protected abstract Listing parseListing();
+	protected abstract Listing parseListing(final String url);
 
 	@Override
 	public Listing getListingTemplate(final FulfillmentAccount account, final String url) {
+		final Class<?> driverSupplierClass = getDriverSupplierClass();
+		
+		if(driverSupplierClass == null) {
+			return handleParsing(url);
+		}
+		
 		DriverSupplier<T> supplier = null;
 
 		try {
-			supplier = BrowserRepository.get().request(getDriverSupplierClass());
+			supplier = BrowserRepository.get().request(driverSupplierClass);
 			driver = supplier.get();
 			SwingUtilities.invokeLater(() -> ListingToolGUI.get().statusTextValue.setText("Preparing web driver"));
 			if(!needsToLogin() || driver.getReady(account)) {
@@ -30,11 +34,7 @@ public abstract class AbstractFulfillmentParser<T extends LoginWebDriver> implem
 				SwingUtilities.invokeLater(() -> ListingToolGUI.get().statusTextValue.setText("Loading Fulfillment Listing URL"));
 				driver.get(url);
 				System.out.println("About to parse listing in AbstractFulfillmentParser");
-				final Listing listing = parseListing();
-				if(listing != null) {
-					listing.url = url;
-					return listing;
-				}
+				return handleParsing(url);
 			}
 		} catch(final Exception e) {
 			supplier = null;
@@ -46,6 +46,16 @@ public abstract class AbstractFulfillmentParser<T extends LoginWebDriver> implem
 				BrowserRepository.get().replace(this.getDriverSupplierClass());
 			}
 		}
+		return null;
+	}
+	
+	private Listing handleParsing(final String url) {
+		final Listing listing = parseListing(url);
+		if(listing != null) {
+			listing.url = url;
+			return listing;
+		}
+		
 		return null;
 	}
 

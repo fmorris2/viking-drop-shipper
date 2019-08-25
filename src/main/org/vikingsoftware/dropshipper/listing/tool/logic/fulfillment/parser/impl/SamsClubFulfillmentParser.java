@@ -2,6 +2,8 @@ package main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parse
 
 import java.util.Collections;
 
+import org.jsoup.Jsoup;
+
 import com.ebay.soap.eBLBaseComponents.ShippingServiceCodeType;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
@@ -18,7 +20,7 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 
 	@Override
 	public Class<SamsClubDriverSupplier> getDriverSupplierClass() {
-		return SamsClubDriverSupplier.class;
+		return null;
 	}
 
 	@Override
@@ -27,13 +29,13 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 	}
 
 	@Override
-	protected Listing parseListing() {
+	protected Listing parseListing(final String url) {
 		try {
 			final Listing listing = new Listing();
 			listing.fulfillmentPlatformId = FulfillmentPlatforms.SAMS_CLUB.getId();
 			listing.shippingService = ShippingServiceCodeType.SHIPPING_METHOD_STANDARD;
 			
-			final String pageSource = driver.getPageSource();
+			final String pageSource = Jsoup.connect(url).get().html();
 			metaDataParser.parse(pageSource);
 			
 			if(metaDataParser.hasVariations()) {

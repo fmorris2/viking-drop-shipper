@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
@@ -86,7 +87,8 @@ public final class SamsClubMetaDataParser {
 	}
 	
 	public String getBrand() {
-		return internalProduct.get("brandName").getAsString();
+		final JsonElement brand = internalProduct.get("brandName");
+		return brand == null ? "Unbranded" : brand.getAsString();
 	}
 	
 	public boolean isAvailableOnline() {
