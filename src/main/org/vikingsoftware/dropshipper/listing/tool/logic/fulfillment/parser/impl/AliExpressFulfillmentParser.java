@@ -36,7 +36,7 @@ public class AliExpressFulfillmentParser extends AbstractFulfillmentParser<AliEx
 	private final Set<PropertyItemOption> currentlySelectedOptions = new HashSet<>();
 
 	@Override
-	protected Listing parseListing() {
+	protected Listing parseListing(final String url) {
 		try {
 			final Listing listing = new Listing();
 			listing.fulfillmentPlatformId = FulfillmentPlatforms.ALI_EXPRESS.getId();

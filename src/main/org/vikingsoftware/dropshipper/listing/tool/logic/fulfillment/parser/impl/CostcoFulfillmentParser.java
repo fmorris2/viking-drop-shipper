@@ -32,7 +32,7 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser
 public class CostcoFulfillmentParser extends AbstractFulfillmentParser<CostcoWebDriver> {
 
 	@Override
-	public Listing parseListing() {
+	public Listing parseListing(final String url) {
 		try {
 			final Listing listing = new Listing();
 			listing.fulfillmentPlatformId = FulfillmentPlatforms.COSTCO.getId();
