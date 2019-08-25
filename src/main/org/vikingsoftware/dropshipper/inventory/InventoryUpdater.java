@@ -19,24 +19,32 @@ import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 public class InventoryUpdater implements CycleParticipant {
 
 	private static final int TASK_STARTER_THREADS = 5;
+	private static final long CYCLE_TIME = 60_000 * 20; //20 minutes so we don't DDOS our Fulfillment Platforms
 
 	//marketplace id ==> inventory updater
 	private final Map<Integer, AutomaticInventoryUpdater> inventoryUpdaters = new HashMap<>();
 	private final ExecutorService taskStarter = Executors.newFixedThreadPool(TASK_STARTER_THREADS);
 
 	private List<MarketplaceListing> listings;
+	private long lastCycle = 0;
 	
 	@Override
 	public void cycle() {
-		MarketplaceLoader.loadMarketplaces();
-		SkuMappingManager.load();
-		populateInventoryUpdaters();
-		if(!setupInventoryUpdaters()) {
-			return;
+		if(System.currentTimeMillis() - lastCycle > CYCLE_TIME) {
+			lastCycle = System.currentTimeMillis();
+			MarketplaceLoader.loadMarketplaces();
+			SkuMappingManager.load();
+			populateInventoryUpdaters();
+			if(!setupInventoryUpdaters()) {
+				return;
+			}
+			FulfillmentManager.get().load();
+			listings = generateListings();
+			updateListings();
+		} else {
+			final double cooldownPeriod = (CYCLE_TIME - (System.currentTimeMillis() - lastCycle)) / 60_000;
+			System.out.println("Inventory updater is on cooldown for another " + cooldownPeriod + " minutes."); 
 		}
-		FulfillmentManager.get().load();
-		listings = generateListings();
-		updateListings();
 	}
 
 	private void populateInventoryUpdaters() {
