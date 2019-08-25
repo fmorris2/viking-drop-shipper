@@ -39,7 +39,6 @@ public class OrderExecutor implements CycleParticipant {
 			return;
 		}
 
-		final List<ProcessedOrder> successfulOrders = new ArrayList<>();
 		final List<ProcessedOrder> failedOrders = new ArrayList<>();
 		final FulfillmentManager manager = FulfillmentManager.get();
 		try {
@@ -66,7 +65,7 @@ public class OrderExecutor implements CycleParticipant {
 						failedOrders.add(processedOrder);
 					} else {
 						System.out.println("Successful order from " + FulfillmentPlatforms.getById(listing.fulfillment_platform_id) + "!");
-						successfulOrders.add(processedOrder);
+						insertSuccessfulOrderIntoDB(processedOrder);
 						break;
 					}
 				}
@@ -74,7 +73,10 @@ public class OrderExecutor implements CycleParticipant {
 	
 			//save to DB
 			System.out.println("Saving successful orders to DB");
-			insertSuccessfulOrdersIntoDB(successfulOrders);
+			for(final ProcessedOrder order : successfullyFulfilledOrders.values()) {
+				System.out.println("Retry for insertion of processed order...");
+				insertSuccessfulOrderIntoDB(order);
+			}
 	
 			System.out.println("Saving failed orders to DB");
 			insertFailedOrdersIntoDB(failedOrders);
@@ -83,42 +85,35 @@ public class OrderExecutor implements CycleParticipant {
 		}
 	}
 
-	private void insertSuccessfulOrdersIntoDB(final Collection<ProcessedOrder> successfulOrders) {
+	private void insertSuccessfulOrderIntoDB(final ProcessedOrder order) {
 		//store all new orders in DB
 		final String sql = "INSERT INTO processed_orders(customer_order_id, fulfillment_listing_id, "
 				+ "fulfillment_account_id, fulfillment_transaction_id,"
 				+ "buy_subtotal, buy_sales_tax, buy_shipping, buy_product_fees, buy_total, profit) VALUES(?,?,?,?,?,?,?,?,?,?)";
 
 		final PreparedStatement prepared = VSDSDBManager.get().createPreparedStatement(sql);
-		final Statement deleteBatch = VSDSDBManager.get().createStatement();
-		successfulOrders.addAll(successfullyFulfilledOrders.values());
+		final Statement deleteSt = VSDSDBManager.get().createStatement();
 		try {
-			for(final ProcessedOrder order : successfulOrders) {
-				prepared.setInt(1, order.customer_order_id);
-				prepared.setInt(2, order.fulfillment_listing_id);
-				prepared.setInt(3, order.fulfillment_account_id);
-				prepared.setString(4, order.fulfillment_transaction_id);
-				prepared.setDouble(5, order.buy_subtotal);
-				prepared.setDouble(6, order.buy_sales_tax);
-				prepared.setDouble(7, order.buy_shipping);
-				prepared.setDouble(8, order.buy_product_fees);
-				prepared.setDouble(9, order.buy_total);
-				prepared.setDouble(10, order.profit);
-				prepared.addBatch();
+			prepared.setInt(1, order.customer_order_id);
+			prepared.setInt(2, order.fulfillment_listing_id);
+			prepared.setInt(3, order.fulfillment_account_id);
+			prepared.setString(4, order.fulfillment_transaction_id);
+			prepared.setDouble(5, order.buy_subtotal);
+			prepared.setDouble(6, order.buy_sales_tax);
+			prepared.setDouble(7, order.buy_shipping);
+			prepared.setDouble(8, order.buy_product_fees);
+			prepared.setDouble(9, order.buy_total);
+			prepared.setDouble(10, order.profit);
+			prepared.execute();
 
-				final String removeSql = "DELETE FROM failed_fulfillment_attempts WHERE customer_order_id="+order.customer_order_id;
-				deleteBatch.addBatch(removeSql);
-			}
-
-			deleteBatch.executeBatch();
-			final int numRows = prepared.executeBatch().length;
-			successfullyFulfilledOrders.clear();
-			System.out.println("Executed batch of " + numRows + " insert queries.");
+			final String removeSql = "DELETE FROM failed_fulfillment_attempts WHERE customer_order_id="+order.customer_order_id;
+			deleteSt.execute(removeSql);
+			
+			successfullyFulfilledOrders.remove(order.customer_order_id);
+			System.out.println("Successfully inserted processed order into DB");
 		} catch (final Exception e) {
-			DBLogging.high(getClass(), "failed to insert successful orders into DB: ", e);
-			for(final ProcessedOrder order : successfulOrders) {
-				successfullyFulfilledOrders.put(order.customer_order_id, order);
-			}
+			DBLogging.high(getClass(), "failed to insert successful order into DB: ", e);
+			successfullyFulfilledOrders.put(order.customer_order_id, order);
 		}
 	}
 
