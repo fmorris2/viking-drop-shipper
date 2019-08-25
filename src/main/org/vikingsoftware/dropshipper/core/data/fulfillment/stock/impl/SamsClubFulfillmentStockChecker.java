@@ -15,7 +15,6 @@ import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
 import main.org.vikingsoftware.dropshipper.core.utils.SamsClubMetaDataParser;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
-import zmq.ZError.IOException;
 
 public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChecker<SamsClubWebDriver> {
 
