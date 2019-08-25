@@ -74,6 +74,10 @@ public class MarketplaceListing {
 	}
 	
 	public Pair<Double, Double> getCurrentPrice() throws Exception {
+		/*
+		 * Only call eBay API for current listing price if we don't already have it stored in the DB.
+		 * This will only be called once for every listing on creation.
+		 */
 		if(current_price == 0) {
 			final Pair<Double, Double> priceInfo = EbayCalls.getPrice(listingId);
 			current_price = priceInfo.left;

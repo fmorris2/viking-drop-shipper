@@ -118,6 +118,11 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			final long parsedStock = entries.stream().mapToInt(entry -> entry.stock).sum();
 			System.out.println("parsedStock: " + parsedStock);
 			
+			/*
+			 * Here, we do some checks in order to optimize eBay API calls. We don't want to request
+			 * the API if we don't need to. Therefore, if we already have the correct stock in our DB,
+			 * we should simply return instead of updating the listing on eBay.
+			 */
 			if(listing.current_ebay_inventory > 0 && parsedStock > 0) {
 				System.out.println("eBay still has inventory - No need to update.");
 				return true;
@@ -138,6 +143,9 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			updateCache.put(listing.listingId, System.currentTimeMillis());
 			return true;
 		} catch(final Exception e) {
+			/*
+			 * Log the exception as a high severity in our DB, to be examined.
+			 */
 			DBLogging.high(getClass(), "failed to send inventory update to ebay: ", e);
 		}
 
@@ -147,7 +155,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 	private void autoPrice(final MarketplaceListing listing, final Collection<SkuInventoryEntry> entries) {
 		try {
 			System.out.println("Beginning auto-pricing for listing " + listing);
-			final Pair<Double,Double> currentPriceInfo = listing.getCurrentPrice();
+			final Pair<Double,Double> currentPriceInfo = listing.getCurrentPrice(); //this is an API-optimized call to get price
 			final double maxFulfillmentPrice = entries.stream().mapToDouble(entry -> entry.price).max().getAsDouble() 
 					* listing.fulfillment_quantity_multiplier;
 			
@@ -162,6 +170,10 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			System.out.println("\tcurrent profit margin: " + currentProfitMargin);
 			System.out.println("\ttarget profit margin: " + listing.target_margin);
 			
+			/*
+			 * If our DB states we already have the target margin, there is no need to update the listing on eBay
+			 * and waste an API call.
+			 */
 			if(Math.abs(currentProfitMargin - listing.target_margin) > MARGIN_TOLERANCE) {
 				System.out.println("\tAdjusting pricing to fulfill target margin...");
 				final double targetPrice = PriceUtils.getPriceFromMargin(maxFulfillmentPrice, currentPriceInfo.right, listing.target_margin);

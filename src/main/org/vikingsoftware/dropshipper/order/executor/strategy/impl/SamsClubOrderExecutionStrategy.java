@@ -117,10 +117,10 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			throw new OrderExecutionException("Confirmation screen zip != order zip: " + detailsStr + " does not contain " + order.buyer_zip_postal_code.substring(0, 4));
 		}
 
-		System.out.println("Buyer name: " + order.buyer_name);
-		System.out.println("lower case: " + order.buyer_name.toLowerCase());
-		if(!detailsStr.contains(order.buyer_name.toLowerCase())) {
-			throw new OrderExecutionException("Confirmation screen details does not contain buyer name: " + detailsStr + " != " + order.buyer_name.toLowerCase());
+		System.out.println("Buyer name: " + order.normalizedBuyerName);
+		System.out.println("lower case: " + order.normalizedBuyerName.toLowerCase());
+		if(!detailsStr.contains(order.normalizedBuyerName.toLowerCase())) {
+			throw new OrderExecutionException("Confirmation screen details does not contain buyer name: " + detailsStr + " != " + order.normalizedBuyerName.toLowerCase());
 		}
 
 		final String truncatedAdd = order.buyer_street_address.length() > ADDRESS_CHARACTER_LIMIT 
@@ -247,7 +247,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		driver.sleep(3000);
 		//enter details
 		System.out.println("Entering name...");
-		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"name\"]")), order.buyer_name);
+		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"name\"]")), order.normalizedBuyerName);
 	
 		System.out.println("Entering street address...");
 		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"addressLineOne\"]")), order.buyer_street_address);

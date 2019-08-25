@@ -2,7 +2,9 @@ package main.org.vikingsoftware.dropshipper.core.data.customer.order;
 
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
+import java.text.Normalizer;
 import java.time.LocalDateTime;
+
 
 public class CustomerOrder {
 
@@ -21,7 +23,7 @@ public class CustomerOrder {
 
 	public final String marketplace_order_id;
 	public final String buyer_username;
-	public final String buyer_name;
+	public final String buyer_name, normalizedBuyerName;
 	public final String buyer_country;
 	public final String buyer_street_address;
 	public final String buyer_apt_suite_unit_etc;
@@ -44,6 +46,9 @@ public class CustomerOrder {
 		this.marketplace_order_id = builder.marketplace_order_id;
 		this.buyer_username = builder.buyer_username;
 		this.buyer_name = builder.buyer_name.replaceAll(" {2,}", " ");
+		this.normalizedBuyerName = Normalizer
+				.normalize(buyer_name, Normalizer.Form.NFD)
+				.replaceAll("[^\\p{ASCII}]", "");
 		this.buyer_country = builder.buyer_country;
 		this.buyer_street_address = builder.buyer_street_address;
 		this.buyer_apt_suite_unit_etc = builder.buyer_apt_suite_unit_etc;
@@ -53,7 +58,7 @@ public class CustomerOrder {
 		this.buyer_phone_number = builder.buyer_phone_number;
 		this.date_parsed = builder.date_parsed;
 	}
-
+	
 	public String getFirstName() {
 		return buyer_name.split(" ")[0];
 	}
