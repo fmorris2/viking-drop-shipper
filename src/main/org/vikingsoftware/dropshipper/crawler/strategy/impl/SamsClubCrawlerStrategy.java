@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
 
 import main.org.vikingsoftware.dropshipper.core.web.DefaultWebDriver;
 import main.org.vikingsoftware.dropshipper.crawler.strategy.FulfillmentListingCrawlerStrategy;
@@ -97,9 +96,10 @@ public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
 			driver.setImplicitWait(1);
 			try {
 				System.out.println("[SamsClubCrawlerStrategy] - Navigating to next page of products...");
-				final WebElement nextButton = driver.findElement(By.cssSelector(".sc-pagination-next > a:nth-child(1)"));
+				final String nextButtonSelector = ".sc-pagination-next > a:nth-child(1)";
+				driver.findElement(By.cssSelector(nextButtonSelector));
 				System.out.println("\tsuccess");
-				nextButton.click();
+				driver.js("document.querySelector(\""+nextButtonSelector+"\").click();");
 				driver.sleep(3000); //sluggish sams club front end
 				parseProductsOnCurrentPage();
 			} catch(final Exception e) {
