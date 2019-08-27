@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import com.ebay.sdk.ApiContext;
 import com.ebay.sdk.TimeFilter;
@@ -210,12 +209,12 @@ public class EbayCalls {
 	}
 	
 	public static void main(final String[] args) throws Exception {
-		//checkAPIAccessRules();
-		MarketplaceLoader.loadMarketplaces();
-		final Set<MarketplaceListing> listings = Marketplaces.EBAY.getMarketplace().getMarketplaceListings();
-		for(final MarketplaceListing listing : listings) {
-			updateHandlingTime(listing.listingId, 4);
-		}
+		checkAPIAccessRules();
+//		MarketplaceLoader.loadMarketplaces();
+//		final Set<MarketplaceListing> listings = Marketplaces.EBAY.getMarketplace().getMarketplaceListings();
+//		for(final MarketplaceListing listing : listings) {
+//			updateHandlingTime(listing.listingId, 4);
+//		}
 	}
 	
 	public static void checkAPIAccessRules() {

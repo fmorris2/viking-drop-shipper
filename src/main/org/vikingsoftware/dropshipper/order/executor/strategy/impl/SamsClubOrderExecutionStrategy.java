@@ -294,7 +294,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 	private void clickShipThisItem(final WebElement orderOnlineBox) {
 		System.out.println("Clicking ship this item...");
-		orderOnlineBox.findElement(By.className("sc-btn-primary")).click();
+		driver.js("document.querySelector(\"div.sc-action-buttons div.sc-cart-qty-button.online .sc-btn-primary span\").click();");
 		System.out.println("\tdone.");
 	}
 
