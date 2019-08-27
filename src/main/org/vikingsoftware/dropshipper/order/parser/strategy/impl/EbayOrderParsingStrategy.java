@@ -12,7 +12,7 @@ public class EbayOrderParsingStrategy implements OrderParsingStrategy {
 
 	@Override
 	public Collection<CustomerOrder> parseNewOrders() {
-		final CustomerOrder[] allOrders = EbayCalls.getOrdersLastXDays(5);
+		final CustomerOrder[] allOrders = EbayCalls.getOrdersLastXDays(2);
 		final Collection<CustomerOrder> newOrders = new ArrayList<>();
 		for(final CustomerOrder order : allOrders) {
 			if(!Marketplaces.EBAY.getMarketplace().isOrderIdKnown(order.marketplace_order_id)) {
