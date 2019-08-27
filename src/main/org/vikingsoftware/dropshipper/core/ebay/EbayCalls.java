@@ -3,6 +3,7 @@ package main.org.vikingsoftware.dropshipper.core.ebay;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +28,7 @@ import com.ebay.soap.eBLBaseComponents.ListingDurationCodeType;
 import com.ebay.soap.eBLBaseComponents.ListingTypeCodeType;
 import com.ebay.soap.eBLBaseComponents.NameValueListArrayType;
 import com.ebay.soap.eBLBaseComponents.NameValueListType;
+import com.ebay.soap.eBLBaseComponents.PaginationType;
 import com.ebay.soap.eBLBaseComponents.PictureDetailsType;
 import com.ebay.soap.eBLBaseComponents.ProductListingDetailsType;
 import com.ebay.soap.eBLBaseComponents.ReturnPolicyType;
@@ -66,8 +68,13 @@ public class EbayCalls {
 		try {
 			final ApiContext apiContext = EbayApiContextManager.getLiveContext();
 			final GetSellerTransactionsCall call = new GetSellerTransactionsCall(apiContext);
-			call.setTimeFilter(new TimeFilter(null, null)); //will use number of days filter
-			call.setNumberOfDays(days);
+			final PaginationType pagination = new PaginationType();
+			pagination.setEntriesPerPage(200);
+			pagination.setPageNumber(1);
+			call.setPagination(pagination);
+			final Calendar cal = Calendar.getInstance();
+			cal.add(Calendar.DAY_OF_YEAR, days * -1);
+			call.setTimeFilter(new TimeFilter(cal, Calendar.getInstance())); //will use number of days filter
 			final TransactionType[] transactions = call.getSellerTransactions();
 			final List<CustomerOrder> orders = new ArrayList<>();
 			final List<TransactionType> unknownTransactionMappings = new ArrayList<>();
@@ -209,7 +216,11 @@ public class EbayCalls {
 	}
 	
 	public static void main(final String[] args) throws Exception {
-		checkAPIAccessRules();
+		MarketplaceLoader.loadMarketplaces();
+		for(final CustomerOrder order : EbayCalls.getOrdersLastXDays(2)) {
+			System.out.println(order.buyer_name);
+		}
+		//checkAPIAccessRules();
 //		MarketplaceLoader.loadMarketplaces();
 //		final Set<MarketplaceListing> listings = Marketplaces.EBAY.getMarketplace().getMarketplaceListings();
 //		for(final MarketplaceListing listing : listings) {
