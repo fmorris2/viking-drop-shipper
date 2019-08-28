@@ -315,7 +315,7 @@ public class ListingToolController {
 
 	private void addImages(final List<ListingImage> images) {
 		for(final ListingImage image : images) {
-			final BufferedImage resizedImage = resize(image.image, 300);
+			final BufferedImage resizedImage = resize(image.getImage(), 300);
 			imagesModel.addElement(resizedImage);
 		}
 	}

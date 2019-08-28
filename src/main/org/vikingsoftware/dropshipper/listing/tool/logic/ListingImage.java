@@ -2,12 +2,22 @@ package main.org.vikingsoftware.dropshipper.listing.tool.logic;
 
 import java.awt.image.BufferedImage;
 
+import main.org.vikingsoftware.dropshipper.core.utils.ImageUtils;
+
 public class ListingImage {
 	public final String url;
-	public final BufferedImage image;
+	
+	private BufferedImage image;
 
-	public ListingImage(final String url, final BufferedImage img) {
+	public ListingImage(final String url) {
 		this.url = url;
-		this.image = img;
+	}
+	
+	public BufferedImage getImage() {
+		if(image == null) {
+			image = ImageUtils.getImageFromUrl(url);
+		}
+		
+		return image;
 	}
 }

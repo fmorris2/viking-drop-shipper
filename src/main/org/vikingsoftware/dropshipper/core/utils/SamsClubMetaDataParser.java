@@ -120,7 +120,7 @@ public final class SamsClubMetaDataParser {
 		
 		while((imgDifferencePercent = ImageUtils.getDifferencePercent(currentImage, notFoundImage)) > 0) {
 			System.out.println("currentSuffix: " + currentSuffix + ", imgDifferencePercent = " + imgDifferencePercent);
-			images.add(new ListingImage(imageUrl, currentImage));
+			images.add(new ListingImage(imageUrl));
 			
 			currentSuffix = (char)(((int)currentSuffix) + 1);
 			imageUrl = imageUrl.substring(0, imageUrl.length() - 1) + currentSuffix;

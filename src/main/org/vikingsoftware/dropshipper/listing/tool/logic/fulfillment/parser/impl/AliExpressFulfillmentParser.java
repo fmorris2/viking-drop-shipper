@@ -75,7 +75,7 @@ public class AliExpressFulfillmentParser extends AbstractFulfillmentParser<AliEx
 				final String curr = currentImg;
 				waitForImgChange(() -> curr != null && curr.equals(fullImg.get()));
 				currentImg = fullImg.get();
-				pics.add(new ListingImage(currentImg, ImageIO.read(new URL(currentImg))));
+				pics.add(new ListingImage(currentImg));
 			} catch(final StaleElementReferenceException e) {
 				i--;
 			}
