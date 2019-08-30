@@ -45,7 +45,7 @@ public class CustomerOrder {
 		this.fulfillment_purchase_quantity = builder.fulfillment_purchase_quantity;
 		this.marketplace_order_id = builder.marketplace_order_id;
 		this.buyer_username = builder.buyer_username;
-		this.buyer_name = builder.buyer_name.replaceAll(" {2,}", " ");
+		this.buyer_name = builder.buyer_name.replaceAll(" {2,}", " ").replace(".", "").replace(",", "");
 		this.normalizedBuyerName = Normalizer
 				.normalize(buyer_name, Normalizer.Form.NFD)
 				.replaceAll("[^\\p{ASCII}]", "");
