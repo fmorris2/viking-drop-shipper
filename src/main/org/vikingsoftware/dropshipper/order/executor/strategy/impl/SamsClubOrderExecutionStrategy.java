@@ -40,10 +40,6 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	private ProcessedOrder orderItem(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws InterruptedException {
 		System.out.println("Getting listing url: " + fulfillmentListing.listing_url);
 		driver.get(fulfillmentListing.listing_url);
-
-		System.out.println("Verifying listing title...");
-		verifyListingTitle(fulfillmentListing);
-		System.out.println("\tverified.");
 		
 		System.out.println("Finding orderOnlineBox...");
 		final WebElement orderOnlineBox = driver.findElement(By.cssSelector("div.sc-action-buttons div.sc-cart-qty-button.online"));
@@ -283,13 +279,6 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		driver.sleep(50);
 		el.sendKeys(str);
 		driver.sleep(50);
-	}
-
-	private void verifyListingTitle(final FulfillmentListing listing) throws InterruptedException {
-		final String title = driver.findElement(By.cssSelector(".sc-product-header-title-container")).getText();
-		if(!title.equalsIgnoreCase(listing.listing_title)) {
-			throw new OrderExecutionException("Fulfillment listing title ("+title+") is not what we expected ("+listing.listing_title+")");
-		}
 	}
 
 	private void clickShipThisItem(final WebElement orderOnlineBox) {
