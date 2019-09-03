@@ -56,8 +56,10 @@ public final class BrowserRepository {
 	}
 
 	public void replace(final Class<? extends DriverSupplier<?>> supplierClass) {
+		System.out.println("BrowserRepository#replace("+supplierClass+")");
 		final WebDriverQueue<?> queue = queueCache.get(supplierClass);
 		if(queue != null) {
+			System.out.println("Queue is not null for class " + supplierClass);
 			queue.replace(supplierClass);
 		}
 	}

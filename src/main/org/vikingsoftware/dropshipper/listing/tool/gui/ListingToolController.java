@@ -232,8 +232,8 @@ public class ListingToolController {
 	}
 
 	private void addRecentSalesRenderer() {
-		recentSalesRenderer = new RecentSalesRenderer();
-		recentSalesRenderer.get("http://www.google.com");
+//		recentSalesRenderer = new RecentSalesRenderer();
+//		recentSalesRenderer.get("http://www.google.com");
 	}
 
 	@SuppressWarnings("unchecked")
@@ -286,7 +286,7 @@ public class ListingToolController {
 			gui.listingPriceInput.setText("");
 			gui.profitMarginInput.setText("");
 			gui.brandInput.setText("");
-			recentSalesRenderer.get("http://www.google.com");
+//			recentSalesRenderer.get("http://www.google.com");
 			categoryModel.removeAllElements();
 			updateListingPriceWithMargin();
 		});
@@ -306,7 +306,7 @@ public class ListingToolController {
 				final String baseUrl = gui.soldItemsCheckbox.isSelected() ? BASE_EBAY_SEARCH_URL_SOLD_ITEMS : BASE_EBAY_SEARCH_URL;
 				final String url = baseUrl + URLEncoder.encode(ListingQueue.peek().title, "UTF-8");
 				System.out.println("Setting recent sold items browser to url: " + url);
-				recentSalesRenderer.get(url);
+//				recentSalesRenderer.get(url);
 			}
 		} catch (final UnsupportedEncodingException e) {
 			e.printStackTrace();

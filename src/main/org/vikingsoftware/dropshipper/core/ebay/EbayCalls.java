@@ -216,11 +216,7 @@ public class EbayCalls {
 	}
 	
 	public static void main(final String[] args) throws Exception {
-		MarketplaceLoader.loadMarketplaces();
-		for(final CustomerOrder order : EbayCalls.getOrdersLastXDays(2)) {
-			System.out.println(order.buyer_name);
-		}
-		//checkAPIAccessRules();
+		checkAPIAccessRules();
 //		MarketplaceLoader.loadMarketplaces();
 //		final Set<MarketplaceListing> listings = Marketplaces.EBAY.getMarketplace().getMarketplaceListings();
 //		for(final MarketplaceListing listing : listings) {

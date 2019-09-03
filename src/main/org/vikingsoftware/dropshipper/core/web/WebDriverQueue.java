@@ -56,6 +56,7 @@ public class WebDriverQueue<T extends WebDriver> {
 	}
 
 	public void replace(final Class<? extends DriverSupplier<?>> supplier) {
+		System.out.println("WebDriverQueue#replace("+supplier+")");
 		assert supplier != null;
 		try {
 			System.out.println("Attempting to replace " + supplier);
