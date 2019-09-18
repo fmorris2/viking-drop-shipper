@@ -115,8 +115,8 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 		System.out.println("Buyer name: " + order.normalizedBuyerName);
 		System.out.println("lower case: " + order.normalizedBuyerName.toLowerCase());
-		if(!detailsStr.contains(order.normalizedBuyerName.toLowerCase())) {
-			throw new OrderExecutionException("Confirmation screen details does not contain buyer name: " + detailsStr + " != " + order.normalizedBuyerName.toLowerCase());
+		if(!detailsStr.contains(getNormalizedName(order.normalizedBuyerName).toLowerCase())) {
+			throw new OrderExecutionException("Confirmation screen details does not contain buyer name: " + detailsStr + " != " + getNormalizedName(order.normalizedBuyerName).toLowerCase());
 		}
 
 		final String truncatedAdd = order.buyer_street_address.length() > ADDRESS_CHARACTER_LIMIT 
@@ -243,7 +243,10 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		driver.sleep(3000);
 		//enter details
 		System.out.println("Entering name...");
-		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"name\"]")), order.normalizedBuyerName);
+		
+		final String normalizedName = getNormalizedName(order.normalizedBuyerName);
+		
+		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"name\"]")), normalizedName);
 	
 		System.out.println("Entering street address...");
 		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"addressLineOne\"]")), order.buyer_street_address);
@@ -272,6 +275,19 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		driver.findElement(By.cssSelector(".sc-address-form-action-buttons > button:nth-child(2)"));
 		driver.js("document.querySelector(\".sc-address-form-action-buttons > button:nth-child(2)\").click();");
 		System.out.println("\tAddress has been saved.");
+	}
+	
+	private String getNormalizedName(final String name) {
+		String normalizedName = "";
+		final String[] nameParts = name.split(" ");
+		for(int i = 0; i < 4 && i < nameParts.length; i++) {
+			if(i > 0) {
+				normalizedName += " ";
+			}
+			normalizedName += nameParts[i];
+		}
+		
+		return normalizedName;
 	}
 
 	private void clearAndSendKeys(final WebElement el, final String str) {
