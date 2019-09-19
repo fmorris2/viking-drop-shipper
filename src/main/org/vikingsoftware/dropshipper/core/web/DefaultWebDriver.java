@@ -34,7 +34,7 @@ public class DefaultWebDriver extends JBrowserDriver {
 	
 	public static Settings.Builder getSettingsBuilder() {
 		return new Settings.Builder()
-			.headless(true)
+			.headless(false)
 			.loggerLevel(Level.SEVERE)
 			.connectionReqTimeout(DEFAULT_TIMEOUT_MS)
 			.connectTimeout(DEFAULT_TIMEOUT_MS);
