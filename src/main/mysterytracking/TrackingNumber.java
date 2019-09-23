@@ -31,6 +31,10 @@ public class TrackingNumber {
 	public String getCourierName() {
 		return courier.name;
 	}
+	
+	public String getCourierParentName() {
+		return courier.parentName;
+	}
 
 	public String getTrackingUrl() {
 		if (courier.trackingUrl != null) {
