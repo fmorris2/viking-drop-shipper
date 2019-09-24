@@ -24,13 +24,23 @@ import main.org.vikingsoftware.dropshipper.core.shippo.ShippoCarrier;
 
 public class TrackingHistoryUpdater implements CycleParticipant {
 
+	private static final long CYCLE_TIME = 60_000 * 30;
+	
+	private long lastCycle;
+	
 	public static void main(final String[] args) {
 		new TrackingHistoryUpdater().cycle();
 	}
 	
 	@Override
+	public boolean shouldCycle() {
+		return System.currentTimeMillis() - lastCycle >= CYCLE_TIME;
+	}
+	
+	@Override
 	public void cycle() {
 		System.out.println("Running cycle of TrackingHistoryUpdater");
+		lastCycle = System.currentTimeMillis();
 		
 		final List<ProcessedOrder> orders = getInProgressOrders();		
 		final Map<ProcessedOrder, Track> statuses = getShippoStatuses(orders);
