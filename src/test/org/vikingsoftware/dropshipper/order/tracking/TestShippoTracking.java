@@ -6,6 +6,8 @@ import org.junit.Test;
 import com.shippo.Shippo;
 import com.shippo.model.Track;
 
+import main.org.vikingsoftware.dropshipper.core.shippo.ShippoCarrier;
+
 public class TestShippoTracking {
 
 	private static final String SHIPPO_LIVE_API_KEY = "shippo_live_f8bba555338ff892031378a0f43a7eb283f2cc95";
@@ -20,7 +22,7 @@ public class TestShippoTracking {
 	@Test
 	public void testTracking() {
 		try {
-			final Track track = Track.getTrackingInfo("ups", "1ZW69R180382008479", Shippo.apiKey);
+			final Track track = Track.getTrackingInfo(ShippoCarrier.getCarrier("fedex").apiToken, "121416885940", Shippo.apiKey);
 			System.out.println(track.getTrackingStatus().getStatusDetails());
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -7,6 +7,7 @@ import main.org.vikingsoftware.dropshipper.inventory.InventoryUpdater;
 import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
 import main.org.vikingsoftware.dropshipper.order.parser.OrderParser;
 import main.org.vikingsoftware.dropshipper.order.tracking.OrderTracking;
+import main.org.vikingsoftware.dropshipper.order.tracking.history.TrackingHistoryUpdater;
 import main.org.vikingsoftware.dropshipper.pricing.margins.MarginAdjuster;
 
 public class VSDropShipper {
@@ -17,9 +18,10 @@ public class VSDropShipper {
 	private static final CycleParticipant[] MODULES = {
 		new OrderParser(),
 		new OrderExecutor(),
-//		new MarginAdjuster(),
-//		new InventoryUpdater(),
-//		new OrderTracking()
+		new MarginAdjuster(),
+		new InventoryUpdater(),
+		new OrderTracking(),
+		new TrackingHistoryUpdater()
 	};
 
 	public static void main(final String[] args) throws InterruptedException {
