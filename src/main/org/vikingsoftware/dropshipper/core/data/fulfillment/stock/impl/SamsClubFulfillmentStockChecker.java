@@ -18,7 +18,7 @@ import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
 
 public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChecker<SamsClubWebDriver> {
 
-	private static final SamsClubMetaDataParser metaData = new SamsClubMetaDataParser();
+	private static final String SEARCH_BASE_URL = "https://www.samsclub.com/s/";
 	
 	private static SamsClubFulfillmentStockChecker instance;
 
@@ -46,16 +46,22 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 		final List<SkuMapping> mappings = SkuMappingManager.getMappingsForMarketplaceListing(marketListing.id);
 		System.out.println("SKU mappings for marketplace listing " + marketListing.id + ": " + mappings.size());
 		try {
-			final String pageSource = Jsoup.connect(fulfillmentListing.listing_url).get().html();
-			entries.add(new SkuInventoryEntry(null, parseItemStock(pageSource), parseItemPrice(pageSource)));
+			final SamsClubMetaDataParser metaData = new SamsClubMetaDataParser();
+			final String pageSource = Jsoup.connect(SEARCH_BASE_URL + fulfillmentListing.item_id).get().html();
+			final boolean successfulParse = metaData.parse(pageSource);
+			
+			if(!successfulParse) {
+				System.out.println("FAILED TO PARSE METADATA FOR fulfillmentListingItemId: " + fulfillmentListing.item_id);
+				entries.add(new SkuInventoryEntry(null, -1, -1));
+			}
+			
+			entries.add(new SkuInventoryEntry(null, parseItemStock(metaData), metaData.getPrice()));
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	private int parseItemStock(final String pageSource) {
-		metaData.parse(pageSource);
-		
+	private int parseItemStock(final SamsClubMetaDataParser metaData) {		
 		//TODO ENSURE TITLE MATCHES EXPECTED FULFILLMENT LISTING TITLE
 		if(!metaData.passesAllListingConditions()) {
 			System.out.println("Sams Club listing does not pass all listing conditions. Setting stock to 0.");
@@ -63,11 +69,6 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 		}
 		
 		return metaData.getStock();
-	}
-	
-	private double parseItemPrice(final String pageSource) {
-		metaData.parse(pageSource);
-		return metaData.getPrice();
 	}
 
 	@Override
