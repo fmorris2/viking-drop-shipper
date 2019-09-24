@@ -27,15 +27,22 @@ public final class SamsClubMetaDataParser {
 	private JsonObject metaData;
 	private JsonObject internalProduct;
 	
-	public void parse(final String pageSource) {
-		final String jsonString = getMetaDataJsonString(pageSource);
-		final JsonReader reader = new JsonReader(new StringReader(jsonString));
-		reader.setLenient(true);
-		this.metaData = parser.parse(reader)
-				.getAsJsonObject()
-				.get("product")
-				.getAsJsonObject();
-		this.internalProduct = this.metaData.get("product").getAsJsonObject();
+	public boolean parse(final String pageSource) {
+		try {
+			final String jsonString = getMetaDataJsonString(pageSource);
+			final JsonReader reader = new JsonReader(new StringReader(jsonString));
+			reader.setLenient(true);
+			this.metaData = parser.parse(reader)
+					.getAsJsonObject()
+					.get("product")
+					.getAsJsonObject();
+			this.internalProduct = this.metaData.get("product").getAsJsonObject();
+			return true;
+		} catch(final Exception e) {
+			//swallow exception
+		}
+		
+		return false;
 	}
 	
 	public String getProductName() {
@@ -74,8 +81,14 @@ public final class SamsClubMetaDataParser {
 	}
 	
 	public boolean passesAllListingConditions() {
-		return isFreeShipping() && isAvailableOnline()
-				&& !hasMinPurchaseQty() && !hasVariations();
+		try {
+			return isFreeShipping() && isAvailableOnline()
+					&& !hasMinPurchaseQty() && !hasVariations();
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return false;
 	}
 	
 	public boolean isFreeShipping() {
