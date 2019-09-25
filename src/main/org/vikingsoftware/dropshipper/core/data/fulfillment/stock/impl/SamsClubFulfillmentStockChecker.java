@@ -50,12 +50,12 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 			final String pageSource = Jsoup.connect(SEARCH_BASE_URL + fulfillmentListing.item_id).get().html();
 			final boolean successfulParse = metaData.parse(pageSource);
 			
-			if(!successfulParse) {
+			if(successfulParse) {
+				entries.add(new SkuInventoryEntry(null, parseItemStock(metaData), metaData.getPrice()));
+			} else {
 				System.out.println("FAILED TO PARSE METADATA FOR fulfillmentListingItemId: " + fulfillmentListing.item_id);
 				entries.add(new SkuInventoryEntry(null, -1, -1));
 			}
-			
-			entries.add(new SkuInventoryEntry(null, parseItemStock(metaData), metaData.getPrice()));
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
