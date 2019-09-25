@@ -76,9 +76,14 @@ public class EbayCalls {
 			cal.add(Calendar.DAY_OF_YEAR, days * -1);
 			call.setTimeFilter(new TimeFilter(cal, Calendar.getInstance())); //will use number of days filter
 			final TransactionType[] transactions = call.getSellerTransactions();
+			
+			if(transactions == null) {
+				return new CustomerOrder[0];
+			}
+			
 			final List<CustomerOrder> orders = new ArrayList<>();
 			final List<TransactionType> unknownTransactionMappings = new ArrayList<>();
-
+			
 			System.out.println("Num eBay transactions in last " + days + " days: " + transactions.length);
 			for(final TransactionType trans : transactions) {
 				final CustomerOrder order = EbayConversionUtils.convertTransactionTypeToCustomerOrder(trans.getItem().getItemID(), trans);
