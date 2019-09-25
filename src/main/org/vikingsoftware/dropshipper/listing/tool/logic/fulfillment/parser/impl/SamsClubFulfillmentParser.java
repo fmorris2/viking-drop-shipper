@@ -8,6 +8,7 @@ import com.ebay.soap.eBLBaseComponents.ShippingServiceCodeType;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubDriverSupplier;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubFulfillmentStockChecker;
 import main.org.vikingsoftware.dropshipper.core.utils.ListingUtils;
 import main.org.vikingsoftware.dropshipper.core.utils.SamsClubMetaDataParser;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
@@ -57,6 +58,13 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 			
 			if(metaDataParser.hasMinPurchaseQty()) {
 				System.out.println("\tListing has a min purchase quantity of > 1. Skipping...");
+				listing.canShip = false;
+				return listing;
+			}
+			
+			final String searchUrl = SamsClubFulfillmentStockChecker.SEARCH_BASE_URL + metaDataParser.getItemID();
+			if(!new SamsClubMetaDataParser().parse(searchUrl)) {
+				System.out.println("\tListing fails Sams Club search test. Skipping...");
 				listing.canShip = false;
 				return listing;
 			}

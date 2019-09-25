@@ -18,7 +18,7 @@ import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
 
 public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChecker<SamsClubWebDriver> {
 
-	private static final String SEARCH_BASE_URL = "https://www.samsclub.com/s/";
+	public static final String SEARCH_BASE_URL = "https://www.samsclub.com/s/";
 	
 	private static SamsClubFulfillmentStockChecker instance;
 
