@@ -35,8 +35,8 @@ public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<S
 		driver.savePageSource();
 
 		driver.setImplicitWait(1);
-		final WebElement shippedEl = driver.findElement(By.className("sc-account-online-order-details-shipped-item-tracking"));
-		final WebElement trackingNumEl = shippedEl.findElements(By.cssSelector("a")).stream().filter(el -> {
+		final WebElement shippedEl = driver.findElement(By.className("sc-account-online-order-details-tracking-info"));
+		final WebElement trackingNumEl = shippedEl.findElements(By.cssSelector("a[href*=\"samsclub.com/tracking\"")).stream().filter(el -> {
 			try {
 				final String href = el.getAttribute("href");
 				if(href != null) {
