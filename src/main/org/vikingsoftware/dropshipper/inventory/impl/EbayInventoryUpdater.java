@@ -24,7 +24,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 
 	//1000 seconds minimum between updates for a specific listing. eBay caps revisions at 150 per day for a listing
 	private static final int MIN_UPDATE_TIME_THRESH = 576_000;
-	private static final double MARGIN_TOLERANCE = 0.1;
+	private static final double MARGIN_TOLERANCE = 0.2;
 
 	private static final Map<String, Long> updateCache = new HashMap<>();
 
@@ -175,10 +175,12 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			 * and waste an API call.
 			 */
 			if(Math.abs(currentProfitMargin - listing.target_margin) > MARGIN_TOLERANCE) {
-				System.out.println("\tAdjusting pricing to fulfill target margin...");
 				final double targetPrice = PriceUtils.getPriceFromMargin(maxFulfillmentPrice, currentPriceInfo.right, listing.target_margin);
-				System.out.println("\t\tNew target price: " + targetPrice);
-				listing.updatePrice(targetPrice);
+				if(targetPrice != currentPriceInfo.left) {
+					System.out.println("\tAdjusting pricing to fulfill target margin...");
+					System.out.println("\t\tNew target price: " + targetPrice);
+					listing.updatePrice(targetPrice);
+				}
 			} else {
 				System.out.println("\tMargin is accurate - No need to update price...");
 			}

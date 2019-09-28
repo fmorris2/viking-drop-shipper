@@ -323,8 +323,9 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			attempts++;
 			try {
 				final WebElement item = cartItems.get(i);
-				System.out.println("Item: " + item.getAttribute("id"));
-				if(item.getAttribute("id") == null) {
+				final String id = item.getAttribute("id");
+				System.out.println("Item: " + id);
+				if(id == null || id.isEmpty()) {
 					continue;
 				}
 				final String itemNum = item.findElement(By.cssSelector(".item_no")).getText().split(" ")[2];
@@ -344,6 +345,10 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 				System.out.println("Stale element detected - Refreshing cart items collection...");
 				i = 0;
 				cartItems = cartItemsSupp.get();
+			} catch(final NoSuchElementException e) {
+				System.out.println("Could not find element");
+				e.printStackTrace();
+				driver.savePageSource("sams-cart.html");
 			}
 		}
 		
@@ -356,6 +361,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		System.out.println("Verifying cart...");
 		//verify expected item quantity in cart
 		final int numCartItems = Integer.parseInt(driver.findElement(By.id("orderCount")).getText());
+		System.out.println("numCartItems: " + numCartItems);
 		if(numCartItems != order.fulfillment_purchase_quantity) {
 			System.out.println("num cart items != fulfillment purchase quantity.");
 			if(!correctMistakes || !clearErroneousItems(order, listing)) {
@@ -364,13 +370,17 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		}
 
 		//verify cart items
+		System.out.println("Verifying number of cart items...");
 		final WebElement parentCartTable = driver.findElement(By.className("cart-table"));
 		final WebElement cartTable = parentCartTable.findElement(By.tagName("tbody"));
 		final List<WebElement> items = cartTable.findElements(By.tagName("tr"));
 		if(items.size() > 1) {
 			throw new OrderExecutionException("there are more unique items in the cart than expected: " + items.size() + " > 1");
 		}
+		
+		System.out.println("\tdone.");
 
+		System.out.println("Verifying item number...");
 		final WebElement itemRow = items.get(0);
 		//verify item details
 		final String itemNumStr = itemRow.findElement(By.className("item_no")).getText();
@@ -378,35 +388,16 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		if(!listing.item_id.equals(itemNumStrParts[itemNumStrParts.length - 1])) {
 			throw new OrderExecutionException("Wrong item ID in cart: " + itemNumStrParts[itemNumStrParts.length - 1] + " != " + listing.item_id);
 		}
+		System.out.println("\tdone.");
 
-		//verify "ship it" option is picked
-		final List<WebElement> deliveryOptions = itemRow.findElements(By.className("nc-delivery"));
-		boolean isShipItSelected = false;
-		for(final WebElement option : deliveryOptions) {
-			try {
-				final WebElement input = option.findElement(By.tagName("input"));
-				final String value = input.getAttribute("value");
-				if(value != null && value.equalsIgnoreCase("online") && input.getAttribute("checked") != null) {
-					isShipItSelected = true;
-					break;
-				}
-			} catch(final NoSuchElementException e) {
-				driver.findElement(By.cssSelector(".nc-delivery > .nc-ship-only")); // check if "ship only" option is selected
-				isShipItSelected = true;
-				break;
-			}
-		}
-
-		if(!isShipItSelected) {
-			throw new OrderExecutionException("'Ship it' option is not selected!");
-		}
-
+		System.out.println("Verifying price...");
 		//verify price!
 		final double total = Double.parseDouble(driver.findElement(By.id("nc-v2-est-total")).getText().substring(1));
 		if(order.getProfit(total) < 0) { //never automatically sell at a loss....
 			throw new OrderExecutionException("WARNING: POTENTIAL FULFILLMENT AT LOSS for fulfillment listing " + listing.id
 					+ "! PROFIT: $" + order.getProfit(total));
 		}
+		System.out.println("\tdone.");
 
 	}
 

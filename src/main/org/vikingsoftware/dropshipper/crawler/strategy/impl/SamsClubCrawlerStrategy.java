@@ -28,11 +28,12 @@ public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
 	
 	public void crawl() {
 		try {
-			driver = new DefaultWebDriver(DefaultWebDriver.getSettingsBuilder()
-					.blockMedia(true)
-					.blockAds(true)
-					.quickRender(true)
-					.build());
+			driver = new DefaultWebDriver();
+//			driver = new DefaultWebDriver(DefaultWebDriver.getSettingsBuilder()
+//					.blockMedia(true)
+//					.blockAds(true)
+//					.quickRender(true)
+//					.build());
 			System.out.println("[SamsClubCrawlerStrategy] - crawl");
 			crawlCategoryPage(ALL_CATEGORIES_URL);
 		} finally {

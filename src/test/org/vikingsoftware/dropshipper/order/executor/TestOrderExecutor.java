@@ -1,9 +1,9 @@
 package test.org.vikingsoftware.dropshipper.order.executor;
 
-import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
-
 import org.junit.Assert;
 import org.junit.Test;
+
+import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
 
 public class TestOrderExecutor {
 

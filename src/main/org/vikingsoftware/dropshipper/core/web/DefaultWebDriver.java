@@ -8,36 +8,32 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxDriverLogLevel;
+import org.openqa.selenium.firefox.FirefoxOptions;
 
-import com.machinepublishers.jbrowserdriver.JBrowserDriver;
-import com.machinepublishers.jbrowserdriver.Settings;
-
-public class DefaultWebDriver extends JBrowserDriver {
+public class DefaultWebDriver extends FirefoxDriver {
 	
-	private static final int DEFAULT_TIMEOUT_MS = 30_000;
 	public static final int DEFAULT_VISIBILITY_WAIT_SECONDS = 20;
 	
 	public DefaultWebDriver() {
-		super(getSettingsBuilder().build());
+		super(getOptions());
 	}
 	
-	public DefaultWebDriver(final Settings settings) {
-		super(settings);
+	public DefaultWebDriver(final FirefoxOptions options) {
+		super(options);
 	}
 	
-	public static Settings.Builder getSettingsBuilder() {
-		return new Settings.Builder()
-			.headless(false)
-			.loggerLevel(Level.SEVERE)
-			.connectionReqTimeout(DEFAULT_TIMEOUT_MS)
-			.connectTimeout(DEFAULT_TIMEOUT_MS);
+	public static FirefoxOptions getOptions() {
+		return new FirefoxOptions()
+				.setHeadless(false)
+				.setLogLevel(FirefoxDriverLogLevel.ERROR);
 	}
 	
 	@Override

@@ -35,17 +35,22 @@ public class SamsClubWebDriver extends LoginWebDriver {
 			get("https://www.samsclub.com/sams/account/signin/login.jsp");
 
 			System.out.println("Logging in with account: " + account.username);
-			savePageSource();
+			savePageSource("sams-login-page.html");
 			
+			this.setImplicitWait(1);
 			findUsernameEl();
 			findPasswordEl();
 			findButtonEl();
+			this.resetImplicitWait();
 			
 			if(usernameEl != null && passwordEl != null && buttonEl != null) {
 				System.out.println("Logging in... " + getCurrentUrl());
-				
-				usernameEl.sendKeys(account.username);
+				usernameEl.click();
+				sendKeysSlowly(usernameEl, account.username);
+				sleep(1500);
+				passwordEl.click();
 				passwordEl.sendKeys(account.password);
+				sleep(1500);
 				buttonEl.click();
 				sleep(4000);
 				

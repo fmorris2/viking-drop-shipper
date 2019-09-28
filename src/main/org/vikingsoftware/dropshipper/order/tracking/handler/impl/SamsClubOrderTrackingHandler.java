@@ -34,15 +34,22 @@ public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<S
 		System.out.println("Navigating to page: " + BASE_ORDER_DETAILS_URL + order.fulfillment_transaction_id);
 		driver.savePageSource();
 
-		final WebElement trackingNumEl = driver.findElements(By.tagName("a")).stream().filter(el -> {
-			final String href = el.getAttribute("href");
-			if(href != null) {
-				return href.contains("tracking/tracking.htm?trackingId=")
-						|| href.contains("fedex?tracking_numbers=");
+		driver.setImplicitWait(1);
+		final WebElement shippedEl = driver.findElement(By.className("sc-account-online-order-details-shipped-item-tracking"));
+		final WebElement trackingNumEl = shippedEl.findElements(By.cssSelector("a")).stream().filter(el -> {
+			try {
+				final String href = el.getAttribute("href");
+				if(href != null) {
+					return href.contains("tracking/tracking.htm?trackingId=")
+							|| href.contains("fedex?tracking_numbers=");
+				}
+			} catch(final Exception e) {
+				e.printStackTrace();
 			}
 
 			return false;
 		}).findFirst().orElse(null);
+		driver.resetImplicitWait();
 
 		String trackingNum = null;
 		if(trackingNumEl != null) {

@@ -43,6 +43,7 @@ public class VSDropShipper {
 			try {
 				SkuMappingManager.clear();
 				BrowserRepository.get().replaceAll();
+				Runtime.getRuntime().exec("pkill -9 firefox");
 			} catch(final Exception e) {
 				e.printStackTrace();
 			}
