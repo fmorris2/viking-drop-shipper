@@ -45,12 +45,8 @@ public class SamsClubWebDriver extends LoginWebDriver {
 			
 			if(usernameEl != null && passwordEl != null && buttonEl != null) {
 				System.out.println("Logging in... " + getCurrentUrl());
-				usernameEl.click();
-				sendKeysSlowly(usernameEl, account.username);
-				sleep(1500);
-				passwordEl.click();
+				usernameEl.sendKeys(account.username);
 				passwordEl.sendKeys(account.password);
-				sleep(1500);
 				buttonEl.click();
 				sleep(4000);
 				

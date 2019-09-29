@@ -5,9 +5,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.function.Supplier;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptException;
+import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.WebElement;
 
 import main.org.vikingsoftware.dropshipper.core.web.DefaultWebDriver;
 import main.org.vikingsoftware.dropshipper.crawler.strategy.FulfillmentListingCrawlerStrategy;
@@ -53,6 +56,7 @@ public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
 		
 		for(final String link : linksOnPage) {
 			final PageType pageType = getPageTypeForUrl(link);
+			System.out.println(pageType + ": " + link);
 			switch(pageType) {
 				case CATEGORY:
 					System.out.println("[SamsClubCrawlerStrategy] - Found category link on page: " + link);
@@ -68,23 +72,30 @@ public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
 	}
 	
 	private Set<String> parseAllLinksOnPage() {
+		final Set<String> links = new HashSet<>();
 		try {
-			return driver.findElements(By.tagName("a")).stream()
-				.map(element -> {
-					final String href = element.getAttribute("href");
-					if(href != null && !href.isEmpty() && !href.startsWith("http")) {
-						return trimUrl("https://www.samsclub.com" + href);
+			System.out.println("parseAllLinksOnPage");
+			final Supplier<List<WebElement>> aElements = () -> driver.findElements(By.tagName("a"));
+			for(final WebElement el : aElements.get()) {
+				try {
+					final String href = el.getAttribute("href");
+					if(href != null && href.contains("samsclub.com/") && !visitedUrls.contains(href)) {
+						final int queryStart = href.indexOf("?");
+						if(queryStart != -1) {
+							links.add(href.substring(0, queryStart));
+						} else {
+							links.add(href);
+						}
 					}
-					
-					return trimUrl(href);
-				})
-				.filter(str -> str != null && !str.isEmpty() && !visitedUrls.contains(str))
-				.collect(Collectors.toSet());
+				} catch(final StaleElementReferenceException e) {
+					return parseAllLinksOnPage();
+				}
+			}
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
 		
-		return Collections.emptySet();
+		return links;
 	}
 	
 	private void crawlSubCategoryPage(final String url) {
@@ -92,27 +103,30 @@ public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
 		visitedUrls.add(url);
 		driver.get(url);
 		try {
-			parseProductsOnCurrentPage();
+			int numProducts = parseProductsOnCurrentPage();
 			
-			driver.setImplicitWait(1);
-			try {
-				System.out.println("[SamsClubCrawlerStrategy] - Navigating to next page of products...");
-				final String nextButtonSelector = ".sc-pagination-next > a:nth-child(1)";
-				driver.findElement(By.cssSelector(nextButtonSelector));
-				System.out.println("\tsuccess");
-				driver.js("document.querySelector(\""+nextButtonSelector+"\").click();");
-				driver.sleep(3000); //sluggish sams club front end
-				parseProductsOnCurrentPage();
-			} catch(final Exception e) {
-				System.out.println("\tfailure");
+			while(numProducts > 0) {
+				driver.setImplicitWait(1);
+				try {
+					System.out.println("[SamsClubCrawlerStrategy] - Navigating to next page of products...");
+					driver.js("document.querySelector(\".sc-pagination-next > a:nth-child(1)\").click();");
+					driver.sleep(3000); //sluggish sams club front end
+					numProducts = parseProductsOnCurrentPage();
+				} catch(final JavascriptException e) {
+					numProducts = 0;
+				} catch(final Exception e) {
+					e.printStackTrace();
+					numProducts = 0;
+				}
 			}
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	private void parseProductsOnCurrentPage() {
+	private int parseProductsOnCurrentPage() {
 		System.out.println("[SamsClubCrawlerStrategy] - Parsing products on current page");
+		int numProducts = 0;
 		final Set<String> links = parseAllLinksOnPage();
 		visitedUrls.addAll(links);
 		
@@ -120,17 +134,11 @@ public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
 			if(getPageTypeForUrl(url) == PageType.PRODUCT) {
 				System.out.println("[SamsClubCrawlerStrategy] - Found product url: " + url);
 				urlFound(url);
+				numProducts++;
 			}
 		}	
-	}
-	
-	private String trimUrl(final String url) {
-		if(url == null) {
-			return null;
-		}
 		
-		final int queryStart = url.indexOf("?");
-		return queryStart > -1 ? url.substring(0, queryStart) : url;
+		return numProducts;
 	}
 	
 	private PageType getPageTypeForUrl(final String url) {

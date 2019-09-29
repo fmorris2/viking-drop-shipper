@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -163,14 +164,18 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 		final String state = cleanse(getAddressField(loc, "state"));
 		final String zip = cleanse(getAddressField(loc, "zip"));
 		final String country = cleanse(getAddressField(loc, "country"));
-		if(city == null || state == null || zip == null || country == null) {
+		final String objId = evt.getObjectId();
+		final TrackingStatus statusObj = evt.getStatus();
+		final Date statusDate = evt.getStatusDate();
+		if(city == null || state == null || zip == null || country == null
+				|| objId == null || statusObj == null || statusDate == null) {
 			return null;
 		}
 		return "INSERT INTO tracking_history(processed_order_id,tracking_number,shippo_object_id,"
 				+ "tracking_status,tracking_status_date,tracking_status_details,tracking_location_city,"
 				+ "tracking_location_state,tracking_location_zip,tracking_location_country) VALUES('"
-				+ order.id + "','" + order.tracking_number + "','" + evt.getObjectId() + "','" + evt.getStatus().ordinal()
-				+ "','" + evt.getStatusDate().toString() + "','" + evt.getStatusDetails() + "','" + city + "','"
+				+ order.id + "','" + order.tracking_number + "','" + objId + "','" + statusObj.ordinal()
+				+ "','" + statusDate + "','" + evt.getStatusDetails() + "','" + city + "','"
 				+ state + "','" + zip + "','" + country + "')";
 	}
 	

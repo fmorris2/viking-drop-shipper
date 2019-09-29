@@ -1,11 +1,14 @@
 package main.org.vikingsoftware.dropshipper.core.utils;
 
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.jsoup.Jsoup;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -26,6 +29,12 @@ public final class SamsClubMetaDataParser {
 	
 	private JsonObject metaData;
 	private JsonObject internalProduct;
+	
+	public static void main(final String[] args) throws IOException {
+		final SamsClubMetaDataParser parser = new SamsClubMetaDataParser();
+		parser.parse(Jsoup.connect("https://www.samsclub.com/p/mm-sliced-almonds-2-lbs/prod22160278").get().html());
+		System.out.println(parser.getStock());
+	}
 	
 	public boolean parse(final String pageSource) {
 		try {
