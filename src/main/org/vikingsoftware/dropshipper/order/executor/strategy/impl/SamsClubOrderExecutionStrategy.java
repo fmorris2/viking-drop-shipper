@@ -230,9 +230,20 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	private void enterAddress(final CustomerOrder order) throws InterruptedException {
 		System.out.println("Clicking change address...");
 		driver.savePageSource("pre-enter-address.html");
+
 		driver.setImplicitWait(5);
 		System.out.println("current url: " + driver.getCurrentUrl());
+		try {
 		driver.findElement(By.cssSelector(".sc-shipping-address-change > span:nth-child(1)"));
+		} catch(final NoSuchElementException e) {
+			try {
+				driver.js("document.querySelector(\".sc-btn-secondary > span:nth-child(1)\").click();");
+				enterAddress(order);
+				return;
+			} catch(final Exception ex) {
+				//swallow
+			}
+		}
 		driver.js("document.querySelector(\".sc-shipping-address-change > span:nth-child(1)\").click();");
 		System.out.println("\tdone.");
 		System.out.println("Clicking edit on preferred address...");

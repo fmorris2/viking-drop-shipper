@@ -2,6 +2,7 @@ package main.org.vikingsoftware.dropshipper.inventory.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,9 +101,13 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			 * we sent to eBay was 0. This if statement cuts down on extra unnecessary
 			 * processing
 			 */
-			if(!listing.active && listing.current_ebay_inventory == 0) {
-				System.out.println("No need to send updated for inactive listing.");
-				return true;
+			if(!listing.active) {
+				if(listing.current_ebay_inventory <= 0) {
+					System.out.println("No need to send updated for inactive listing.");
+					return true;
+				} else if(EbayCalls.updateInventory(listing.listingId, Collections.singletonList(new SkuInventoryEntry(null, 0, -1)))) {
+					return listing.setCurrentEbayInventory(0);
+				}
 			}
 			
 			System.out.println("Sending " + skuStocks.size() + " item stock updates to eBay");
@@ -126,7 +131,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			if(listing.current_ebay_inventory > 0 && parsedStock > 0) {
 				System.out.println("eBay still has inventory - No need to update.");
 				return true;
-			} else if(listing.current_ebay_inventory <= 0 && parsedStock == 0) {
+			} else if(listing.current_ebay_inventory <= 0 && parsedStock <= 0) {
 				System.out.println("Parsed stock was 0 and eBay inventory is currently 0. No need to update");
 				return true;
 			}
@@ -135,8 +140,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 				System.out.println("successfully sent inventory update to ebay - Updating our DB with last inv update.");
 				listing.setCurrentEbayInventory(Math.min(EbayCalls.FAKE_MAX_QUANTITY, parsedStock));
 			} else {
-				System.out.println("did not send inventory update to ebay successfully - Updating our DB accordingly.");
-				listing.setCurrentEbayInventory(0);
+				System.err.println("did not send inventory update to ebay successfully!");
 			}
 			
 			System.out.println("Our DB has been updated.");

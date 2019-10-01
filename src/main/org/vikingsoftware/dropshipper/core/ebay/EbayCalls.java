@@ -1,10 +1,15 @@
 package main.org.vikingsoftware.dropshipper.core.ebay;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.ebay.sdk.ApiContext;
@@ -61,11 +66,34 @@ public class EbayCalls {
 
 	public static final int FAKE_MAX_QUANTITY = 1;
 	private static final int MIN_AVAILABLE_FULFILLMENT_QTY = 75;
+	
+	private static final Map<String, Integer> callMap = new HashMap<>();
 
 	private EbayCalls() {}
+	
+	private static void addCall(final String id) {
+//		callMap.put(id, callMap.getOrDefault(id, 0) + 1);
+//		if(callMap.get(id) == 1000) {
+//			try(final FileWriter fW = new FileWriter("calls.txt");
+//				final BufferedWriter bW = new BufferedWriter(fW);) {
+//				bW.write("CALLS MADE:");
+//				bW.newLine();
+//				for(final String key : callMap.keySet()) {
+//					bW.write(key + " - " + callMap.get(key));
+//					bW.newLine();
+//				}
+//				bW.flush();
+//				System.err.println("Call limit reached.");
+//				System.exit(0);
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		}
+	}
 
 	public static CustomerOrder[] getOrdersLastXDays(final int days) {
 		try {
+			addCall("getOrdersLastXDays");
 			final ApiContext apiContext = EbayApiContextManager.getLiveContext();
 			final GetSellerTransactionsCall call = new GetSellerTransactionsCall(apiContext);
 			final PaginationType pagination = new PaginationType();
@@ -120,6 +148,7 @@ public class EbayCalls {
 	
 	public static boolean updatePrice(final String listingId, final double price) {
 		try {
+			addCall("updatePrice");
 			final ApiContext api = EbayApiContextManager.getLiveContext();
 			final ReviseFixedPriceItemCall call = new ReviseFixedPriceItemCall(api);
 			final ItemType itemToRevise = new ItemType();
@@ -142,6 +171,7 @@ public class EbayCalls {
 	
 	public static boolean updateHandlingTime(final String listingId, final int handlingDays) {
 		try {
+			addCall("updateHandlingTime");
 			final ApiContext api = EbayApiContextManager.getLiveContext();
 			final ReviseFixedPriceItemCall call = new ReviseFixedPriceItemCall(api);
 			final ItemType itemToRevise = new ItemType();
@@ -159,6 +189,7 @@ public class EbayCalls {
 	}
 	
 	public static Pair<Double, Double> getPrice(String listingId) throws Exception {
+		addCall("getPrice");
 		final ApiContext api = EbayApiContextManager.getLiveContext();
 		final GetItemCall call = new GetItemCall(api);
 		final ItemType item = call.getItem(listingId);
@@ -175,6 +206,7 @@ public class EbayCalls {
 
 	public static boolean updateInventory(final String listingId, final List<SkuInventoryEntry> invEntries) {
 		try {
+			addCall("updateInventory");
 			final ApiContext api = EbayApiContextManager.getLiveContext();
 			final ReviseFixedPriceItemCall call = new ReviseFixedPriceItemCall(api);
 			final ItemType itemToRevise = new ItemType();
@@ -200,9 +232,8 @@ public class EbayCalls {
 			}
 			System.out.println("Setting stock for listing id " + listingId + " to " + itemToRevise.getQuantity());
 			call.setItemToBeRevised(itemToRevise);
-			final int fees = call.reviseFixedPriceItem().getFee().length;
-			System.out.println("fees: " + fees);
-			return fees > 0;
+			call.reviseFixedPriceItem();
+			return true;
 		} catch(final Exception e) {
 			e.printStackTrace();
 			DBLogging.high(EbayCalls.class, "failed to update inventory for listing " + listingId + " and invEntries " + invEntries + ": ", e);
@@ -247,6 +278,7 @@ public class EbayCalls {
 
 	public static boolean setShipmentTrackingInfo(final ProcessedOrder order, final TrackingEntry entry) {
 		try {
+			addCall("setShipmentTrackingInfo");
 			final ApiContext api = EbayApiContextManager.getLiveContext();
 			final CompleteSaleCall call = new CompleteSaleCall(api);
 			final Optional<CustomerOrder> customerOrder = CustomerOrderManager.loadCustomerOrderById(order.customer_order_id);
