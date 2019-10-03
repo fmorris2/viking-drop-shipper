@@ -27,7 +27,8 @@ public class EbayConversionUtils {
 			final AddressType addr = buyer.getBuyerInfo().getShippingAddress();
 			final ItemType item = transaction.getItem();
 			
-			if(transaction.getAmountPaid() == null || transaction.getActualShippingCost() == null) { //awaiting ebay payment
+			if(transaction.getAmountPaid() == null || transaction.getActualShippingCost() == null
+					|| transaction.getAmountPaid().getValue() <= 0) { //awaiting ebay payment or cancelled
 				return null;
 			}
 	

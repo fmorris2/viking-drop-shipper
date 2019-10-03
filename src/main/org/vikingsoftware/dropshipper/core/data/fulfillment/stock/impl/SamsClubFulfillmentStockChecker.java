@@ -47,7 +47,8 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 		System.out.println("SKU mappings for marketplace listing " + marketListing.id + ": " + mappings.size());
 		try {
 			final String pageSource = Jsoup.connect(fulfillmentListing.listing_url).get().html();
-			entries.add(new SkuInventoryEntry(null, parseItemStock(pageSource), parseItemPrice(pageSource)));
+			final int stock = parseItemStock(pageSource);
+			entries.add(new SkuInventoryEntry(null, stock, parseItemPrice(pageSource)));
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
@@ -71,7 +72,7 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 	}
 
 	@Override
-	protected int parseItemStock(final SamsClubWebDriver driver) { return -1; }
+	protected int parseItemStock(final SamsClubWebDriver driver) { System.err.println("SHOULDN'T GET HERE!"); System.exit(0); return -1; }
 
 	@Override
 	protected Class<? extends DriverSupplier<?>> getDriverSupplierClass() {

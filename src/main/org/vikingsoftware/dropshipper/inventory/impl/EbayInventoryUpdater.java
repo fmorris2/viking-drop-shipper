@@ -121,6 +121,12 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			autoPrice(listing, entries);
 			
 			final long parsedStock = entries.stream().mapToInt(entry -> entry.stock).sum();
+			
+			if(parsedStock < 0) {
+				System.err.println("JSoup parsed invalid " + parsedStock + " from metadata. Skipping for now...");
+				return true;
+			}
+			
 			System.out.println("parsedStock: " + parsedStock);
 			
 			/*
@@ -138,7 +144,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			
 			if(EbayCalls.updateInventory(listing.listingId, entries)) {
 				System.out.println("successfully sent inventory update to ebay - Updating our DB with last inv update.");
-				listing.setCurrentEbayInventory(Math.min(EbayCalls.FAKE_MAX_QUANTITY, parsedStock));
+				listing.setCurrentEbayInventory(Math.max(0, Math.min(EbayCalls.FAKE_MAX_QUANTITY, parsedStock)));
 			} else {
 				System.err.println("did not send inventory update to ebay successfully!");
 			}

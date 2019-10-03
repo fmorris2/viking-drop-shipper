@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptException;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
@@ -19,6 +20,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.Sams
 import main.org.vikingsoftware.dropshipper.core.data.misc.StateUtils;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
+import main.org.vikingsoftware.dropshipper.core.utils.SamsClubMetaDataParser;
 import main.org.vikingsoftware.dropshipper.core.utils.SamsClubUtils;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
@@ -31,6 +33,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 	private static final String FAKE_PHONE_NUMBER = "(916) 245-0125";
 	private static final int ADDRESS_CHARACTER_LIMIT = 35;
+	private static final SamsClubMetaDataParser parser = new SamsClubMetaDataParser();
 	
 	@Override
 	protected ProcessedOrder executeOrderImpl(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws Exception {
@@ -40,6 +43,13 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	private ProcessedOrder orderItem(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws InterruptedException {
 		System.out.println("Getting listing url: " + fulfillmentListing.listing_url);
 		driver.get(fulfillmentListing.listing_url);
+		
+		parser.parse(driver.getPageSource());
+		
+		if(parser.getStock() <= 0) {
+			System.out.println("Listing is out of stock!");
+			throw new OrderExecutionException("Listing is out of stock!");
+		}
 		
 		System.out.println("Finding orderOnlineBox...");
 		final WebElement orderOnlineBox = driver.findElement(By.cssSelector("div.sc-action-buttons div.sc-cart-qty-button.online"));
@@ -64,8 +74,9 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		driver.findElement(By.cssSelector(".summary .continue-btn .js-checkout-btn"));
 		driver.js("document.querySelector(\".summary .continue-btn .js-checkout-btn\").click();");
 		driver.screenshot("enter-address-page.png");
+		driver.sleep(7000);
 		enterAddress(order);
-		driver.sleep(2000);
+		driver.sleep(6000);
 		return finishCheckoutProcess(order, fulfillmentListing);
 	}
 
@@ -210,6 +221,9 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			if(orderNum == null) {
 				throw new OrderExecutionException("Failed to parse order num from Sams Club receipt page!");
 			}
+			
+			driver.clearSession();
+			driver.manage().deleteAllCookies();
 
 			return new ProcessedOrder.Builder()
 					.customer_order_id(order.id)
@@ -244,7 +258,17 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 				//swallow
 			}
 		}
-		driver.js("document.querySelector(\".sc-shipping-address-change > span:nth-child(1)\").click();");
+		try {
+			driver.js("document.querySelector(\".sc-btn-secondary > span:nth-child(1)\").click();");
+		} catch(final JavascriptException e) {
+			//swallow
+		}
+		
+		try {
+			driver.js("document.querySelector(\".sc-shipping-address-change > span:nth-child(1)\").click();");
+		} catch(final JavascriptException e) {
+			//swallow
+		}
 		System.out.println("\tdone.");
 		System.out.println("Clicking edit on preferred address...");
 		driver.findElement(By.cssSelector("button.sc-address-card-edit-action:nth-child(1) > span:nth-child(1)"));
@@ -316,7 +340,19 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	}
 
 	private void navigateToCart() {
-		driver.get("https://www.samsclub.com/sams/cart/cart.jsp");
+		final String url = "https://www.samsclub.com/sams/cart/cart.jsp";
+		driver.get(url);
+		
+		try {
+			//"Sorry there's a problem" message, for example
+			final WebElement errorEl = driver.findElement(By.className("js-global-error"));
+			if(errorEl.isDisplayed()) {
+				System.out.println("Encountered error message on cart. Retrying...");
+				navigateToCart();
+			}
+		} catch(final NoSuchElementException e) {
+			//swallow
+		}
 	}
 	
 	private boolean clearErroneousItems(final CustomerOrder order, final FulfillmentListing listing) {

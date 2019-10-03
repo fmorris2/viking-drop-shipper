@@ -215,7 +215,7 @@ public class EbayCalls {
 				if(invEntries.get(0).stock < MIN_AVAILABLE_FULFILLMENT_QTY) {
 					itemToRevise.setQuantity(0);
 				} else {
-					itemToRevise.setQuantity(Math.min(FAKE_MAX_QUANTITY, invEntries.get(0).stock));
+					itemToRevise.setQuantity(Math.max(0, Math.min(FAKE_MAX_QUANTITY, invEntries.get(0).stock)));
 				}
 			} else {
 				final VariationsType variations = new VariationsType();
@@ -223,7 +223,7 @@ public class EbayCalls {
 				for(final SkuInventoryEntry entry : invEntries) {
 					final VariationType variation = new VariationType();
 					variation.setSKU(entry.sku);
-					variation.setQuantity(Math.min(FAKE_MAX_QUANTITY, entry.stock));
+					variation.setQuantity(Math.max(0, Math.min(FAKE_MAX_QUANTITY, entry.stock)));
 					entries.add(variation);
 				}
 				variations.setVariation(entries.stream().toArray(VariationType[]::new));
@@ -232,7 +232,8 @@ public class EbayCalls {
 			}
 			System.out.println("Setting stock for listing id " + listingId + " to " + itemToRevise.getQuantity());
 			call.setItemToBeRevised(itemToRevise);
-			call.reviseFixedPriceItem();
+			//call.reviseFixedPriceItem();
+			logToFile("updateInventory: listingId - " + listingId + ", quantity: " + Math.max(0, Math.min(FAKE_MAX_QUANTITY, itemToRevise.getQuantity())));
 			return true;
 		} catch(final Exception e) {
 			e.printStackTrace();
@@ -249,6 +250,17 @@ public class EbayCalls {
 		}
 
 		return false;
+	}
+	
+	private static void logToFile(final String str) {
+		try(final FileWriter fW = new FileWriter("call-log.txt", true);
+			final BufferedWriter bW = new BufferedWriter(fW)) {
+			bW.write(str);
+			bW.newLine();
+			bW.flush();
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public static void main(final String[] args) throws Exception {
