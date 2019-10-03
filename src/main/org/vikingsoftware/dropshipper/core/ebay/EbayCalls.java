@@ -232,7 +232,7 @@ public class EbayCalls {
 			}
 			System.out.println("Setting stock for listing id " + listingId + " to " + itemToRevise.getQuantity());
 			call.setItemToBeRevised(itemToRevise);
-			//call.reviseFixedPriceItem();
+			call.reviseFixedPriceItem();
 			logToFile("updateInventory: listingId - " + listingId + ", quantity: " + Math.max(0, Math.min(FAKE_MAX_QUANTITY, itemToRevise.getQuantity())));
 			return true;
 		} catch(final Exception e) {
