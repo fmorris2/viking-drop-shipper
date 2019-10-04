@@ -34,7 +34,7 @@ public final class SamsClubMetaDataParser {
 		final SamsClubMetaDataParser parser = new SamsClubMetaDataParser();
 		int stock = -1;
 		for(int i = 0; i < 1000; i++) {
-			parser.parse(Jsoup.connect("https://www.samsclub.com/p/savory-sticks-beef-48-oz-betsy-farms/prod22885314")
+			parser.parse(Jsoup.connect("https://www.samsclub.com/p/mm-fluticasone-6x120-sprays/prod21003064")
 					.userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36")
 					.get()
 					.html());
@@ -97,12 +97,18 @@ public final class SamsClubMetaDataParser {
 	}
 	
 	public int getStock() {
-		final int stock = internalProduct.get("onlineInventory")
-				.getAsJsonObject()
-				.get("availableToSellQuantity")
-				.getAsInt();
+		try {
+			final int stock = internalProduct.get("onlineInventory")
+					.getAsJsonObject()
+					.get("availableToSellQuantity")
+					.getAsInt();
+			
+			return stock;
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
 		
-		return stock;
+		return 0;
 	}
 	
 	public boolean passesAllListingConditions() {

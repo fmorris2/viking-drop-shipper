@@ -55,20 +55,32 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 	}
 	
 	private int parseItemStock(final String pageSource) {
-		metaData.parse(pageSource);
-		
-		//TODO ENSURE TITLE MATCHES EXPECTED FULFILLMENT LISTING TITLE
-		if(!metaData.passesAllListingConditions()) {
-			System.out.println("Sams Club listing does not pass all listing conditions. Setting stock to 0.");
-			return 0;
+		try {
+			metaData.parse(pageSource);
+			
+			//TODO ENSURE TITLE MATCHES EXPECTED FULFILLMENT LISTING TITLE
+			if(!metaData.passesAllListingConditions()) {
+				System.out.println("Sams Club listing does not pass all listing conditions. Setting stock to 0.");
+				return 0;
+			}
+			
+			return metaData.getStock();
+		} catch(final Exception e) {
+			e.printStackTrace();
 		}
 		
-		return metaData.getStock();
+		return 0;
 	}
 	
 	private double parseItemPrice(final String pageSource) {
-		metaData.parse(pageSource);
-		return metaData.getPrice();
+		try {
+			metaData.parse(pageSource);
+			return metaData.getPrice();
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return -1;
 	}
 
 	@Override

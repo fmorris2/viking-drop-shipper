@@ -37,7 +37,13 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	
 	@Override
 	protected ProcessedOrder executeOrderImpl(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws Exception {
-		return orderItem(order, fulfillmentListing);
+		try {
+			return orderItem(order, fulfillmentListing);
+		} catch(final Exception e) {
+			driver.clearSession();
+			driver.manage().deleteAllCookies();
+			throw new RuntimeException(e);
+		}
 	}
 
 	private ProcessedOrder orderItem(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws InterruptedException {
