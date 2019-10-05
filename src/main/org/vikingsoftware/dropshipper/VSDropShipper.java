@@ -44,6 +44,7 @@ public class VSDropShipper {
 				SkuMappingManager.clear();
 				BrowserRepository.get().replaceAll();
 				Runtime.getRuntime().exec("pkill -9 firefox");
+				Runtime.getRuntime().exec("pkill -9 geckodriver");
 			} catch(final Exception e) {
 				e.printStackTrace();
 			}

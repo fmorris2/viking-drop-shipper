@@ -1,5 +1,6 @@
 package main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -34,6 +35,14 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 		return instance;
 	}
 	
+	public static void main(final String[] args) throws IOException {
+		final String pageSource = Jsoup.connect("https://www.samsclub.com/p/mm-fluticasone-6x120-sprays/prod21003064").get().html();
+		final String itemId = "761285";
+		final int stock = new SamsClubFulfillmentStockChecker().parseItemStock(itemId, pageSource);
+		new SamsClubFulfillmentStockChecker().parseItemPrice(itemId, pageSource);
+		System.out.println("Stock: " + stock);
+	}
+	
 	@Override
 	protected Collection<SkuInventoryEntry> getStockImpl(MarketplaceListing marketListing, FulfillmentListing fulfillmentListing) {
 		final Collection<SkuInventoryEntry> entries = new ArrayList<>();
@@ -47,16 +56,21 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 		System.out.println("SKU mappings for marketplace listing " + marketListing.id + ": " + mappings.size());
 		try {
 			final String pageSource = Jsoup.connect(fulfillmentListing.listing_url).get().html();
-			final int stock = parseItemStock(pageSource);
-			entries.add(new SkuInventoryEntry(null, stock, parseItemPrice(pageSource)));
+			final int stock = parseItemStock(fulfillmentListing.item_id, pageSource);
+			entries.add(new SkuInventoryEntry(null, stock, parseItemPrice(fulfillmentListing.item_id, pageSource)));
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	private int parseItemStock(final String pageSource) {
+	private int parseItemStock(final String itemId, final String pageSource) {
 		try {
 			metaData.parse(pageSource);
+			
+			if(!itemId.equalsIgnoreCase(metaData.getItemID())) {
+				System.err.println("Could not parse metadata as the item IDs don't match!");
+				return 0;
+			}
 			
 			//TODO ENSURE TITLE MATCHES EXPECTED FULFILLMENT LISTING TITLE
 			if(!metaData.passesAllListingConditions()) {
@@ -72,9 +86,15 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 		return 0;
 	}
 	
-	private double parseItemPrice(final String pageSource) {
+	private double parseItemPrice(final String itemId, final String pageSource) {
 		try {
 			metaData.parse(pageSource);
+			
+			if(!itemId.equalsIgnoreCase(metaData.getItemID())) {
+				System.err.println("Could not parse metadata as the item IDs don't match!");
+				return -1;
+			}
+			
 			return metaData.getPrice();
 		} catch(final Exception e) {
 			e.printStackTrace();

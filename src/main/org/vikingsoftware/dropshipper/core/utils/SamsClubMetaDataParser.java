@@ -73,7 +73,7 @@ public final class SamsClubMetaDataParser {
 	}
 	
 	public String getItemID() {
-		return internalProduct.get("itemNumber").getAsString();
+		return internalProduct == null ? null : internalProduct.get("itemNumber").getAsString();
 	}
 	
 	public String getDescription() {

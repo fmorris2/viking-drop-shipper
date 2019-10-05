@@ -2,7 +2,6 @@ package main.org.vikingsoftware.dropshipper.core.ebay;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -161,7 +160,7 @@ public class EbayCalls {
 			
 			call.setItemToBeRevised(itemToRevise);
 			call.reviseFixedPriceItem();
-			return true;
+			return !call.hasError();
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
@@ -180,7 +179,7 @@ public class EbayCalls {
 			
 			call.setItemToBeRevised(itemToRevise);
 			call.reviseFixedPriceItem();
-			return true;
+			return !call.hasError();
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
@@ -234,7 +233,7 @@ public class EbayCalls {
 			call.setItemToBeRevised(itemToRevise);
 			call.reviseFixedPriceItem();
 			logToFile("updateInventory: listingId - " + listingId + ", quantity: " + Math.max(0, Math.min(FAKE_MAX_QUANTITY, itemToRevise.getQuantity())));
-			return true;
+			return !call.hasError();
 		} catch(final Exception e) {
 			e.printStackTrace();
 			DBLogging.high(EbayCalls.class, "failed to update inventory for listing " + listingId + " and invEntries " + invEntries + ": ", e);
@@ -311,7 +310,7 @@ public class EbayCalls {
 					call.setShipment(shipmentDetails);
 					System.out.println("Updating tracking details on eBay for order " + order.id);
 					call.completeSale();
-					return true;
+					return !call.hasError();
 				}
 			}
 		} catch(final Exception e) {

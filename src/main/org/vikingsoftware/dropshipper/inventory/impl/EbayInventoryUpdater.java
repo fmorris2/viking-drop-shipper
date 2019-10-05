@@ -120,11 +120,12 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			
 			autoPrice(listing, entries);
 			
-			final long parsedStock = entries.stream().mapToInt(entry -> entry.stock).sum();
+			long parsedStock = entries.stream().mapToInt(entry -> entry.stock).sum();
 			
 			if(parsedStock < 0) {
-				System.err.println("JSoup parsed invalid " + parsedStock + " from metadata. Skipping for now...");
-				return true;
+				System.err.println("JSoup parsed invalid " + parsedStock + " from metadata for marketplace listing id " + listing.id + ". Assuming stock is 0...");
+				parsedStock = 0;
+				//return true;
 			}
 			
 			System.out.println("parsedStock: " + parsedStock);
