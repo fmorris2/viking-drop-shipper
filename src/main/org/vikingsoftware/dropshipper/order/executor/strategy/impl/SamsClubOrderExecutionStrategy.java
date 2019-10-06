@@ -35,6 +35,13 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	private static final int ADDRESS_CHARACTER_LIMIT = 35;
 	private static final SamsClubMetaDataParser parser = new SamsClubMetaDataParser();
 	
+	/*
+	 * TODO - Use column in DB so we can toggle it on front-end
+	 */
+	private boolean shouldDisregardProfit(final CustomerOrder order) {
+		return false;
+	}
+	
 	@Override
 	protected ProcessedOrder executeOrderImpl(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws Exception {
 		try {
@@ -165,8 +172,8 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		final DecimalFormat df = new DecimalFormat("###.##");
 		System.out.println("\tProfit: " + df.format(order.getProfit(convertedTotal)));
 		final double profit = order.getProfit(convertedTotal);
-		if(profit < 0) {
-			throw new OrderExecutionException("WARNING! POTENTIAL FULFILLMENT AT A LOSS FOR FULFILLMENT ID " + listing.id
+		if(!shouldDisregardProfit(order) && profit < 0) {
+			throw new OrderExecutionException("WARNING! POTENTIAL FULFILLMENT AT LOSS FOR FULFILLMENT ID " + listing.id
 					+ "! PROFIT: $" + profit);
 		}
 
@@ -446,7 +453,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		System.out.println("Verifying price...");
 		//verify price!
 		final double total = Double.parseDouble(driver.findElement(By.id("nc-v2-est-total")).getText().substring(1));
-		if(order.getProfit(total) < 0) { //never automatically sell at a loss....
+		if(!shouldDisregardProfit(order) && order.getProfit(total) < 0) { //never automatically sell at a loss....
 			throw new OrderExecutionException("WARNING: POTENTIAL FULFILLMENT AT LOSS for fulfillment listing " + listing.id
 					+ "! PROFIT: $" + order.getProfit(total));
 		}
