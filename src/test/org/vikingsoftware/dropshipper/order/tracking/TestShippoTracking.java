@@ -22,7 +22,7 @@ public class TestShippoTracking {
 	@Test
 	public void testTracking() {
 		try {
-			final Track track = Track.getTrackingInfo(ShippoCarrier.ONTRAC.apiToken, "C11732386821635", Shippo.apiKey);
+			final Track track = Track.getTrackingInfo(ShippoCarrier.FEDEX.apiToken, "126056648740", Shippo.apiKey);
 			System.out.println("Track: " + track);
 			System.out.println(track.getTrackingStatus().getStatusDetails());
 		} catch (Exception e) {

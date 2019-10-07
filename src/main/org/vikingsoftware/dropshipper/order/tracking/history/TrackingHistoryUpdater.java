@@ -167,8 +167,8 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 		final String objId = evt.getObjectId();
 		final TrackingStatus statusObj = evt.getStatus();
 		final Date statusDate = evt.getStatusDate();
-		if(city == null || state == null || zip == null || country == null
-				|| objId == null || statusObj == null || statusDate == null) {
+		System.err.println("statusObj: " + statusObj + ", evt: " + evt);
+		if(statusObj == null) {
 			return null;
 		}
 		return "INSERT INTO tracking_history(processed_order_id,tracking_number,shippo_object_id,"
@@ -180,7 +180,7 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 	}
 	
 	private String cleanse(final String str) {
-		return str.replace("'", "");
+		return str == null ? "?" : str.replace("'", "");
 	}
 	
 	private String getAddressField(final Address addr, final String field) {
