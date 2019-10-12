@@ -37,7 +37,7 @@ public class OrderParser implements CycleParticipant {
 				+ " sell_shipping, sell_percentage_cut, sell_total,"
 				+ " quantity, marketplace_order_id, buyer_username,"
 				+ " buyer_name, buyer_country, buyer_street_address, buyer_apt_suite_unit_etc, buyer_state_province_region,"
-				+ "buyer_city, buyer_zip_postal_code, buyer_phone_number) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+				+ "buyer_city, buyer_zip_postal_code, buyer_phone_number, date_parsed) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 		final PreparedStatement prepared = VSDSDBManager.get().createPreparedStatement(sql);
 		try {
@@ -59,6 +59,7 @@ public class OrderParser implements CycleParticipant {
 				prepared.setString(15, order.buyer_city);
 				prepared.setString(16, order.buyer_zip_postal_code);
 				prepared.setString(17, order.buyer_phone_number);
+				prepared.setLong(18, System.currentTimeMillis());
 				prepared.addBatch();
 			}
 

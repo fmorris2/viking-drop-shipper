@@ -2,7 +2,6 @@ package main.org.vikingsoftware.dropshipper;
 
 import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
 import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
-import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
 import main.org.vikingsoftware.dropshipper.inventory.InventoryUpdater;
 import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
 import main.org.vikingsoftware.dropshipper.order.parser.OrderParser;
@@ -41,7 +40,6 @@ public class VSDropShipper {
 			}
 
 			try {
-				SkuMappingManager.clear();
 				BrowserRepository.get().replaceAll();
 				Runtime.getRuntime().exec("pkill -9 firefox");
 				Runtime.getRuntime().exec("pkill -9 geckodriver");

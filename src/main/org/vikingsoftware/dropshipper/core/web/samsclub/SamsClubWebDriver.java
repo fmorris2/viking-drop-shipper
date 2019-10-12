@@ -3,8 +3,6 @@ package main.org.vikingsoftware.dropshipper.core.web.samsclub;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
-import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 
 public class SamsClubWebDriver extends LoginWebDriver {
@@ -15,11 +13,6 @@ public class SamsClubWebDriver extends LoginWebDriver {
 	
 	private WebElement usernameEl, passwordEl, buttonEl;
 	
-	@Override
-	public boolean selectOrderOptions(SkuMapping skuMapping, FulfillmentListing listing) {
-		return false;
-	}
-
 	@Override
 	protected boolean prepareForExecutionViaLoginImpl() {
 		try {

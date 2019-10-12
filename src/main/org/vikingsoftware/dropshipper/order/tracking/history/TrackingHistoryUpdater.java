@@ -6,7 +6,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,8 +52,11 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 		
 		final Statement st = VSDSDBManager.get().createStatement();
 		try {
-			final ResultSet res = st.executeQuery("SELECT id,tracking_number FROM processed_orders "
-					+ "WHERE is_cancelled=0 AND is_complete=0 AND tracking_number IS NOT NULL");
+			final ResultSet res = st.executeQuery("SELECT id,tracking_number FROM processed_order "
+					+ "LEFT JOIN tracking_history ON processed_order.id = tracking_history.processed_order_id "
+					+ "WHERE is_cancelled = 0 AND tracking_number IS NOT NULL AND tracking_status = 2"
+					+ "GROUP BY processed_order.id "
+					+ "ORDER BY processed_order.id ASC, tracking_history.id DESC");
 			
 			while(res.next()) {
 				orders.add(new ProcessedOrder.Builder()
@@ -111,12 +113,13 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 				continue;
 			}
 			final TrackingStatus updatedStatus = evt.getStatus();
+			final long ms = entry.getValue().getTrackingStatus().getStatusDate().getTime();
 			final Statement st = VSDSDBManager.get().createStatement();
 			try {
 				final ResultSet res = st.executeQuery("SELECT tracking_status,tracking_status_date FROM tracking_history "
 						+ "WHERE processed_order_id="+entry.getKey().id + " ORDER BY id DESC LIMIT 1");
 				if(!res.next() || res.getInt("tracking_status") != updatedStatus.ordinal() ||
-						!res.getString("tracking_status_date").equals(entry.getValue().getTrackingStatus().getStatusDate().toString())) {
+						res.getLong("tracking_status_date") != ms) {
 					System.out.println("New update to tracking history for processed order " + entry.getKey().id);
 					final String insertQuery = generateInsertQuery(entry.getKey(), entry.getValue());
 					if(insertQuery != null) {
@@ -146,9 +149,6 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 				if(evt == null || evt.getStatus() == null) {
 					continue;
 				}
-				if(evt.getStatus() == TrackingStatus.DELIVERED) {
-					st.addBatch("UPDATE processed_orders SET is_complete=1 WHERE id="+entry.getKey().id);
-				}
 			}
 			
 			st.executeBatch();
@@ -166,15 +166,15 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 		final String country = cleanse(getAddressField(loc, "country"));
 		final String objId = evt.getObjectId();
 		final TrackingStatus statusObj = evt.getStatus();
-		final Date statusDate = evt.getStatusDate();
+		final long statusDate = evt.getStatusDate().getTime();
 		System.err.println("statusObj: " + statusObj + ", evt: " + evt);
 		if(statusObj == null) {
 			return null;
 		}
-		return "INSERT INTO tracking_history(processed_order_id,tracking_number,shippo_object_id,"
+		return "INSERT INTO tracking_history(processed_order_id,shippo_object_id,"
 				+ "tracking_status,tracking_status_date,tracking_status_details,tracking_location_city,"
 				+ "tracking_location_state,tracking_location_zip,tracking_location_country) VALUES('"
-				+ order.id + "','" + order.tracking_number + "','" + objId + "','" + statusObj.ordinal()
+				+ order.id + "','" + objId + "','" + statusObj.ordinal()
 				+ "','" + statusDate + "','" + evt.getStatusDetails() + "','" + city + "','"
 				+ state + "','" + zip + "','" + country + "')";
 	}

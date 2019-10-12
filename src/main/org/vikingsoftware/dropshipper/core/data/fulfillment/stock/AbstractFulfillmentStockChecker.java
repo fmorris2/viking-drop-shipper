@@ -3,16 +3,13 @@ package main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.Future;
 
 import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
-import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
-import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
-import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
+import main.org.vikingsoftware.dropshipper.core.data.misc.Pair;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.ThreadUtils;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
@@ -27,7 +24,7 @@ public abstract class AbstractFulfillmentStockChecker<T extends LoginWebDriver> 
 	protected abstract double parseItemPrice(final T driver);
 
 	@Override
-	public Future<Collection<SkuInventoryEntry>> getStock(final FulfillmentAccount account,
+	public Future<Collection<Pair<Integer,Double>>> getStock(final FulfillmentAccount account,
 			final MarketplaceListing marketListing, final FulfillmentListing fulfillmentListing) {
 		return ThreadUtils.threadPool.submit(() -> {
 			System.out.println("Submitting getStockImpl task for market listing " + marketListing.id);
@@ -36,9 +33,9 @@ public abstract class AbstractFulfillmentStockChecker<T extends LoginWebDriver> 
 		});
 	}
 
-	protected Collection<SkuInventoryEntry> getStockImpl(final MarketplaceListing marketListing, final FulfillmentListing fulfillmentListing) {
+	protected Collection<Pair<Integer,Double>> getStockImpl(final MarketplaceListing marketListing, final FulfillmentListing fulfillmentListing) {
 		System.out.println("getStockImpl for market listing " + marketListing.id);
-		final Collection<SkuInventoryEntry> entries = new ArrayList<>();
+		final Collection<Pair<Integer,Double>> entries = new ArrayList<>();
 		DriverSupplier<? extends T> supplier = null;
 		T driver = null;
 		try {
@@ -74,21 +71,9 @@ public abstract class AbstractFulfillmentStockChecker<T extends LoginWebDriver> 
 	}
 
 	protected void parseAndAddSkuInventoryEntries(final T driver, final MarketplaceListing marketListing,
-			final FulfillmentListing fulfillmentListing, final Collection<SkuInventoryEntry> entries) {
+			final FulfillmentListing fulfillmentListing, final Collection<Pair<Integer,Double>> entries) {
 		driver.get(fulfillmentListing.listing_url);
 
-		final List<SkuMapping> mappings = SkuMappingManager.getMappingsForMarketplaceListing(marketListing.id);
-		System.out.println("SKU mappings for marketplace listing " + marketListing.id + ": " + mappings.size());
-		if(!mappings.isEmpty()) {
-			driver.clearCachedSelectedOrderOptions();
-			for(final SkuMapping mapping : mappings) {
-				System.out.println("selecting order options for SKU Mapping " + mapping);
-				if(driver.selectOrderOptions(mapping, fulfillmentListing)) {
-					entries.add(new SkuInventoryEntry(mapping.item_sku, parseItemStock(driver), parseItemPrice(driver)));
-				}
-			}
-		} else {
-			entries.add(new SkuInventoryEntry(null, parseItemStock(driver), parseItemPrice(driver)));
-		}
+		entries.add(new Pair<>(parseItemStock(driver), parseItemPrice(driver)));
 	}
 }

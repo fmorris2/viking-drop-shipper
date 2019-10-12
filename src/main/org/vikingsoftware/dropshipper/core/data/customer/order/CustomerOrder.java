@@ -31,7 +31,7 @@ public class CustomerOrder {
 	public final String buyer_city;
 	public final String buyer_zip_postal_code;
 	public final String buyer_phone_number;
-	public final LocalDateTime date_parsed;
+	public final long date_parsed;
 
 	private CustomerOrder(final Builder builder) {
 		this.id = builder.id;
@@ -94,7 +94,7 @@ public class CustomerOrder {
 		private String buyer_city;
 		private String buyer_zip_postal_code;
 		private String buyer_phone_number;
-		private LocalDateTime date_parsed;
+		private long date_parsed;
 
 		public Builder id(final int id) {
 			this.id = id;
@@ -191,8 +191,8 @@ public class CustomerOrder {
 			return this;
 		}
 		
-		public Builder date_parsed(final Timestamp timestamp) {
-			this.date_parsed = timestamp.toLocalDateTime();
+		public Builder date_parsed(final long timestamp) {
+			this.date_parsed = timestamp;
 			return this;
 		}
 

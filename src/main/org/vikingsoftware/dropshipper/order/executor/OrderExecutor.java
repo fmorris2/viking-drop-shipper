@@ -87,9 +87,10 @@ public class OrderExecutor implements CycleParticipant {
 
 	private void insertSuccessfulOrderIntoDB(final ProcessedOrder order) {
 		//store all new orders in DB
-		final String sql = "INSERT INTO processed_orders(customer_order_id, fulfillment_listing_id, "
+		final String sql = "INSERT INTO processed_order(customer_order_id, fulfillment_listing_id, "
 				+ "fulfillment_account_id, fulfillment_transaction_id,"
-				+ "buy_subtotal, buy_sales_tax, buy_shipping, buy_product_fees, buy_total, profit) VALUES(?,?,?,?,?,?,?,?,?,?)";
+				+ "buy_subtotal, buy_sales_tax, buy_shipping, buy_product_fees, buy_total, profit, date_processed) "
+				+ "VALUES(?,?,?,?,?,?,?,?,?,?,?)";
 
 		final PreparedStatement prepared = VSDSDBManager.get().createPreparedStatement(sql);
 		final Statement deleteSt = VSDSDBManager.get().createStatement();
@@ -104,6 +105,7 @@ public class OrderExecutor implements CycleParticipant {
 			prepared.setDouble(8, order.buy_product_fees);
 			prepared.setDouble(9, order.buy_total);
 			prepared.setDouble(10, order.profit);
+			prepared.setLong(11, System.currentTimeMillis());
 			prepared.execute();
 
 			final String removeSql = "DELETE FROM failed_fulfillment_attempts WHERE customer_order_id="+order.customer_order_id;

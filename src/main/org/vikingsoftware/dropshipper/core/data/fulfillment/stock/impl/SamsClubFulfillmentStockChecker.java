@@ -3,16 +3,13 @@ package main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import org.jsoup.Jsoup;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.AbstractFulfillmentStockChecker;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
-import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
-import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
-import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
+import main.org.vikingsoftware.dropshipper.core.data.misc.Pair;
 import main.org.vikingsoftware.dropshipper.core.utils.SamsClubMetaDataParser;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
@@ -44,20 +41,18 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 	}
 	
 	@Override
-	protected Collection<SkuInventoryEntry> getStockImpl(MarketplaceListing marketListing, FulfillmentListing fulfillmentListing) {
-		final Collection<SkuInventoryEntry> entries = new ArrayList<>();
+	protected Collection<Pair<Integer,Double>> getStockImpl(MarketplaceListing marketListing, FulfillmentListing fulfillmentListing) {
+		final Collection<Pair<Integer,Double>> entries = new ArrayList<>();
 		parseAndAddSkuInventoryEntries(marketListing, fulfillmentListing, entries);
 		return entries;
 	}
 	
 	protected void parseAndAddSkuInventoryEntries(MarketplaceListing marketListing,
-			FulfillmentListing fulfillmentListing, Collection<SkuInventoryEntry> entries) {
-		final List<SkuMapping> mappings = SkuMappingManager.getMappingsForMarketplaceListing(marketListing.id);
-		System.out.println("SKU mappings for marketplace listing " + marketListing.id + ": " + mappings.size());
+			FulfillmentListing fulfillmentListing, Collection<Pair<Integer,Double>> entries) {
 		try {
 			final String pageSource = Jsoup.connect(fulfillmentListing.listing_url).get().html();
 			final int stock = parseItemStock(fulfillmentListing.item_id, pageSource);
-			entries.add(new SkuInventoryEntry(null, stock, parseItemPrice(fulfillmentListing.item_id, pageSource)));
+			entries.add(new Pair<>(stock, parseItemPrice(fulfillmentListing.item_id, pageSource)));
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}

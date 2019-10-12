@@ -6,9 +6,9 @@ import java.util.concurrent.Future;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
-import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
+import main.org.vikingsoftware.dropshipper.core.data.misc.Pair;
 
 public interface FulfillmentStockChecker {
-	public Future<Collection<SkuInventoryEntry>> getStock(final FulfillmentAccount account,
+	public Future<Collection<Pair<Integer, Double>>> getStock(final FulfillmentAccount account,
 			final MarketplaceListing marketListing, final FulfillmentListing fulfillmentListing);
 }

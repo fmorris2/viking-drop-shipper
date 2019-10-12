@@ -82,7 +82,7 @@ public class OrderTracking implements CycleParticipant {
 		final List<ProcessedOrder> orders = new ArrayList<>();
 		try {
 			final Statement st = VSDSDBManager.get().createStatement();
-			final ResultSet res = st.executeQuery("SELECT * FROM processed_orders WHERE tracking_number IS NULL");
+			final ResultSet res = st.executeQuery("SELECT * FROM processed_order WHERE tracking_number IS NULL");
 			while(res.next()) {
 				final ProcessedOrder order = new ProcessedOrder.Builder()
 					.id(res.getInt("id"))
@@ -103,7 +103,7 @@ public class OrderTracking implements CycleParticipant {
 
 	private String getUpdateTrackingNumberInDBQuery(final ProcessedOrder order, final TrackingEntry entry) {
 		if(entry !=  null && (order.tracking_number == null || !order.tracking_number.equals(entry.trackingNumber))) {
-			return "UPDATE processed_orders SET tracking_number='"+entry.trackingNumber+"' WHERE id="+order.id;
+			return "UPDATE processed_order SET tracking_number='"+entry.trackingNumber+"' WHERE id="+order.id;
 		}
 
 		return null;

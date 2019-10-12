@@ -13,13 +13,13 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.AliE
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.CostcoFulfillmentStockChecker;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubFulfillmentStockChecker;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
-import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
+import main.org.vikingsoftware.dropshipper.core.data.misc.Pair;
 
 public class FulfillmentStockManager {
 
 	private FulfillmentStockManager(){}
 
-	public static Future<Collection<SkuInventoryEntry>> getStock(final MarketplaceListing marketListing, final FulfillmentListing fulfillmentListing) {
+	public static Future<Collection<Pair<Integer,Double>>> getStock(final MarketplaceListing marketListing, final FulfillmentListing fulfillmentListing) {
 		FulfillmentAccount account = null;
 		try {
 			switch(FulfillmentPlatforms.getById(fulfillmentListing.fulfillment_platform_id)) {

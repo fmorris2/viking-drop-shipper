@@ -13,7 +13,6 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentMana
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
-import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 public class InventoryUpdater implements CycleParticipant {
@@ -33,7 +32,6 @@ public class InventoryUpdater implements CycleParticipant {
 		if(System.currentTimeMillis() - lastCycle > CYCLE_TIME) {
 			lastCycle = System.currentTimeMillis();
 			MarketplaceLoader.loadMarketplaces();
-			SkuMappingManager.load();
 			populateInventoryUpdaters();
 			if(!setupInventoryUpdaters()) {
 				return;

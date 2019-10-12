@@ -43,8 +43,6 @@ import com.ebay.soap.eBLBaseComponents.ShippingDetailsType;
 import com.ebay.soap.eBLBaseComponents.ShippingServiceOptionsType;
 import com.ebay.soap.eBLBaseComponents.SiteCodeType;
 import com.ebay.soap.eBLBaseComponents.TransactionType;
-import com.ebay.soap.eBLBaseComponents.VariationType;
-import com.ebay.soap.eBLBaseComponents.VariationsType;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrderManager;
@@ -53,7 +51,6 @@ import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.data.misc.Pair;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
-import main.org.vikingsoftware.dropshipper.core.data.sku.SkuInventoryEntry;
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
@@ -203,31 +200,17 @@ public class EbayCalls {
 		return new Pair<>(price, shippingPrice);
 	}
 
-	public static boolean updateInventory(final String listingId, final List<SkuInventoryEntry> invEntries) {
+	public static boolean updateInventory(final String listingId, final Pair<Integer,Double> stockAndPrice) {
 		try {
 			addCall("updateInventory");
 			final ApiContext api = EbayApiContextManager.getLiveContext();
 			final ReviseFixedPriceItemCall call = new ReviseFixedPriceItemCall(api);
 			final ItemType itemToRevise = new ItemType();
 			itemToRevise.setItemID(listingId);
-			if(invEntries.size() == 1 && invEntries.get(0).sku == null) {
-				if(invEntries.get(0).stock < MIN_AVAILABLE_FULFILLMENT_QTY) {
-					itemToRevise.setQuantity(0);
-				} else {
-					itemToRevise.setQuantity(Math.max(0, Math.min(FAKE_MAX_QUANTITY, invEntries.get(0).stock)));
-				}
+			if(stockAndPrice.left < MIN_AVAILABLE_FULFILLMENT_QTY) {
+				itemToRevise.setQuantity(0);
 			} else {
-				final VariationsType variations = new VariationsType();
-				final List<VariationType> entries = new ArrayList<>();
-				for(final SkuInventoryEntry entry : invEntries) {
-					final VariationType variation = new VariationType();
-					variation.setSKU(entry.sku);
-					variation.setQuantity(Math.max(0, Math.min(FAKE_MAX_QUANTITY, entry.stock)));
-					entries.add(variation);
-				}
-				variations.setVariation(entries.stream().toArray(VariationType[]::new));
-				System.out.println("Variations: " + variations.getVariationLength());
-				itemToRevise.setVariations(variations);
+				itemToRevise.setQuantity(Math.max(0, Math.min(FAKE_MAX_QUANTITY, stockAndPrice.left)));
 			}
 			System.out.println("Setting stock for listing id " + listingId + " to " + itemToRevise.getQuantity());
 			call.setItemToBeRevised(itemToRevise);
@@ -236,7 +219,7 @@ public class EbayCalls {
 			return !call.hasError();
 		} catch(final Exception e) {
 			e.printStackTrace();
-			DBLogging.high(EbayCalls.class, "failed to update inventory for listing " + listingId + " and invEntries " + invEntries + ": ", e);
+			DBLogging.high(EbayCalls.class, "failed to update inventory for listing " + listingId + " w/ stock and price " + stockAndPrice + ": ", e);
 		
 			if(e.getMessage().equals("You are not allowed to revise ended listings.")) {
 				System.out.println("setting ended listing to inactive in database...");

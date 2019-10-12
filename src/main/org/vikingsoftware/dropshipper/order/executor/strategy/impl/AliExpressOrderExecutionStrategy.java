@@ -36,8 +36,6 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.AliE
 import main.org.vikingsoftware.dropshipper.core.data.misc.CreditCardInfo;
 import main.org.vikingsoftware.dropshipper.core.data.misc.StateUtils;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
-import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
-import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMappingManager;
 import main.org.vikingsoftware.dropshipper.core.utils.CaptchaUtils;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.web.CustomSelect;
@@ -138,18 +136,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 		if(!setOrderQuantity(order)) {
 			return processedOrder;
 		}
-
-		//select appropriate order options (color, length, etc)
-		System.out.println("selecting order options...");
-		final Optional<SkuMapping> skuMapping = SkuMappingManager.getMapping(order.marketplace_listing_id, order.sku);
-		if(!skuMapping.isPresent()) {
-			return processedOrder;
-		}
-
-		if(!browser.selectOrderOptions(skuMapping.get(), fulfillmentListing)) {
-			return processedOrder;
-		}
-
+		
 		browser.findElement(By.id("j-buy-now-btn")).click();
 
 		System.out.println("entering shipping address...");

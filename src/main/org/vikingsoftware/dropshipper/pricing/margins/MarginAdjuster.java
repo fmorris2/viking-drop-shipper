@@ -29,14 +29,14 @@ public class MarginAdjuster implements CycleParticipant {
 			" FROM marketplace_listing" + 
 			" INNER JOIN fulfillment_mapping ON fulfillment_mapping.marketplace_listing_id = marketplace_listing.id" + 
 			" LEFT JOIN (" + 
-			"(SELECT processed_orders.fulfillment_listing_id, processed_orders.creation_timestamp" + 
-			" FROM processed_orders" + 
-			" WHERE ((UNIX_TIMESTAMP() * 1000) - (UNIX_TIMESTAMP(processed_orders.creation_timestamp) * 1000) > " + LAST_ORDER_TIME_WINDOW + ")" + 
-			" GROUP BY processed_orders.fulfillment_listing_id" + 
-			" ORDER BY creation_timestamp DESC) AS t2" + 
+			"(SELECT processed_order.fulfillment_listing_id, processed_order.date_processed" + 
+			" FROM processed_order" + 
+			" WHERE ((UNIX_TIMESTAMP() * 1000) - processed_order.date_processed > " + LAST_ORDER_TIME_WINDOW + ")" + 
+			" GROUP BY processed_order.fulfillment_listing_id" + 
+			" ORDER BY date_processed DESC) AS t2" + 
 			") ON fulfillment_mapping.fulfillment_listing_id = t2.fulfillment_listing_id" + 
 			" WHERE marketplace_listing.active" + 
-			" AND (UNIX_TIMESTAMP() * 1000) - (UNIX_TIMESTAMP(marketplace_listing.last_margin_update) * 1000) > " + LAST_MARGIN_UPDATE_TIME_WINDOW;
+			" AND (UNIX_TIMESTAMP() * 1000) - marketplace_listing.last_margin_update > " + LAST_MARGIN_UPDATE_TIME_WINDOW;
 	
 	private boolean debug = true;
 	
@@ -99,7 +99,8 @@ public class MarginAdjuster implements CycleParticipant {
 		debug("Adjusting margin from " + listing.currentMargin + "% --> " + newMargin + "% for: " + listing);
 		try {
 			final Statement st = VSDSDBManager.get().createStatement();
-			st.execute("UPDATE marketplace_listing SET target_margin=" + newMargin + ", last_margin_update=CURRENT_TIMESTAMP()"
+			final long ms = System.currentTimeMillis();
+			st.execute("UPDATE marketplace_listing SET target_margin=" + newMargin + ", last_margin_update="+ms
 					+ " WHERE id=" + listing.marketplaceListingId);
 			System.out.println("\tsuccess.");
 		} catch(final Exception e) {

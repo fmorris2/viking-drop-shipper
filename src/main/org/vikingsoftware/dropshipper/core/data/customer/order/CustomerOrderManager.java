@@ -18,8 +18,8 @@ public class CustomerOrderManager {
 		try {
 			final Statement st = VSDSDBManager.get().createStatement();
 			final ResultSet results = st.executeQuery("SELECT * FROM customer_order"
-					+ " LEFT JOIN processed_orders ON customer_order.id=processed_orders.customer_order_id"
-					+ " WHERE processed_orders.customer_order_id IS NULL AND customer_order.is_cancelled=0");
+					+ " LEFT JOIN processed_order ON customer_order.id=processed_order.customer_order_id"
+					+ " WHERE processed_order.customer_order_id IS NULL AND customer_order.is_cancelled=0");
 
 			while(results.next()) {
 				toExecute.add(buildOrderFromResultSet(results));
@@ -84,7 +84,7 @@ public class CustomerOrderManager {
 			.buyer_city(results.getString("buyer_city"))
 			.buyer_zip_postal_code(results.getString("buyer_zip_postal_code"))
 			.buyer_phone_number(results.getString("buyer_phone_number"))
-			.date_parsed(results.getTimestamp("date_parsed"))
+			.date_parsed(results.getLong("date_parsed"))
 			.build();
 	}
 }

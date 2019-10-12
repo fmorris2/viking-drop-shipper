@@ -11,8 +11,6 @@ import org.openqa.selenium.Cookie;
 import org.openqa.selenium.UnableToSetCookieException;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
-import main.org.vikingsoftware.dropshipper.core.data.sku.SkuMapping;
 
 public abstract class LoginWebDriver extends DefaultWebDriver {
 
@@ -26,8 +24,6 @@ public abstract class LoginWebDriver extends DefaultWebDriver {
 
 	protected int loginTries = 0;
 	protected FulfillmentAccount account;
-
-	public abstract boolean selectOrderOptions(final SkuMapping skuMapping, final FulfillmentListing listing);
 
 	protected abstract boolean prepareForExecutionViaLoginImpl();
 	protected abstract String getLandingPageURL();
