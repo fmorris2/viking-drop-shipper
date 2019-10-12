@@ -62,7 +62,9 @@ public abstract class LoginWebDriver extends DefaultWebDriver {
 	}
 
 	public void clearSession() {
-		sessionCookies.put(account, new HashSet<>());
+		if(account != null) {
+			sessionCookies.put(account, new HashSet<>());
+		}
 	}
 
 	public void clearCachedSelectedOrderOptions() {
