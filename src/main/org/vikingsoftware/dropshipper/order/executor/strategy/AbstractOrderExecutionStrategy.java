@@ -8,6 +8,7 @@ import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOr
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
+import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
 
 public abstract class AbstractOrderExecutionStrategy<T extends LoginWebDriver> implements OrderExecutionStrategy {
 
@@ -52,6 +53,9 @@ public abstract class AbstractOrderExecutionStrategy<T extends LoginWebDriver> i
 	protected ProcessedOrder executeOrder(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws Exception {
 		System.out.println(this + "#executeOrder");
 		driver = driverSupplier.get();
+		if(driver instanceof SamsClubWebDriver) {
+			driver.clearSession();
+		}
 		if(driver.getReady(account)) {
 			System.out.println("\tSuccessfully prepared " + driver);
 			return executeOrderImpl(order, fulfillmentListing);
