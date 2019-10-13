@@ -52,9 +52,9 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 		
 		final Statement st = VSDSDBManager.get().createStatement();
 		try {
-			final ResultSet res = st.executeQuery("SELECT id,tracking_number FROM processed_order "
+			final ResultSet res = st.executeQuery("SELECT processed_order.id,tracking_number FROM processed_order "
 					+ "LEFT JOIN tracking_history ON processed_order.id = tracking_history.processed_order_id "
-					+ "WHERE is_cancelled = 0 AND tracking_number IS NOT NULL AND tracking_status = 2"
+					+ "WHERE is_cancelled = 0 AND tracking_number IS NOT NULL AND tracking_status IS NULL OR tracking_status = 2 "
 					+ "GROUP BY processed_order.id "
 					+ "ORDER BY processed_order.id ASC, tracking_history.id DESC");
 			
