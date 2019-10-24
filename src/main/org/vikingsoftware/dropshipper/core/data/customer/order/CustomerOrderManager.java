@@ -47,6 +47,22 @@ public class CustomerOrderManager {
 
 		return Optional.empty();
 	}
+	
+	public static Optional<CustomerOrder> loadCustomerOrderByMarketplaceOrderId(final String orderId) {
+		try {
+			final Statement st = VSDSDBManager.get().createStatement();
+			final ResultSet results = st.executeQuery("SELECT * FROM customer_order"
+					+ " WHERE marketplace_order_id='"+orderId+"'");
+
+			if(results.next()) {
+				return Optional.of(buildOrderFromResultSet(results));
+			}
+		} catch(final Exception e) {
+			DBLogging.medium(CustomerOrder.class, "failed to load customer order by marketplace order id " + orderId, e);
+		}
+
+		return Optional.empty();
+	}
 
 	public static CustomerOrder loadFirstCustomerOrder() {
 		CustomerOrder toReturn = null;
@@ -85,6 +101,8 @@ public class CustomerOrderManager {
 			.buyer_zip_postal_code(results.getString("buyer_zip_postal_code"))
 			.buyer_phone_number(results.getString("buyer_phone_number"))
 			.date_parsed(results.getLong("date_parsed"))
+			.date_cancelled(results.getLong("date_cancelled"))
+			.is_cancelled(results.getBoolean("is_cancelled"))
 			.build();
 	}
 }

@@ -27,14 +27,13 @@ import com.ebay.soap.eBLBaseComponents.BuyerRequirementDetailsType;
 import com.ebay.soap.eBLBaseComponents.CategoryType;
 import com.ebay.soap.eBLBaseComponents.CountryCodeType;
 import com.ebay.soap.eBLBaseComponents.CurrencyCodeType;
+import com.ebay.soap.eBLBaseComponents.DetailLevelCodeType;
 import com.ebay.soap.eBLBaseComponents.ItemType;
 import com.ebay.soap.eBLBaseComponents.ListingDurationCodeType;
 import com.ebay.soap.eBLBaseComponents.ListingTypeCodeType;
 import com.ebay.soap.eBLBaseComponents.NameValueListArrayType;
 import com.ebay.soap.eBLBaseComponents.NameValueListType;
 import com.ebay.soap.eBLBaseComponents.PaginationType;
-import com.ebay.soap.eBLBaseComponents.PaymentTransactionType;
-import com.ebay.soap.eBLBaseComponents.PaymentsInformationType;
 import com.ebay.soap.eBLBaseComponents.PictureDetailsType;
 import com.ebay.soap.eBLBaseComponents.ProductListingDetailsType;
 import com.ebay.soap.eBLBaseComponents.ReturnPolicyType;
@@ -95,6 +94,7 @@ public class EbayCalls {
 			final ApiContext apiContext = EbayApiContextManager.getLiveContext();
 			final GetSellerTransactionsCall call = new GetSellerTransactionsCall(apiContext);
 			call.setIncludeFinalValueFee(true);
+			call.setDetailLevel(new DetailLevelCodeType[]{DetailLevelCodeType.RETURN_ALL});
 			final PaginationType pagination = new PaginationType();
 			pagination.setEntriesPerPage(200);
 			pagination.setPageNumber(1);
@@ -107,17 +107,6 @@ public class EbayCalls {
 			if(transactions == null) {
 				return new CustomerOrder[0];
 			}
-			
-//			final TransactionType transaction = transactions[0];
-//			final ItemType item = transaction.getItem();
-//			final PaymentsInformationType monetaryDetails = transaction.getMonetaryDetails();
-//			final PaymentTransactionType initialBuyerPayment = monetaryDetails.getPayments().getPayment(0);
-//			System.out.println("Order ID: " + transaction.getTransactionID());
-//			System.out.println("Item ID: " + item.getItemID());
-//			System.out.println("Paypal Transaction ID: " + initialBuyerPayment.getReferenceID().getValue());
-//			System.out.println("Final Value Fees: " + transaction.getFinalValueFee().getValue());
-//			
-//			System.exit(0);
 			
 			final List<CustomerOrder> orders = new ArrayList<>();
 			final List<TransactionType> unknownTransactionMappings = new ArrayList<>();

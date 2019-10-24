@@ -1,9 +1,7 @@
 package main.org.vikingsoftware.dropshipper.core.data.customer.order;
 
-import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.Normalizer;
-import java.time.LocalDateTime;
 
 
 public class CustomerOrder {
@@ -32,6 +30,8 @@ public class CustomerOrder {
 	public final String buyer_zip_postal_code;
 	public final String buyer_phone_number;
 	public final long date_parsed;
+	public final long date_cancelled;
+	public final boolean is_cancelled;
 
 	private CustomerOrder(final Builder builder) {
 		this.id = builder.id;
@@ -57,6 +57,8 @@ public class CustomerOrder {
 		this.buyer_zip_postal_code = builder.buyer_zip_postal_code;
 		this.buyer_phone_number = builder.buyer_phone_number;
 		this.date_parsed = builder.date_parsed;
+		this.date_cancelled = builder.date_cancelled;
+		this.is_cancelled = builder.is_cancelled;
 	}
 	
 	public String getFirstName() {
@@ -95,6 +97,8 @@ public class CustomerOrder {
 		private String buyer_zip_postal_code;
 		private String buyer_phone_number;
 		private long date_parsed;
+		private long date_cancelled;
+		private boolean is_cancelled;
 
 		public Builder id(final int id) {
 			this.id = id;
@@ -193,6 +197,16 @@ public class CustomerOrder {
 		
 		public Builder date_parsed(final long timestamp) {
 			this.date_parsed = timestamp;
+			return this;
+		}
+		
+		public Builder date_cancelled(final long val) {
+			this.date_cancelled = val;
+			return this;
+		}
+		
+		public Builder is_cancelled(final boolean val) {
+			this.is_cancelled = val;
 			return this;
 		}
 

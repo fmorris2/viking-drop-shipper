@@ -14,6 +14,9 @@ public class ProcessedOrder {
 	public final double buy_product_fees;
 	public final double buy_total;
 	public final double profit;
+	public final long date_processed;
+	public final long date_cancelled;
+	public final boolean is_cancelled;
 
 	private ProcessedOrder(final Builder builder) {
 		this.id = builder.id;
@@ -28,6 +31,9 @@ public class ProcessedOrder {
 		this.buy_product_fees = builder.buy_product_fees;
 		this.buy_total = builder.buy_total;
 		this.profit = builder.profit;
+		this.date_processed = builder.date_processed;
+		this.date_cancelled = builder.date_cancelled;
+		this.is_cancelled = builder.is_cancelled;
 	}
 
 	public static class Builder {
@@ -43,6 +49,9 @@ public class ProcessedOrder {
 		private double buy_product_fees;
 		private double buy_total;
 		private double profit;
+		private long date_processed;
+		private long date_cancelled;
+		private boolean is_cancelled;
 
 		public Builder id(final int id) {
 			this.id = id;
@@ -101,6 +110,21 @@ public class ProcessedOrder {
 
 		public Builder profit(final double val) {
 			this.profit = val;
+			return this;
+		}
+		
+		public Builder date_processed(final long val) {
+			this.date_processed = val;
+			return this;
+		}
+		
+		public Builder date_cancelled(final long val) {
+			this.date_cancelled = val;
+			return this;
+		}
+		
+		public Builder is_cancelled(final boolean val) {
+			this.is_cancelled = val;
 			return this;
 		}
 
