@@ -17,7 +17,7 @@ public class VSDropShipper {
 	private static final CycleParticipant[] MODULES = {
 		new OrderParser(),
 		new OrderExecutor(),
-		new MarginAdjuster(),
+		//new MarginAdjuster(),
 		new InventoryUpdater(),
 		new OrderTracking(),
 		new TrackingHistoryUpdater()
