@@ -2,6 +2,7 @@ package main.org.vikingsoftware.dropshipper;
 
 import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
 import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
+import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 import main.org.vikingsoftware.dropshipper.inventory.InventoryUpdater;
 import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
 import main.org.vikingsoftware.dropshipper.order.parser.OrderParser;
@@ -40,6 +41,7 @@ public class VSDropShipper {
 
 			try {
 				BrowserRepository.get().replaceAll();
+				LoginWebDriver.clearSessionCaches();
 				Runtime.getRuntime().exec("pkill -9 firefox");
 				Runtime.getRuntime().exec("pkill -9 geckodriver");
 			} catch(final Exception e) {

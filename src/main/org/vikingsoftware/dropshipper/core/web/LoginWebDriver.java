@@ -28,6 +28,12 @@ public abstract class LoginWebDriver extends DefaultWebDriver {
 	protected abstract boolean prepareForExecutionViaLoginImpl();
 	protected abstract String getLandingPageURL();
 	protected abstract boolean verifyLoggedIn();
+	
+	public static void clearSessionCaches() {
+		sessionCookies.clear();
+		cookieCache.clear();
+		loginLocks.clear();
+	}
 
 	public boolean getReady(final FulfillmentAccount account) {
 		System.out.println("LoginWebDriver#getReady");
