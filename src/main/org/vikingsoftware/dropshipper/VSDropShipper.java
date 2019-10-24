@@ -12,7 +12,6 @@ import main.org.vikingsoftware.dropshipper.pricing.margins.MarginAdjuster;
 public class VSDropShipper {
 
 	public static final String VS_PHONE_NUM = "4238454649";
-	private static final long CYCLE_TIME_MS = 60_000;
 
 	private static final CycleParticipant[] MODULES = {
 		new OrderParser(),
@@ -46,8 +45,6 @@ public class VSDropShipper {
 			} catch(final Exception e) {
 				e.printStackTrace();
 			}
-			System.out.println("Sleeping between cycles...");
-			Thread.sleep(CYCLE_TIME_MS);
 		}
 	}
 
