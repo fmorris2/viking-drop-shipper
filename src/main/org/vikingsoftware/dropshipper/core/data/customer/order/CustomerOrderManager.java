@@ -15,11 +15,11 @@ public class CustomerOrderManager {
 
 	public static List<CustomerOrder> loadOrdersToExecute() {
 		final List<CustomerOrder> toExecute = new ArrayList<>();
-		try {
+		try (
 			final Statement st = VSDSDBManager.get().createStatement();
 			final ResultSet results = st.executeQuery("SELECT * FROM customer_order"
 					+ " LEFT JOIN processed_order ON customer_order.id=processed_order.customer_order_id"
-					+ " WHERE processed_order.customer_order_id IS NULL AND customer_order.is_cancelled=0");
+					+ " WHERE processed_order.customer_order_id IS NULL AND customer_order.is_cancelled=0")) {
 
 			while(results.next()) {
 				toExecute.add(buildOrderFromResultSet(results));
@@ -33,10 +33,10 @@ public class CustomerOrderManager {
 	}
 
 	public static Optional<CustomerOrder> loadCustomerOrderById(final int id) {
-		try {
+		try (
 			final Statement st = VSDSDBManager.get().createStatement();
 			final ResultSet results = st.executeQuery("SELECT * FROM customer_order"
-					+ " WHERE id="+id);
+					+ " WHERE id="+id)) {
 
 			if(results.next()) {
 				return Optional.of(buildOrderFromResultSet(results));
@@ -49,10 +49,10 @@ public class CustomerOrderManager {
 	}
 	
 	public static Optional<CustomerOrder> loadCustomerOrderByMarketplaceOrderId(final String orderId) {
-		try {
+		try (
 			final Statement st = VSDSDBManager.get().createStatement();
 			final ResultSet results = st.executeQuery("SELECT * FROM customer_order"
-					+ " WHERE marketplace_order_id='"+orderId+"'");
+					+ " WHERE marketplace_order_id='"+orderId+"'")) {
 
 			if(results.next()) {
 				return Optional.of(buildOrderFromResultSet(results));
@@ -66,9 +66,9 @@ public class CustomerOrderManager {
 
 	public static CustomerOrder loadFirstCustomerOrder() {
 		CustomerOrder toReturn = null;
-		final Statement st = VSDSDBManager.get().createStatement();
-		try {
-			final ResultSet results = st.executeQuery("SELECT * FROM customer_order LIMIT 1");
+		try (
+			final Statement st = VSDSDBManager.get().createStatement();
+			final ResultSet results = st.executeQuery("SELECT * FROM customer_order LIMIT 1")) {
 			if(results.next()) {
 				toReturn = buildOrderFromResultSet(results);
 			}

@@ -92,9 +92,8 @@ public class OrderExecutor implements CycleParticipant {
 				+ "buy_subtotal, buy_sales_tax, buy_shipping, buy_product_fees, buy_total, profit, date_processed) "
 				+ "VALUES(?,?,?,?,?,?,?,?,?,?,?)";
 
-		final PreparedStatement prepared = VSDSDBManager.get().createPreparedStatement(sql);
-		final Statement deleteSt = VSDSDBManager.get().createStatement();
-		try {
+		try (final PreparedStatement prepared = VSDSDBManager.get().createPreparedStatement(sql);
+			 final Statement deleteSt = VSDSDBManager.get().createStatement()) {
 			prepared.setInt(1, order.customer_order_id);
 			prepared.setInt(2, order.fulfillment_listing_id);
 			prepared.setInt(3, order.fulfillment_account_id);

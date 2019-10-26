@@ -7,8 +7,7 @@ import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 public final class TransactionManager {
 	
 	public static boolean insertTransaction(final Transaction transaction) {
-		final Statement st = VSDSDBManager.get().createStatement();
-		try {
+		try (final Statement st = VSDSDBManager.get().createStatement()) {
 			return st.execute(generateInsertQuery(transaction));
 		} catch(final Exception e) {
 			e.printStackTrace();

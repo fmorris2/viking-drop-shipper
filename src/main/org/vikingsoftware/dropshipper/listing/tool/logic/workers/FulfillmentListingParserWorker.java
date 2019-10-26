@@ -144,9 +144,8 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 	}
 
 	private void loadPreExistingFulfillmentURLs() {
-		try {
-			final Statement st = VSDSDBManager.get().createStatement();
-			final ResultSet res = st.executeQuery("SELECT fulfillment_platform_id,item_id,listing_url,listing_title FROM fulfillment_listing");
+		try (final Statement st = VSDSDBManager.get().createStatement();
+			 final ResultSet res = st.executeQuery("SELECT fulfillment_platform_id,item_id,listing_url,listing_title FROM fulfillment_listing")) {
 			while(res.next()) {
 				preExistingFulfillmentURLs.add(res.getString("listing_url"));
 				final Set<String> ids = platformToFulfillmentIds.getOrDefault(res.getInt("fulfillment_platform_id"), new HashSet<>());

@@ -12,8 +12,7 @@ public class TestVDSDBManager {
 
 	@Test
 	public void test() {
-		final Statement st = VSDSDBManager.get().createStatement();
-		try {
+		try (final Statement st = VSDSDBManager.get().createStatement()){
 			Assert.assertTrue("DB connection is not valid", st.getConnection().isValid(5));
 		} catch (final SQLException e) {
 			e.printStackTrace();

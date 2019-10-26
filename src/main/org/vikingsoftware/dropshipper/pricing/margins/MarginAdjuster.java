@@ -64,9 +64,8 @@ public class MarginAdjuster implements CycleParticipant {
 	 */
 	private final List<StagnantListing> getStagnantListings() {
 		final List<StagnantListing> stagnantListings = new ArrayList<>();
-		try {
-			final Statement st = VSDSDBManager.get().createStatement();
-			final ResultSet res = st.executeQuery(STAGNANT_LISTING_QUERY);
+		try (final Statement st = VSDSDBManager.get().createStatement();
+			 final ResultSet res = st.executeQuery(STAGNANT_LISTING_QUERY)) {
 			while(res.next()) {
 				final StagnantListing listing = new StagnantListing(res.getInt("stagnantMarketplaceListingID"),
 						res.getDouble("currentMargin"), res.getString("listingTitle"));
@@ -97,8 +96,7 @@ public class MarginAdjuster implements CycleParticipant {
 	private void decreaseMargin(final StagnantListing listing) {
 		final double newMargin = Math.max(MARGIN_FLOOR, listing.currentMargin - MARGIN_ADJUSTMENT_STEP);
 		debug("Adjusting margin from " + listing.currentMargin + "% --> " + newMargin + "% for: " + listing);
-		try {
-			final Statement st = VSDSDBManager.get().createStatement();
+		try (final Statement st = VSDSDBManager.get().createStatement()) {
 			final long ms = System.currentTimeMillis();
 			st.execute("UPDATE marketplace_listing SET target_margin=" + newMargin + ", last_margin_update="+ms
 					+ " WHERE id=" + listing.marketplaceListingId);
@@ -111,8 +109,7 @@ public class MarginAdjuster implements CycleParticipant {
 	
 	private void flagForPurgeExamination(final StagnantListing listing) {
 		debug("Flagging for purge examination: " + listing);
-		try {
-			final Statement st = VSDSDBManager.get().createStatement();
+		try (final Statement st = VSDSDBManager.get().createStatement()) {
 			st.execute("UPDATE marketplace_listing SET needs_purge_examination=1"
 					+ " WHERE id=" + listing.marketplaceListingId);
 			System.out.println("\tsuccess.");

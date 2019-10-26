@@ -35,8 +35,7 @@ public class MarketplaceListing {
 	}
 	
 	public static boolean setIsActive(final String listingId, final boolean isActive) {
-		try {
-			final Statement st = VSDSDBManager.get().createStatement();
+		try (final Statement st = VSDSDBManager.get().createStatement()) {
 			st.execute("UPDATE marketplace_listing SET active=" + (isActive ? 1 : 0)
 					+ " WHERE listing_id="  + listingId);
 			return true;
@@ -48,8 +47,7 @@ public class MarketplaceListing {
 	}
 	
 	public static boolean setCurrentEbayInventory(final String listingId, final long amount) {
-		try {
-			final Statement st = VSDSDBManager.get().createStatement();
+		try (final Statement st = VSDSDBManager.get().createStatement()) {
 			st.execute("UPDATE marketplace_listing SET current_ebay_inventory=" + amount
 					+ " WHERE listing_id=" + listingId);
 			return true;
@@ -61,8 +59,7 @@ public class MarketplaceListing {
 	}
 	
 	public static boolean decrementCurrentEbayInventory(final int marketplaceListingId) {
-		try {
-			final Statement st = VSDSDBManager.get().createStatement();
+		try (final Statement st = VSDSDBManager.get().createStatement()) {
 			st.execute("UPDATE marketplace_listing SET current_ebay_inventory=(current_ebay_inventory-1)"
 					+ " WHERE id=" + marketplaceListingId);
 			return true;
@@ -84,8 +81,12 @@ public class MarketplaceListing {
 			current_shipping_cost = priceInfo.right;
 			
 			//update our DB
-			VSDSDBManager.get().createStatement().execute("UPDATE marketplace_listing SET current_price="+current_price
+			try(final Statement st = VSDSDBManager.get().createStatement()) {
+				st.execute("UPDATE marketplace_listing SET current_price="+current_price
 					+ ",current_shipping_cost="+current_shipping_cost+" WHERE id="+id);
+			} catch(final Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 		return new Pair<>(current_price, current_shipping_cost);
@@ -93,8 +94,10 @@ public class MarketplaceListing {
 	
 	public void updatePrice(final double newPrice) throws SQLException {
 		if(EbayCalls.updatePrice(listingId, newPrice)) {
-			VSDSDBManager.get().createStatement().execute("UPDATE marketplace_listing SET current_price="+newPrice
+			try(final Statement st = VSDSDBManager.get().createStatement()) {
+				st.execute("UPDATE marketplace_listing SET current_price="+newPrice
 					+ " WHERE id="+id);
+			}
 		}
 	}
 	

@@ -58,15 +58,14 @@ public class Marketplace {
 
 	private Set<MarketplaceListing> getMarketplaceListings(final boolean activeOnly) {
 		final Set<MarketplaceListing> listings = new HashSet<>();
-		final Statement st = VSDSDBManager.get().createStatement();
-
-		try {
-			String sql = "SELECT * FROM marketplace_listing INNER JOIN fulfillment_mapping ON marketplace_listing.id=fulfillment_mapping.marketplace_listing_id "
-					+ "WHERE marketplace_id="+id;
-			if(activeOnly) {
-				sql += " AND active=1";
-			}
-			final ResultSet results = st.executeQuery(sql);
+		
+		String sql = "SELECT * FROM marketplace_listing INNER JOIN fulfillment_mapping ON marketplace_listing.id=fulfillment_mapping.marketplace_listing_id "
+				+ "WHERE marketplace_id="+id;
+		if(activeOnly) {
+			sql += " AND active=1";
+		}
+		try (final Statement st = VSDSDBManager.get().createStatement();
+			 final ResultSet results = st.executeQuery(sql)) {
 			while(results.next()) {
 				final MarketplaceListing listing = Marketplace.loadListingFromResultSet(results);
 				listings.add(listing);

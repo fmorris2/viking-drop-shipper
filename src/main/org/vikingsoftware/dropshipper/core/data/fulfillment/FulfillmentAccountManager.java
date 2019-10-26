@@ -67,9 +67,9 @@ public class FulfillmentAccountManager {
 	}
 	
 	public int getNumProcessedOrdersForAccount(final int id) {
-		try {
+		try (
 			final Statement st = VSDSDBManager.get().createStatement();
-			final ResultSet res = st.executeQuery("SELECT COUNT(*) FROM processed_order WHERE fulfillment_account_id="+id);
+			final ResultSet res = st.executeQuery("SELECT COUNT(*) FROM processed_order WHERE fulfillment_account_id="+id)) {
 			if(res.next()) {
 				return res.getInt(1);
 			}
@@ -81,10 +81,10 @@ public class FulfillmentAccountManager {
 	}
 	
 	public LocalDateTime getMostRecentProcessedOrderForAccount(final int id) {
-		try {
+		try (
 			final Statement st = VSDSDBManager.get().createStatement();
 			final ResultSet res = st.executeQuery("SELECT date_processed FROM processed_order WHERE "
-					+ "fulfillment_account_id="+id + " ORDER BY date_processed DESC LIMIT 1");
+					+ "fulfillment_account_id="+id + " ORDER BY date_processed DESC LIMIT 1")) {
 			
 			if(res.next()) {
 				final long timestamp = res.getLong(1);
@@ -110,9 +110,9 @@ public class FulfillmentAccountManager {
 	}
 
 	private void load() {
-		try {
+		try (
 			final Statement st = VSDSDBManager.get().createStatement();
-			final ResultSet res = st.executeQuery("SELECT * FROM fulfillment_account");
+			final ResultSet res = st.executeQuery("SELECT * FROM fulfillment_account")) {
 			while(res.next()) {
 				final int id = res.getInt("id");
 				final int plat_id = res.getInt("fulfillment_platform_id");

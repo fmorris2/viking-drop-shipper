@@ -51,28 +51,31 @@ public class OrderTracking implements CycleParticipant {
 			taskStarter.execute(() -> futures.get(index).run());
 		}
 
-		final Statement st = VSDSDBManager.get().createStatement();
-		for(int i = 0; i < futures.size(); i++) {
-			try {
-				System.out.println("Checking status of inventory update task #" + i + "...");
-				final TrackingEntry entry = futures.get(i).get();
-				if(EbayCalls.setShipmentTrackingInfo(untrackedOrders.get(i), entry)) {
-					System.out.println("Successfully executed tracking update task for processed order " + untrackedOrders.get(i).id);
-					final String updateSql = getUpdateTrackingNumberInDBQuery(untrackedOrders.get(i), entry);
-					if(updateSql != null) {
-						st.addBatch(updateSql);
+		try(final Statement st = VSDSDBManager.get().createStatement()) {
+			for(int i = 0; i < futures.size(); i++) {
+				try {
+					System.out.println("Checking status of inventory update task #" + i + "...");
+					final TrackingEntry entry = futures.get(i).get();
+					if(EbayCalls.setShipmentTrackingInfo(untrackedOrders.get(i), entry)) {
+						System.out.println("Successfully executed tracking update task for processed order " + untrackedOrders.get(i).id);
+						final String updateSql = getUpdateTrackingNumberInDBQuery(untrackedOrders.get(i), entry);
+						if(updateSql != null) {
+							st.addBatch(updateSql);
+						}
 					}
+				} catch(final Exception e) {
+					DBLogging.high(getClass(), "failed to update order tracking for processed order " + untrackedOrders.get(i).id, e);
+					System.out.println("Failed to execute tracking update task for processed order " + untrackedOrders.get(i).id);
 				}
-			} catch(final Exception e) {
-				DBLogging.high(getClass(), "failed to update order tracking for processed order " + untrackedOrders.get(i).id, e);
-				System.out.println("Failed to execute tracking update task for processed order " + untrackedOrders.get(i).id);
 			}
-		}
-
-		try {
-			System.out.println("Executed batch of " + st.executeBatch().length + " order tracking updates.");
-		} catch(final SQLException e) {
-			e.printStackTrace();
+			
+			try {
+				System.out.println("Executed batch of " + st.executeBatch().length + " order tracking updates.");
+			} catch(final SQLException e) {
+				e.printStackTrace();
+			}
+		} catch (Exception e1) {
+			e1.printStackTrace();
 		}
 
 		TrackingManager.get().endCycle();
@@ -80,9 +83,8 @@ public class OrderTracking implements CycleParticipant {
 
 	private List<ProcessedOrder> getUntrackedOrders() {
 		final List<ProcessedOrder> orders = new ArrayList<>();
-		try {
-			final Statement st = VSDSDBManager.get().createStatement();
-			final ResultSet res = st.executeQuery("SELECT * FROM processed_order WHERE tracking_number IS NULL");
+		try (final Statement st = VSDSDBManager.get().createStatement();
+			 final ResultSet res = st.executeQuery("SELECT * FROM processed_order WHERE tracking_number IS NULL")) {
 			while(res.next()) {
 				final ProcessedOrder order = new ProcessedOrder.Builder()
 					.id(res.getInt("id"))

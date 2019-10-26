@@ -10,9 +10,8 @@ public interface CycleParticipant {
 	public void cycle();
 	
 	default boolean shouldCycle() {
-		try {
-			final Statement st = VSDSDBManager.get().createStatement();
-			final ResultSet res = st.executeQuery("SELECT power_switch FROM global_settings LIMIT 1");
+		try (final Statement st = VSDSDBManager.get().createStatement();
+			 final ResultSet res = st.executeQuery("SELECT power_switch FROM global_settings LIMIT 1")) {
 			if(res.next()) {
 				return res.getBoolean(1);
 			}

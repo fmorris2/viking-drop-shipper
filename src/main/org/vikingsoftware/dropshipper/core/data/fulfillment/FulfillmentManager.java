@@ -50,8 +50,7 @@ public class FulfillmentManager {
 
 	public static void freeze(final int fulfillmentPlatformId) {
 		frozenFulfillmentPlatforms.add(fulfillmentPlatformId);
-		try {
-			final Statement st = VSDSDBManager.get().createStatement();
+		try (final Statement st = VSDSDBManager.get().createStatement()) {
 			st.execute("UPDATE fulfillment_platform SET frozen=1 WHERE id=" + fulfillmentPlatformId);
 		} catch(final Exception e) {
 			DBLogging.critical(FulfillmentManager.class, "failed to freeze fulfillment platform " + fulfillmentPlatformId, e);
@@ -68,8 +67,7 @@ public class FulfillmentManager {
 			listingsForOrder.remove(listing);
 		}
 
-		try {
-			final Statement st = VSDSDBManager.get().createStatement();
+		try (final Statement st = VSDSDBManager.get().createStatement()) {
 			st.execute("INSERT INTO fulfillment_listings_to_examine(fulfillment_listing_id, current_listing_title)"
 					+ " VALUES("+listing.id+",'"+newTitle+"')");
 			System.out.println("Successfully flagged listing " + listing + " for examination");
@@ -136,10 +134,10 @@ public class FulfillmentManager {
 	}
 
 	public Optional<FulfillmentListing> getListingForItemId(final int platformId, final String itemId) {
-		final Statement st = VSDSDBManager.get().createStatement();
-		try {
+		try (
+			final Statement st = VSDSDBManager.get().createStatement();
 			final ResultSet results = st.executeQuery("SELECT * FROM fulfillment_listing WHERE fulfillment_platform_id=" + platformId +
-					" AND item_id="+itemId);
+					" AND item_id="+itemId)) {
 
 			if(results.next()) {
 				final FulfillmentListing listing = new FulfillmentListing.Builder()
@@ -168,14 +166,14 @@ public class FulfillmentManager {
 	}
 
 	private void loadValidFulfillmentListings() {
-		final Statement st = VSDSDBManager.get().createStatement();
-		try {
+		try (
+			final Statement st = VSDSDBManager.get().createStatement();
 			final ResultSet results = st.executeQuery("SELECT * FROM fulfillment_listing"
 					+ " INNER JOIN fulfillment_mapping ON"
 					+ " fulfillment_listing.id=fulfillment_mapping.fulfillment_listing_id"
 					+ " LEFT JOIN fulfillment_listings_to_examine ON"
 					+ " fulfillment_listing.id=fulfillment_listings_to_examine.fulfillment_listing_id"
-					+ "	WHERE fulfillment_listings_to_examine.id IS NULL");
+					+ "	WHERE fulfillment_listings_to_examine.id IS NULL")) {
 			while(results.next()) {
 				final int marketplace_listing_id = results.getInt("marketplace_listing_id");
 				final FulfillmentListing listing = new FulfillmentListing.Builder()
@@ -196,9 +194,9 @@ public class FulfillmentManager {
 	}
 
 	private void loadFulfillmentPlatforms() {
-		final Statement st = VSDSDBManager.get().createStatement();
-		try {
-			final ResultSet results = st.executeQuery("SELECT * FROM fulfillment_platform");
+		try (
+			final Statement st = VSDSDBManager.get().createStatement();
+			final ResultSet results = st.executeQuery("SELECT * FROM fulfillment_platform")) {
 			while(results.next()) {
 				final FulfillmentPlatform platform = new FulfillmentPlatform.Builder()
 					.id(results.getInt("id"))

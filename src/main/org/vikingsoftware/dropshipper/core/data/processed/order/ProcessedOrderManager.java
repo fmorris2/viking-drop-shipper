@@ -9,9 +9,8 @@ import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 public final class ProcessedOrderManager {
 	
 	public static Optional<ProcessedOrder> getProcessedOrderForCustomerOrder(final int customerOrderId) {
-		final Statement st = VSDSDBManager.get().createStatement();
-		try {
-			final ResultSet res = st.executeQuery("SELECT * FROM processed_order WHERE customer_order_id="+customerOrderId);
+		try (final Statement st = VSDSDBManager.get().createStatement();
+			 final ResultSet res = st.executeQuery("SELECT * FROM processed_order WHERE customer_order_id="+customerOrderId)) {
 			if(res.next()) {
 				final ProcessedOrder order = new ProcessedOrder.Builder()
 						.id(res.getInt("id"))

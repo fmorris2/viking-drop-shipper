@@ -15,9 +15,8 @@ import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 public class MarketplaceLoader {
 
 	public static void loadMarketplaces() {
-		final Statement st = VSDSDBManager.get().createStatement();
-		try {
-			final ResultSet results = st.executeQuery("SELECT * FROM marketplace");
+		try (final Statement st = VSDSDBManager.get().createStatement();
+			 final ResultSet results = st.executeQuery("SELECT * FROM marketplace")) {
 			while(results.next()) {
 
 				final int id = results.getInt("id");
@@ -43,11 +42,10 @@ public class MarketplaceLoader {
 
 	private static Map<String, Integer> loadMarketplaceListings(final int marketplaceId) {
 		final Map<String, Integer> listings = new HashMap<>();
-		final Statement st = VSDSDBManager.get().createStatement();
-		try {
-			final ResultSet results = st.executeQuery("SELECT id, listing_id"
+		try (final Statement st = VSDSDBManager.get().createStatement();
+			 final ResultSet results = st.executeQuery("SELECT id, listing_id"
 					+ " FROM marketplace_listing"
-					+ " WHERE marketplace_id=" + marketplaceId);
+					+ " WHERE marketplace_id=" + marketplaceId)) {
 
 			while(results.next()) {
 				final int id = results.getInt("id");
@@ -70,9 +68,8 @@ public class MarketplaceLoader {
 	}
 
 	private static MarketplaceListing loadMarketplaceListing(final String key, final String val) {
-		try {
-			final Statement st = VSDSDBManager.get().createStatement();
-			final ResultSet result = st.executeQuery("SELECT * from marketplace_listing WHERE " + key +"="+val);
+		try (final Statement st = VSDSDBManager.get().createStatement();
+			 final ResultSet result = st.executeQuery("SELECT * from marketplace_listing WHERE " + key +"="+val)) {
 			if(result.next()) {
 				return Marketplace.loadListingFromResultSet(result);
 			}
@@ -85,12 +82,11 @@ public class MarketplaceLoader {
 
 	private static Set<String> loadKnownOrderIds(final int marketplaceId) {
 		final Set<String> knownOrderIds = new HashSet<>();
-		final Statement st = VSDSDBManager.get().createStatement();
-		try {
-			final ResultSet results = st.executeQuery("SELECT marketplace_order_id "
+		try (final Statement st = VSDSDBManager.get().createStatement();
+			 final ResultSet results = st.executeQuery("SELECT marketplace_order_id "
 					+ "FROM customer_order INNER JOIN marketplace_listing ON "
 					+ "customer_order.marketplace_listing_id=marketplace_listing.id "
-					+ "WHERE marketplace_id=" + marketplaceId);
+					+ "WHERE marketplace_id=" + marketplaceId)) {
 
 			while(results.next()) {
 				final String id = results.getString("marketplace_order_id");

@@ -132,9 +132,8 @@ public class EbayCalls {
 	}
 
 	private static void logUnknownTransactionMappingsInDB(final List<TransactionType> transactions) {
-		try {
+		try (final Statement st = VSDSDBManager.get().createStatement()) {
 			System.out.println("Logging " + transactions.size() + " unknown eBay transactions in DB");
-			final Statement st = VSDSDBManager.get().createStatement();
 			for(final TransactionType trans : transactions) {
 				st.addBatch("INSERT INTO unknown_transaction_mappings(marketplace_id, listing_id) "
 						+ "VALUES("+Marketplaces.EBAY.getMarketplaceId()+", '"+trans.getItem().getItemID()+"')");

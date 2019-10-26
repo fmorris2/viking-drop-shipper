@@ -50,13 +50,12 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 	private List<ProcessedOrder> getInProgressOrders() {
 		final List<ProcessedOrder> orders = new ArrayList<>();
 		
-		final Statement st = VSDSDBManager.get().createStatement();
-		try {
-			final ResultSet res = st.executeQuery("SELECT processed_order.id,tracking_number FROM processed_order "
+		try (final Statement st = VSDSDBManager.get().createStatement();
+			 final ResultSet res = st.executeQuery("SELECT processed_order.id,tracking_number FROM processed_order "
 					+ "LEFT JOIN tracking_history ON processed_order.id = tracking_history.processed_order_id "
 					+ "WHERE is_cancelled = 0 AND tracking_number IS NOT NULL AND tracking_status IS NULL OR tracking_status = 2 "
 					+ "GROUP BY processed_order.id "
-					+ "ORDER BY processed_order.id ASC, tracking_history.id DESC");
+					+ "ORDER BY processed_order.id ASC, tracking_history.id DESC")) {
 			
 			while(res.next()) {
 				orders.add(new ProcessedOrder.Builder()
@@ -114,10 +113,9 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 			}
 			final TrackingStatus updatedStatus = evt.getStatus();
 			final long ms = entry.getValue().getTrackingStatus().getStatusDate().getTime();
-			final Statement st = VSDSDBManager.get().createStatement();
-			try {
-				final ResultSet res = st.executeQuery("SELECT tracking_status,tracking_status_date FROM tracking_history "
-						+ "WHERE processed_order_id="+entry.getKey().id + " ORDER BY id DESC LIMIT 1");
+			try (final Statement st = VSDSDBManager.get().createStatement();
+				 final ResultSet res = st.executeQuery("SELECT tracking_status,tracking_status_date FROM tracking_history "
+						+ "WHERE processed_order_id="+entry.getKey().id + " ORDER BY id DESC LIMIT 1")) {
 				if(!res.next() || res.getInt("tracking_status") != updatedStatus.ordinal() ||
 						res.getLong("tracking_status_date") != ms) {
 					System.out.println("New update to tracking history for processed order " + entry.getKey().id);
@@ -142,8 +140,7 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 	}
 	
 	private void updateCompletedOrders(final Map<ProcessedOrder, Track> statuses) {
-		try {
-			final Statement st = VSDSDBManager.get().createStatement();
+		try (final Statement st = VSDSDBManager.get().createStatement()) {
 			for(final Map.Entry<ProcessedOrder, Track> entry : statuses.entrySet()) {
 				final TrackingEvent evt = entry.getValue().getTrackingStatus();
 				if(evt == null || evt.getStatus() == null) {
@@ -198,8 +195,7 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 	
 	private boolean sendInsertQueries(final List<String> insertQueries) {
 		System.out.println("Sending " + insertQueries.size() + " new tracking history updates...");
-		try {
-			final Statement st = VSDSDBManager.get().createStatement();
+		try (final Statement st = VSDSDBManager.get().createStatement()) {
 			for(final String query : insertQueries) {
 				st.addBatch(query);
 			}
