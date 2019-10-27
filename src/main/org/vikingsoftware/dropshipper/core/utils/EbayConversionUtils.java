@@ -36,7 +36,7 @@ public class EbayConversionUtils {
 			
 			final PaymentsInformationType monetaryDetails = transaction.getMonetaryDetails();
 			final PaymentTransactionType initialBuyerPayment = monetaryDetails.getPayments().getPayment(0);
-	
+			
 			return new CustomerOrder.Builder()
 				.marketplace_listing_id(dbListingId)
 				.sku(item.getSKU())
@@ -56,6 +56,7 @@ public class EbayConversionUtils {
 				.buyer_phone_number(addr.getPhone())
 				.date_parsed(transaction.getPaidTime().toInstant().toEpochMilli())
 				.marketplace_sell_fee((float)initialBuyerPayment.getFeeOrCreditAmount().getValue() * -1)
+				.handling_time(item.getDispatchTimeMax())
 				.build();
 		} catch(final Exception e) {
 			e.printStackTrace();

@@ -18,6 +18,7 @@ public class CustomerOrder {
 	public final double sell_total;
 	public final int quantity;
 	public final int fulfillment_purchase_quantity;
+	public final int handling_time;
 
 	public final String marketplace_order_id;
 	public final String buyer_username;
@@ -62,6 +63,7 @@ public class CustomerOrder {
 		this.date_cancelled = builder.date_cancelled;
 		this.is_cancelled = builder.is_cancelled;
 		this.marketplace_sell_fee = builder.marketplace_sell_fee;
+		this.handling_time = builder.handling_time;
 	}
 	
 	public String getFirstName() {
@@ -88,6 +90,7 @@ public class CustomerOrder {
 		private double sell_total;
 		private int quantity;
 		private int fulfillment_purchase_quantity;
+		private int handling_time;
 
 		private String marketplace_order_id;
 		private String buyer_username;
@@ -217,6 +220,11 @@ public class CustomerOrder {
 		
 		public Builder marketplace_sell_fee(final double fee) {
 			this.marketplace_sell_fee = fee;
+			return this;
+		}
+		
+		public Builder handling_time(final int time) {
+			this.handling_time = time;
 			return this;
 		}
 

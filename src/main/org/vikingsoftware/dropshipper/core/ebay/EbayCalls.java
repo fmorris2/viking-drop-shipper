@@ -201,6 +201,21 @@ public class EbayCalls {
 		
 		return new Pair<>(price, shippingPrice);
 	}
+	
+	public static Optional<Integer> getHandlingTime(final String listingId) {
+		addCall("getHandlingTime");
+		final ApiContext api = EbayApiContextManager.getLiveContext();
+		final GetItemCall call = new GetItemCall(api);
+		call.setItemID(listingId);
+		try {
+			final ItemType item = call.getItem();
+			return Optional.of(item.getDispatchTimeMax());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return Optional.empty();
+	}
 
 	public static boolean updateInventory(final String listingId, final Pair<Integer,Double> stockAndPrice) {
 		try {

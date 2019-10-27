@@ -103,6 +103,7 @@ public class CustomerOrderManager {
 			.date_parsed(results.getLong("date_parsed"))
 			.date_cancelled(results.getLong("date_cancelled"))
 			.is_cancelled(results.getBoolean("is_cancelled"))
+			.handling_time(results.getInt("handling_time"))
 			.build();
 	}
 }
