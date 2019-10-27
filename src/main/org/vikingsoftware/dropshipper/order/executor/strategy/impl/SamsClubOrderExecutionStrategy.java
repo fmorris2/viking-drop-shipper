@@ -248,6 +248,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 					.buy_shipping(shipping)
 					.buy_total(price)
 					.profit(order.getProfit(price))
+					.date_processed(System.currentTimeMillis())
 					.build();
 		} finally {
 			driver.manage().timeouts().implicitlyWait(LoginWebDriver.DEFAULT_VISIBILITY_WAIT_SECONDS, TimeUnit.SECONDS);

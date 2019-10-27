@@ -2,6 +2,8 @@ package main.org.vikingsoftware.dropshipper.core.utils;
 
 import com.ebay.soap.eBLBaseComponents.AddressType;
 import com.ebay.soap.eBLBaseComponents.ItemType;
+import com.ebay.soap.eBLBaseComponents.PaymentTransactionType;
+import com.ebay.soap.eBLBaseComponents.PaymentsInformationType;
 import com.ebay.soap.eBLBaseComponents.TransactionType;
 import com.ebay.soap.eBLBaseComponents.UserType;
 
@@ -31,6 +33,9 @@ public class EbayConversionUtils {
 					|| transaction.getAmountPaid().getValue() <= 0) { //awaiting ebay payment or cancelled
 				return null;
 			}
+			
+			final PaymentsInformationType monetaryDetails = transaction.getMonetaryDetails();
+			final PaymentTransactionType initialBuyerPayment = monetaryDetails.getPayments().getPayment(0);
 	
 			return new CustomerOrder.Builder()
 				.marketplace_listing_id(dbListingId)
@@ -49,6 +54,8 @@ public class EbayConversionUtils {
 				.buyer_city(addr.getCityName())
 				.buyer_zip_postal_code(addr.getPostalCode())
 				.buyer_phone_number(addr.getPhone())
+				.date_parsed(transaction.getPaidTime().toInstant().toEpochMilli())
+				.marketplace_sell_fee((float)initialBuyerPayment.getFeeOrCreditAmount().getValue() * -1)
 				.build();
 		} catch(final Exception e) {
 			e.printStackTrace();

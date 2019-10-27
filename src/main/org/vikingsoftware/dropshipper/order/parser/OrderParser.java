@@ -7,11 +7,12 @@ import java.util.Collection;
 
 import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
-import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplace;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
+import main.org.vikingsoftware.dropshipper.core.utils.TransactionUtils;
 import main.org.vikingsoftware.dropshipper.order.parser.strategy.OrderParsingStrategy;
 
 public class OrderParser implements CycleParticipant {
@@ -69,6 +70,12 @@ public class OrderParser implements CycleParticipant {
 			for(final CustomerOrder newOrder : newOrders) {
 				System.out.println("decrementing current ebay inventory for marketplace listing id: " + newOrder.marketplace_listing_id);
 				MarketplaceListing.decrementCurrentEbayInventory(newOrder.marketplace_listing_id);
+				
+				System.out.println("inserting marketplace income & marketplace sell-fee transactions for customer order w/ order id " + newOrder.marketplace_order_id);
+				if(!TransactionUtils.insertTransactionsForCustomerOrder(newOrder)) {
+					DBLogging.critical(OrderParser.class, "Failed to insert transactions for new customer order " + newOrder.id, null);
+				}
+				
 			}
 		} catch (final SQLException e) {
 			e.printStackTrace();

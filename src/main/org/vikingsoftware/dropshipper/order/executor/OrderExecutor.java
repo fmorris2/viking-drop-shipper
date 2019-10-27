@@ -18,6 +18,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.Fulfill
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
+import main.org.vikingsoftware.dropshipper.core.utils.TransactionUtils;
 
 public class OrderExecutor implements CycleParticipant {
 
@@ -65,7 +66,11 @@ public class OrderExecutor implements CycleParticipant {
 						failedOrders.add(processedOrder);
 					} else {
 						System.out.println("Successful order from " + FulfillmentPlatforms.getById(listing.fulfillment_platform_id) + "!");
-						insertSuccessfulOrderIntoDB(processedOrder);
+						if(insertSuccessfulOrderIntoDB(processedOrder)) {
+							if(!TransactionUtils.insertTransactionForProcessedOrder(processedOrder)) {
+								DBLogging.critical(OrderExecutor.class, "Failed to insert transaction for successful processed order " + processedOrder.id, null);
+							}
+						}
 						break;
 					}
 				}
@@ -85,7 +90,7 @@ public class OrderExecutor implements CycleParticipant {
 		}
 	}
 
-	private void insertSuccessfulOrderIntoDB(final ProcessedOrder order) {
+	private boolean insertSuccessfulOrderIntoDB(final ProcessedOrder order) {
 		//store all new orders in DB
 		final String sql = "INSERT INTO processed_order(customer_order_id, fulfillment_listing_id, "
 				+ "fulfillment_account_id, fulfillment_transaction_id,"
@@ -112,10 +117,13 @@ public class OrderExecutor implements CycleParticipant {
 			
 			successfullyFulfilledOrders.remove(order.customer_order_id);
 			System.out.println("Successfully inserted processed order into DB");
+			return true;
 		} catch (final Exception e) {
 			DBLogging.high(getClass(), "failed to insert successful order into DB: ", e);
 			successfullyFulfilledOrders.put(order.customer_order_id, order);
 		}
+		
+		return false;
 	}
 
 	private void insertFailedOrdersIntoDB(final Collection<ProcessedOrder> failedOrders) {

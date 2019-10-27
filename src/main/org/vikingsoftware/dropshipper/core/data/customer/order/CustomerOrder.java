@@ -32,6 +32,8 @@ public class CustomerOrder {
 	public final long date_parsed;
 	public final long date_cancelled;
 	public final boolean is_cancelled;
+	
+	public final Double marketplace_sell_fee;
 
 	private CustomerOrder(final Builder builder) {
 		this.id = builder.id;
@@ -59,6 +61,7 @@ public class CustomerOrder {
 		this.date_parsed = builder.date_parsed;
 		this.date_cancelled = builder.date_cancelled;
 		this.is_cancelled = builder.is_cancelled;
+		this.marketplace_sell_fee = builder.marketplace_sell_fee;
 	}
 	
 	public String getFirstName() {
@@ -99,6 +102,8 @@ public class CustomerOrder {
 		private long date_parsed;
 		private long date_cancelled;
 		private boolean is_cancelled;
+		
+		private Double marketplace_sell_fee;
 
 		public Builder id(final int id) {
 			this.id = id;
@@ -207,6 +212,11 @@ public class CustomerOrder {
 		
 		public Builder is_cancelled(final boolean val) {
 			this.is_cancelled = val;
+			return this;
+		}
+		
+		public Builder marketplace_sell_fee(final double fee) {
+			this.marketplace_sell_fee = fee;
 			return this;
 		}
 
