@@ -1,5 +1,6 @@
 package main.org.vikingsoftware.dropshipper.tools;
 
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -21,6 +22,7 @@ import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrde
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrderManager;
 import main.org.vikingsoftware.dropshipper.core.data.transaction.Transaction;
+import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayApiContextManager;
 import main.org.vikingsoftware.dropshipper.core.utils.TransactionUtils;
 

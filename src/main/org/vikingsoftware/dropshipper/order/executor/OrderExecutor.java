@@ -128,13 +128,14 @@ public class OrderExecutor implements CycleParticipant {
 
 	private void insertFailedOrdersIntoDB(final Collection<ProcessedOrder> failedOrders) {
 		//store all new orders in DB
-		final String sql = "INSERT INTO failed_fulfillment_attempts(customer_order_id, fulfillment_listing_id) VALUES(?,?)";
+		final String sql = "INSERT INTO failed_fulfillment_attempts(customer_order_id, fulfillment_listing_id, timestamp) VALUES(?,?,?)";
 
 		final PreparedStatement prepared = VSDSDBManager.get().createPreparedStatement(sql);
 		try {
 			for(final ProcessedOrder order : failedOrders) {
 				prepared.setInt(1, order.customer_order_id);
 				prepared.setInt(2, order.fulfillment_listing_id);
+				prepared.setLong(3, System.currentTimeMillis());
 				prepared.addBatch();
 			}
 

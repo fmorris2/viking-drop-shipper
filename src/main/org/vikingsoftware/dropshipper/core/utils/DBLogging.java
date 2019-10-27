@@ -22,14 +22,15 @@ public class DBLogging {
 
 	private static void updateLogs() {
 		try {
-			final PreparedStatement st = VSDSDBManager.get().createPreparedStatement("INSERT INTO logging(class,level,message,exception)"
-					+ " VALUES(?,?,?,?)");
+			final PreparedStatement st = VSDSDBManager.get().createPreparedStatement("INSERT INTO logging(class,level,message,exception,date)"
+					+ " VALUES(?,?,?,?,?)");
 			while(!messageQueue.isEmpty()) {
 				final LogMessage msg = messageQueue.poll();
 				st.setString(1, msg.clazz.getName());
 				st.setString(2, msg.level.name());
 				st.setString(3, msg.message);
 				st.setString(4, convertExceptionToString(msg.exception));
+				st.setLong(5, System.currentTimeMillis());
 				st.addBatch();
 			}
 
