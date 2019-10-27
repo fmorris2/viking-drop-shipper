@@ -15,6 +15,7 @@ import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOr
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
+import main.org.vikingsoftware.dropshipper.core.tracking.TrackingStatus;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 public class OrderTracking implements CycleParticipant {
@@ -61,6 +62,9 @@ public class OrderTracking implements CycleParticipant {
 						final String updateSql = getUpdateTrackingNumberInDBQuery(untrackedOrders.get(i), entry);
 						if(updateSql != null) {
 							st.addBatch(updateSql);
+							
+							final String trackingHistoryQuery = getTrackingHistoryQuery(untrackedOrders.get(i));
+							st.addBatch(trackingHistoryQuery);
 						}
 					}
 				} catch(final Exception e) {
@@ -109,5 +113,11 @@ public class OrderTracking implements CycleParticipant {
 		}
 
 		return null;
+	}
+	
+	private String getTrackingHistoryQuery(final ProcessedOrder order) {
+		return "INSERT INTO tracking_history(processed_order_id,tracking_status,tracking_status_date)"
+				+ "VALUES(" + order.id + "," + TrackingStatus.TRACKING_NUMBER_PARSED.value + ","
+				+ System.currentTimeMillis() + ")";
 	}
 }

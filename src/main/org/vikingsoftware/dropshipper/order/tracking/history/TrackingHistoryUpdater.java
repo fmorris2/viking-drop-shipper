@@ -13,7 +13,6 @@ import java.util.Set;
 import com.shippo.model.Track;
 import com.shippo.model.Track.Address;
 import com.shippo.model.Track.TrackingEvent;
-import com.shippo.model.Track.TrackingStatus;
 
 import main.mysterytracking.TrackingNumber;
 import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
@@ -21,6 +20,7 @@ import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOr
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.shippo.ShippoApiContextManager;
 import main.org.vikingsoftware.dropshipper.core.shippo.ShippoCarrier;
+import main.org.vikingsoftware.dropshipper.core.tracking.TrackingStatus;
 
 public class TrackingHistoryUpdater implements CycleParticipant {
 
@@ -117,12 +117,12 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 		if(evt == null) {
 			return;
 		}
-		final TrackingStatus updatedStatus = evt.getStatus();
+		final TrackingStatus updatedStatus = TrackingStatus.getStatusFromValue(evt.getStatus().ordinal());
 		final long ms = evt.getStatusDate().getTime();
 		try (final Statement st = VSDSDBManager.get().createStatement();
 			 final ResultSet res = st.executeQuery("SELECT tracking_status,tracking_status_date FROM tracking_history "
 					+ "WHERE processed_order_id="+order.id + " ORDER BY id DESC LIMIT 1")) {
-			if(!res.next() || res.getInt("tracking_status") != updatedStatus.ordinal() ||
+			if(!res.next() || res.getInt("tracking_status") != updatedStatus.value ||
 					res.getLong("tracking_status_date") != ms) {
 				System.out.println("New update to tracking history for processed order " + order.id);
 				final String insertQuery = generateInsertQuery(order, status);
@@ -151,7 +151,7 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 		final String zip = cleanse(getAddressField(loc, "zip"));
 		final String country = cleanse(getAddressField(loc, "country"));
 		final String objId = evt.getObjectId();
-		final TrackingStatus statusObj = evt.getStatus();
+		final TrackingStatus statusObj = TrackingStatus.getStatusFromValue(evt.getStatus().ordinal());
 		final long statusDate = evt.getStatusDate().getTime();
 		System.err.println("statusObj: " + statusObj + ", evt: " + evt);
 		if(statusObj == null) {
@@ -160,7 +160,7 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 		return "INSERT INTO tracking_history(processed_order_id,shippo_object_id,"
 				+ "tracking_status,tracking_status_date,tracking_status_details,tracking_location_city,"
 				+ "tracking_location_state,tracking_location_zip,tracking_location_country) VALUES('"
-				+ order.id + "','" + objId + "','" + statusObj.ordinal()
+				+ order.id + "','" + objId + "','" + statusObj.value
 				+ "','" + statusDate + "','" + evt.getStatusDetails() + "','" + city + "','"
 				+ state + "','" + zip + "','" + country + "')";
 	}
