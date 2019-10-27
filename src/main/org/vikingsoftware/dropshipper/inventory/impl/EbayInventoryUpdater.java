@@ -111,6 +111,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			}
 	
 			autoPrice(listing, stockAndPrice);
+			updateHandlingTime(listing);
 			
 			int parsedStock = stockAndPrice.left;
 			
@@ -153,6 +154,16 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 		}
 
 		return false;
+	}
+	
+	private void updateHandlingTime(final MarketplaceListing listing) {
+		if(listing.current_handling_time != listing.target_handling_time) {
+			System.out.println("Updating handling time for listing id " + listing.id + " from " + listing.current_handling_time
+					+ " --> " + listing.target_handling_time + " days.");
+			if(EbayCalls.updateHandlingTime(listing.listingId, listing.target_handling_time)) {
+				listing.updateHandlingTimeInDB(listing.target_handling_time);
+			}
+		}
 	}
 	
 	private void autoPrice(final MarketplaceListing listing, final Pair<Integer,Double> stockAndPrice) {

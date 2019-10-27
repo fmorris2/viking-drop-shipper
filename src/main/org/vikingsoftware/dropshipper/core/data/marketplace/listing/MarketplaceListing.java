@@ -17,6 +17,8 @@ public class MarketplaceListing {
 	public final int current_ebay_inventory;
 	public final double target_margin;
 	public final int fulfillment_quantity_multiplier;
+	public final int current_handling_time;
+	public final int target_handling_time;
 	
 	private double current_price;
 	private double current_shipping_cost;
@@ -32,6 +34,8 @@ public class MarketplaceListing {
 		this.current_price = builder.current_price;
 		this.current_shipping_cost = builder.current_shipping_cost;
 		this.fulfillment_quantity_multiplier = builder.fulfillment_quantity_multiplier;
+		this.current_handling_time = builder.current_handling_time;
+		this.target_handling_time = builder.target_handling_time;
 	}
 	
 	public static boolean setIsActive(final String listingId, final boolean isActive) {
@@ -101,6 +105,15 @@ public class MarketplaceListing {
 		}
 	}
 	
+	public void updateHandlingTimeInDB(final int handlingTime) {
+		try(final Statement st = VSDSDBManager.get().createStatement()) {
+			st.execute("UPDATE marketplace_listing SET current_handling_time="+handlingTime
+					+ " WHERE id="+id);
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public boolean setCurrentEbayInventory(final long amount) {
 		return setCurrentEbayInventory(this.listingId, amount);
 	}
@@ -115,7 +128,9 @@ public class MarketplaceListing {
 		private double target_margin;
 		private double current_price;
 		private double current_shipping_cost;
-		private int fulfillment_quantity_multiplier;
+		private int fulfillment_quantity_multiplier;	
+		private int current_handling_time;
+		private int target_handling_time;
 
 		public Builder id(final int id) {
 			this.id = id;
@@ -164,6 +179,16 @@ public class MarketplaceListing {
 		
 		public Builder active(final boolean active) {
 			this.active = active;
+			return this;
+		}
+		
+		public Builder current_handling_time(final int time) {
+			this.current_handling_time = time;
+			return this;
+		}
+		
+		public Builder target_handling_time(final int time) {
+			this.target_handling_time = time;
 			return this;
 		}
 

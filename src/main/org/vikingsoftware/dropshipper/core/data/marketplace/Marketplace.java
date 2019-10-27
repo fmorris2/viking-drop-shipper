@@ -89,6 +89,8 @@ public class Marketplace {
 			.currentShippingCost(results.getDouble("current_shipping_cost"))
 			.targetMargin(results.getDouble("target_margin"))
 			.fulfillmentQuantityMultiplier(results.getInt("fulfillment_quantity_multiplier"))
+			.current_handling_time(results.getInt("current_handling_time"))
+			.target_handling_time(results.getInt("target_handling_time"))
 		.build();
 	}
 
