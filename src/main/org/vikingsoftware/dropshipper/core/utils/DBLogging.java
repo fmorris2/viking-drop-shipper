@@ -13,6 +13,8 @@ import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 
 public class DBLogging {
 
+	private static final LogLevel SEND_TO_DB_LEVEL = LogLevel.HIGH;
+	
 	private static final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 	private static final Queue<LogMessage> messageQueue = new ConcurrentLinkedQueue<>();
 
@@ -26,12 +28,14 @@ public class DBLogging {
 					+ " VALUES(?,?,?,?,?)");
 			while(!messageQueue.isEmpty()) {
 				final LogMessage msg = messageQueue.poll();
-				st.setString(1, msg.clazz.getName());
-				st.setString(2, msg.level.name());
-				st.setString(3, msg.message);
-				st.setString(4, convertExceptionToString(msg.exception));
-				st.setLong(5, System.currentTimeMillis());
-				st.addBatch();
+				if(msg.level.ordinal() >= SEND_TO_DB_LEVEL.ordinal()) {
+					st.setString(1, msg.clazz.getName());
+					st.setString(2, msg.level.name());
+					st.setString(3, msg.message);
+					st.setString(4, convertExceptionToString(msg.exception));
+					st.setLong(5, System.currentTimeMillis());
+					st.addBatch();
+				}
 			}
 
 			st.executeBatch();
