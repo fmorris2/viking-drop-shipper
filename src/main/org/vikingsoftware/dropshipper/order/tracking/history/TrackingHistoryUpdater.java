@@ -6,9 +6,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import com.shippo.model.Track;
 import com.shippo.model.Track.Address;
@@ -25,6 +25,9 @@ import main.org.vikingsoftware.dropshipper.core.shippo.ShippoCarrier;
 public class TrackingHistoryUpdater implements CycleParticipant {
 
 	private static final long CYCLE_TIME = 60_000 * 30;
+	private static Set<String> SHIPPO_CARRIER_BLACKLIST = new HashSet<>(Arrays.asList(
+			ShippoCarrier.ONTRAC.apiToken
+	));
 	
 	private long lastCycle;
 	
@@ -42,9 +45,15 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 		System.out.println("Running cycle of TrackingHistoryUpdater");
 		lastCycle = System.currentTimeMillis();
 		
-		final List<ProcessedOrder> orders = getInProgressOrders();		
-		final Map<ProcessedOrder, Track> statuses = getShippoStatuses(orders);
-		updateTrackingHistoryTable(statuses);
+		final List<ProcessedOrder> orders = getInProgressOrders();
+		for(final ProcessedOrder order : orders) {
+			final Track shippoStatus = getShippoStatus(order);
+			if(shippoStatus != null) {
+				updateTrackingHistoryTable(order, shippoStatus);
+			} else { //can't get status via shippo
+				//TODO ONTRAC?
+			}
+		}
 	}
 	
 	private List<ProcessedOrder> getInProgressOrders() {
@@ -71,26 +80,24 @@ public class TrackingHistoryUpdater implements CycleParticipant {
  		return orders;
 	}
 	
-	private Map<ProcessedOrder, Track> getShippoStatuses(final List<ProcessedOrder> orders) {
-		final Map<ProcessedOrder, Track> statuses = new HashMap<>();
+	private Track getShippoStatus(final ProcessedOrder order) {
+		Track status = null;
 		
-		for(final ProcessedOrder order : orders) {
-			if(order.tracking_number != null) {
-				final String shippoCarrierToken = getShippoCarrierToken(order.tracking_number);
-				if(shippoCarrierToken != null) {
-					try {
-						final Track track = Track.getTrackingInfo(shippoCarrierToken, order.tracking_number, ShippoApiContextManager.getLiveKey());
-						if(track != null) {
-							statuses.put(order, track);
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
+		if(order.tracking_number != null) {
+			final String shippoCarrierToken = getShippoCarrierToken(order.tracking_number);
+			if(shippoCarrierToken != null && !SHIPPO_CARRIER_BLACKLIST.contains(shippoCarrierToken)) {
+				try {
+					final Track track = Track.getTrackingInfo(shippoCarrierToken, order.tracking_number, ShippoApiContextManager.getLiveKey());
+					if(track != null) {
+						status = track;
 					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 		}
 		
-		return statuses;
+		return status;
 	}
 	
 	private String getShippoCarrierToken(final String trackingNumber) {
@@ -104,53 +111,35 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 		return shippoCarrier == null ? null : shippoCarrier.apiToken;
 	}
 	
-	private void updateTrackingHistoryTable(final Map<ProcessedOrder, Track> statuses) {
+	private void updateTrackingHistoryTable(ProcessedOrder order, Track status) {
 		final List<String> insertQueries = new ArrayList<>();
-		for(final Map.Entry<ProcessedOrder, Track> entry : statuses.entrySet()) {
-			final TrackingEvent evt = entry.getValue().getTrackingStatus();
-			if(evt == null) {
-				continue;
-			}
-			final TrackingStatus updatedStatus = evt.getStatus();
-			final long ms = entry.getValue().getTrackingStatus().getStatusDate().getTime();
-			try (final Statement st = VSDSDBManager.get().createStatement();
-				 final ResultSet res = st.executeQuery("SELECT tracking_status,tracking_status_date FROM tracking_history "
-						+ "WHERE processed_order_id="+entry.getKey().id + " ORDER BY id DESC LIMIT 1")) {
-				if(!res.next() || res.getInt("tracking_status") != updatedStatus.ordinal() ||
-						res.getLong("tracking_status_date") != ms) {
-					System.out.println("New update to tracking history for processed order " + entry.getKey().id);
-					final String insertQuery = generateInsertQuery(entry.getKey(), entry.getValue());
-					if(insertQuery != null) {
-						System.out.println(insertQuery);
-						insertQueries.add(insertQuery);
-					}
+		final TrackingEvent evt = status.getTrackingStatus();
+		if(evt == null) {
+			return;
+		}
+		final TrackingStatus updatedStatus = evt.getStatus();
+		final long ms = evt.getStatusDate().getTime();
+		try (final Statement st = VSDSDBManager.get().createStatement();
+			 final ResultSet res = st.executeQuery("SELECT tracking_status,tracking_status_date FROM tracking_history "
+					+ "WHERE processed_order_id="+order.id + " ORDER BY id DESC LIMIT 1")) {
+			if(!res.next() || res.getInt("tracking_status") != updatedStatus.ordinal() ||
+					res.getLong("tracking_status_date") != ms) {
+				System.out.println("New update to tracking history for processed order " + order.id);
+				final String insertQuery = generateInsertQuery(order, status);
+				if(insertQuery != null) {
+					System.out.println(insertQuery);
+					insertQueries.add(insertQuery);
 				}
-			} catch(final SQLException e) {
-				e.printStackTrace();
 			}
+		} catch(final SQLException e) {
+			e.printStackTrace();
 		}
 		
 		final boolean success = sendInsertQueries(insertQueries);
 		if(success) {
 			System.out.println("Successfully processed tracking history update queries.");
-			updateCompletedOrders(statuses);
 		} else {
 			System.out.println("Failed to process tracking history updates.");
-		}
-	}
-	
-	private void updateCompletedOrders(final Map<ProcessedOrder, Track> statuses) {
-		try (final Statement st = VSDSDBManager.get().createStatement()) {
-			for(final Map.Entry<ProcessedOrder, Track> entry : statuses.entrySet()) {
-				final TrackingEvent evt = entry.getValue().getTrackingStatus();
-				if(evt == null || evt.getStatus() == null) {
-					continue;
-				}
-			}
-			
-			st.executeBatch();
-		} catch(final SQLException e) {
-			e.printStackTrace();
 		}
 	}
 	
