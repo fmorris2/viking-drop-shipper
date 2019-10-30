@@ -23,7 +23,7 @@ public class TestShippoTracking {
 	public void testTracking() {
 		try {
 			//Track.registerTrackingWebhook(ShippoCarrier.ONTRAC.apiToken, "C11732391285793", "", Shippo.apiKey);
-			final Track track = Track.getTrackingInfo(ShippoCarrier.ONTRAC.apiToken, "C11732391285793", Shippo.apiKey);
+			final Track track = Track.getTrackingInfo(ShippoCarrier.USPS.apiToken, "9200190230268800130152", Shippo.apiKey);
 			System.out.println("Track: " + track);
 			System.out.println(track.getTrackingStatus().getStatusDetails());
 		} catch (Exception e) {

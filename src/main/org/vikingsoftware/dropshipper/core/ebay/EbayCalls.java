@@ -17,6 +17,8 @@ import com.ebay.sdk.call.AddFixedPriceItemCall;
 import com.ebay.sdk.call.CompleteSaleCall;
 import com.ebay.sdk.call.GetApiAccessRulesCall;
 import com.ebay.sdk.call.GetItemCall;
+import com.ebay.sdk.call.GetItemTransactionsCall;
+import com.ebay.sdk.call.GetOrdersCall;
 import com.ebay.sdk.call.GetSellerTransactionsCall;
 import com.ebay.sdk.call.GetSuggestedCategoriesCall;
 import com.ebay.sdk.call.ReviseFixedPriceItemCall;
@@ -33,6 +35,8 @@ import com.ebay.soap.eBLBaseComponents.ListingDurationCodeType;
 import com.ebay.soap.eBLBaseComponents.ListingTypeCodeType;
 import com.ebay.soap.eBLBaseComponents.NameValueListArrayType;
 import com.ebay.soap.eBLBaseComponents.NameValueListType;
+import com.ebay.soap.eBLBaseComponents.OrderIDArrayType;
+import com.ebay.soap.eBLBaseComponents.OrderType;
 import com.ebay.soap.eBLBaseComponents.PaginationType;
 import com.ebay.soap.eBLBaseComponents.PictureDetailsType;
 import com.ebay.soap.eBLBaseComponents.ProductListingDetailsType;
@@ -86,6 +90,37 @@ public class EbayCalls {
 //				e.printStackTrace();
 //			}
 //		}
+	}
+	
+	public static TransactionType getItemTransaction(final String ebayListingID, final String ebayTransactionId) {
+		final ApiContext api = EbayApiContextManager.getLiveContext();
+		final GetItemTransactionsCall call = new GetItemTransactionsCall(api);
+		call.setItemID(ebayListingID);
+		call.setTransactionID(ebayTransactionId);
+		try {
+			final TransactionType[] transactions = call.getItemTransactions();
+			return transactions != null && transactions.length > 0 ? transactions[0] : null;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	public static OrderType getOrder(final String ebayOrderId) {
+		final ApiContext api = EbayApiContextManager.getLiveContext();
+		final GetOrdersCall call = new GetOrdersCall(api);
+		final OrderIDArrayType orderIdArr = new OrderIDArrayType();
+		orderIdArr.setOrderID(new String[]{ebayOrderId});
+		call.setOrderIDArray(orderIdArr);
+		try {
+			final OrderType[] orders = call.getOrders();
+			return orders != null && orders.length > 0 ? orders[0] : null;
+		} catch (Exception e) {
+			e.printStackTrace();
+		} 
+		
+		return null;
 	}
 
 	public static CustomerOrder[] getOrdersLastXDays(final int days) {

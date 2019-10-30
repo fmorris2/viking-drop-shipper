@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.shippo.model.Track;
 import com.shippo.model.Track.Address;
@@ -62,7 +63,7 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 		try (final Statement st = VSDSDBManager.get().createStatement();
 			 final ResultSet res = st.executeQuery("SELECT processed_order.id,tracking_number FROM processed_order "
 					+ "LEFT JOIN tracking_history ON processed_order.id = tracking_history.processed_order_id "
-					+ "WHERE is_cancelled = 0 AND tracking_number IS NOT NULL AND tracking_status IS NULL OR tracking_status = 2 "
+					+ "WHERE is_cancelled = 0 AND tracking_number IS NOT NULL AND tracking_number != 'N/A' AND tracking_status IS NULL OR tracking_status = 2 "
 					+ "GROUP BY processed_order.id "
 					+ "ORDER BY processed_order.id ASC, tracking_history.id DESC")) {
 			
@@ -77,17 +78,22 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 		}
 		
 		System.out.println("Loaded " + orders.size() + " orders which need tracking history updated.");
- 		return orders;
+ 		return orders.stream()
+ 				.filter(order -> order.tracking_number.equals("1Z5R74F90307367765"))
+ 				.collect(Collectors.toList());
 	}
 	
 	private Track getShippoStatus(final ProcessedOrder order) {
+		System.out.println("TrackingHistoryUpdater#getShippoStatus for tracking number " + order.tracking_number);
 		Track status = null;
 		
 		if(order.tracking_number != null) {
 			final String shippoCarrierToken = getShippoCarrierToken(order.tracking_number);
+			System.out.println("shippoCarrierToken for tracking number " + order.tracking_number + ": " + shippoCarrierToken);
 			if(shippoCarrierToken != null && !SHIPPO_CARRIER_BLACKLIST.contains(shippoCarrierToken)) {
 				try {
 					final Track track = Track.getTrackingInfo(shippoCarrierToken, order.tracking_number, ShippoApiContextManager.getLiveKey());
+					System.out.println("Shippo Track object for tracking number " + order.tracking_number + ": " + track);
 					if(track != null) {
 						status = track;
 					}
@@ -107,7 +113,9 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 			return null;
 		}
 		
+		System.out.println("Courier name: " + carrierDetails.getCourierParentName());
 		final ShippoCarrier shippoCarrier = ShippoCarrier.getCarrier(carrierDetails.getCourierParentName());
+		System.out.println("ShippoCarrier: " + shippoCarrier);
 		return shippoCarrier == null ? null : shippoCarrier.apiToken;
 	}
 	
