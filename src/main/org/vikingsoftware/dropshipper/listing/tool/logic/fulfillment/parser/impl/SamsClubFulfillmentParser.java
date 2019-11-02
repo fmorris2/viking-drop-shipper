@@ -69,6 +69,9 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 			listing.itemId = metaDataParser.getItemID();
 			System.out.println("Item ID: " + listing.itemId);
 			
+			listing.productId = metaDataParser.getProductId();
+			System.out.println("Product ID: " + listing.productId);
+			
 			listing.description = metaDataParser.getDescription();
 			ListingUtils.makeDescriptionPretty(listing);
 			System.out.println("Description: " + listing.description);

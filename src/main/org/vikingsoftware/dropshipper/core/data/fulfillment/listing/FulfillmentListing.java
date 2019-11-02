@@ -5,6 +5,7 @@ public class FulfillmentListing {
 	public final int id;
 	public final int fulfillment_platform_id;
 	public final String item_id;
+	public final String product_id;
 	public final String listing_title;
 	public final String listing_url;
 
@@ -12,6 +13,7 @@ public class FulfillmentListing {
 		this.id = builder.id;
 		this.fulfillment_platform_id = builder.fulfillment_platform_id;
 		this.item_id = builder.item_id;
+		this.product_id = builder.product_id;
 		this.listing_title = builder.listing_title;
 		this.listing_url = builder.listing_url;
 	}
@@ -20,6 +22,7 @@ public class FulfillmentListing {
 		private int id;
 		private int fulfillment_platform_id;
 		private String item_id;
+		private String product_id;
 		private String listing_title;
 		private String listing_url;
 
@@ -35,6 +38,11 @@ public class FulfillmentListing {
 
 		public Builder item_id(final String id) {
 			this.item_id = id;
+			return this;
+		}
+		
+		public Builder product_id(final String id) {
+			this.product_id = id;
 			return this;
 		}
 

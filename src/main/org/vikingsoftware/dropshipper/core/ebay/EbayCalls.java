@@ -397,7 +397,7 @@ public class EbayCalls {
 		item.setListingType(ListingTypeCodeType.FIXED_PRICE_ITEM);
 		item.setLocation("St. Louis, MO");
 		item.setPostalCode("63101");
-		item.setPayPalEmailAddress("thevikingmarketplace@gmail.com");
+		item.setPayPalEmailAddress("sales@vikingwholesale.org");
 		item.setProductListingDetails(createProductListingDetailsForListing(listing));
 		item.setPictureDetails(createPictureDetailsForListing(listing));
 		item.setPrimaryCategory(createCategoryTypeForListing(listing));

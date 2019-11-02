@@ -81,6 +81,7 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 		return 0;
 	}
 	
+<<<<<<< Updated upstream
 	private double parseItemPrice(final String itemId, final String pageSource) {
 		try {
 			metaData.parse(pageSource);
@@ -96,6 +97,16 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 		}
 		
 		return -1;
+=======
+	private String parseProductId(final String pageSource) {
+		metaData.parse(pageSource);
+		return metaData.getProductId();
+	}
+	
+	private double parseItemPrice(final String pageSource) {
+		metaData.parse(pageSource);
+		return metaData.getPrice();
+>>>>>>> Stashed changes
 	}
 
 	@Override

@@ -76,6 +76,10 @@ public final class SamsClubMetaDataParser {
 		return internalProduct == null ? null : internalProduct.get("itemNumber").getAsString();
 	}
 	
+	public String getProductId() {
+		return internalProduct.get("productId").getAsString();
+	}
+	
 	public String getDescription() {
 		return metaData.get("description")
 				.getAsJsonObject()
@@ -110,6 +114,7 @@ public final class SamsClubMetaDataParser {
 		
 		return 0;
 	}
+
 	
 	public boolean passesAllListingConditions() {
 		try {
@@ -140,10 +145,14 @@ public final class SamsClubMetaDataParser {
 	}
 	
 	public boolean hasMinPurchaseQty() {
+		return  getMinPurchaseQty() > 1;
+	}
+	
+	public int getMinPurchaseQty() {
 		return internalProduct.get("onlineInventory")
 				.getAsJsonObject()
 				.get("minPurchaseQuantity")
-				.getAsInt() > 1;
+				.getAsInt();
 	}
 	
 	public boolean hasVariations() {
@@ -182,4 +191,5 @@ public final class SamsClubMetaDataParser {
 		
 		return null;
 	}
+	
 }

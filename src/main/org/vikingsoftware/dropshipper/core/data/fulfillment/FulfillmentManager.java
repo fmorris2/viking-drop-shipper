@@ -144,6 +144,7 @@ public class FulfillmentManager {
 						.id(results.getInt("id"))
 						.fulfillment_platform_id(platformId)
 						.item_id(itemId)
+						.product_id(results.getString("product_id"))
 						.listing_title(results.getString("listing_title"))
 						.listing_url(results.getString("listing_url"))
 						.build();
@@ -180,10 +181,11 @@ public class FulfillmentManager {
 					.id(results.getInt("fulfillment_listing.id"))
 					.fulfillment_platform_id(results.getInt("fulfillment_platform_id"))
 					.item_id(results.getString("item_id"))
+					.product_id(results.getString("product_id"))
 					.listing_title(results.getString("listing_title"))
 					.listing_url(results.getString("listing_url"))
 					.build();
-
+				
 				final List<FulfillmentListing> currentListings = listings.getOrDefault(marketplace_listing_id, new ArrayList<>());
 				currentListings.add(listing);
 				listings.put(marketplace_listing_id, currentListings);
