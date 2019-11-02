@@ -13,6 +13,7 @@ public class Listing implements Cloneable {
 	public String description;
 	public EbayCategory category;
 	public String itemId;
+	public String productId;
 	public String brand;
 	public String url;
 	public int fulfillmentPlatformId;
@@ -31,6 +32,7 @@ public class Listing implements Cloneable {
 		clone.title = title;
 		clone.description = description;
 		clone.itemId = itemId;
+		clone.productId = productId;
 		clone.brand = brand;
 		clone.url = url;
 		clone.fulfillmentPlatformId = fulfillmentPlatformId;

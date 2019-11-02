@@ -1,6 +1,8 @@
 package main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.impl;
 
 import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.jsoup.Jsoup;
 
@@ -15,6 +17,9 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.AbstractFulfillmentParser;
 
 public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClubWebDriver> {
+	
+	private static final String PRODUCT_ID_REGEX = "\\/(prod)*(\\d{5,})";
+	private static final Pattern PRODUCT_ID_PATTERN = Pattern.compile(PRODUCT_ID_REGEX);
 
 	@Override
 	public Class<SamsClubDriverSupplier> getDriverSupplierClass() {
@@ -69,6 +74,12 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 			listing.itemId = metaDataParser.getItemID();
 			System.out.println("Item ID: " + listing.itemId);
 			
+			listing.productId = metaDataParser.getProductID();
+			if(listing.productId == null) {
+				listing.productId = parseProductIdFromListingUrl(url);
+			}
+			System.out.println("Product ID: " + listing.productId);
+			
 			listing.description = metaDataParser.getDescription();
 			ListingUtils.makeDescriptionPretty(listing);
 			System.out.println("Description: " + listing.description);
@@ -87,6 +98,15 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 			return listing;
 		} catch(final Exception e) {
 			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	private String parseProductIdFromListingUrl(final String url) {
+		final Matcher matcher = PRODUCT_ID_PATTERN.matcher(url);
+		if(matcher.find()) {
+			return matcher.group(2);
 		}
 		
 		return null;

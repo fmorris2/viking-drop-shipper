@@ -76,6 +76,16 @@ public final class SamsClubMetaDataParser {
 		return internalProduct == null ? null : internalProduct.get("itemNumber").getAsString();
 	}
 	
+	public String getProductID() {
+		try {
+			return internalProduct == null ? null : internalProduct.get("productId").getAsString();
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
 	public String getDescription() {
 		return metaData.get("description")
 				.getAsJsonObject()

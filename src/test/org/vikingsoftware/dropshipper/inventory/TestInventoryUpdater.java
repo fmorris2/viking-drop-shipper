@@ -10,9 +10,7 @@ public class TestInventoryUpdater {
 	@Test
 	public void test() {
 		final InventoryUpdater updater = new InventoryUpdater();
-		//for(int i = 0; i < 1000; i++) {
-			updater.cycle();
-		//}
+		updater.cycle();
 		Assert.assertTrue(true);
 	}
 
