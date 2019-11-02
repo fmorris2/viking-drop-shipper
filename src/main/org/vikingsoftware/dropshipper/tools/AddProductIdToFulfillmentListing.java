@@ -26,7 +26,7 @@ public final class AddProductIdToFulfillmentListing {
 	
 	public static void main(final String[] args) {
 		final List<FulfillmentListing> listings = FulfillmentManager.get().getListingsForFulfillmentPlatform(FulfillmentPlatforms.SAMS_CLUB);
-		listings.removeIf(listing -> listing.product_id != null);
+		//listings.removeIf(listing -> listing.product_id != null);
 		System.out.println("Loaded " + listings.size() + " fulfillment listings for sams club");
 		
 		for(final FulfillmentListing listing : listings) {
@@ -34,7 +34,7 @@ public final class AddProductIdToFulfillmentListing {
 			try {
 				final String pageSource = Jsoup.connect(listing.listing_url).get().html();
 				parser.parse(pageSource);
-				final String productId = parser.getProductID().replace("prod", "");
+				final String productId = parser.getProductID();
 				if(productId != null) {
 					insertProductId(listing.id, productId);
 					success = true;
@@ -46,7 +46,8 @@ public final class AddProductIdToFulfillmentListing {
 			if(!success) {
 				final Matcher matcher = PRODUCT_ID_PATTERN.matcher(listing.listing_url);
 				if(matcher.find()) {
-					insertProductId(listing.id, matcher.group(2));
+					final String prodPrefix = matcher.group(1);
+					insertProductId(listing.id, (prodPrefix == null ? "" : prodPrefix) + matcher.group(2));
 				} else {
 					System.err.println("Failed to parse product id for listing w/ url: " + listing.listing_url);
 					System.exit(0);

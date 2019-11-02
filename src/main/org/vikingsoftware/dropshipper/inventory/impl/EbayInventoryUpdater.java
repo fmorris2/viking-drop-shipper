@@ -140,7 +140,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 				System.out.println("successfully sent inventory update to ebay - Updating our DB with last inv update.");
 				listing.setCurrentEbayInventory(Math.max(0, Math.min(EbayCalls.FAKE_MAX_QUANTITY, parsedStock)));
 			} else {
-				System.err.println("did not send inventory update to ebay successfully!");
+				System.err.println("did not send inventory update to ebay successfully for id " + listing.id + "!");
 				System.exit(0);
 			}
 			
