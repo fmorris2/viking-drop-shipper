@@ -12,10 +12,13 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.ebay.sdk.ApiContext;
+import com.ebay.sdk.ApiException;
+import com.ebay.sdk.SdkException;
 import com.ebay.sdk.TimeFilter;
 import com.ebay.sdk.call.AddFixedPriceItemCall;
 import com.ebay.sdk.call.CompleteSaleCall;
 import com.ebay.sdk.call.GetApiAccessRulesCall;
+import com.ebay.sdk.call.GetCategorySpecificsCall;
 import com.ebay.sdk.call.GetItemCall;
 import com.ebay.sdk.call.GetItemTransactionsCall;
 import com.ebay.sdk.call.GetOrdersCall;
@@ -40,6 +43,7 @@ import com.ebay.soap.eBLBaseComponents.OrderType;
 import com.ebay.soap.eBLBaseComponents.PaginationType;
 import com.ebay.soap.eBLBaseComponents.PictureDetailsType;
 import com.ebay.soap.eBLBaseComponents.ProductListingDetailsType;
+import com.ebay.soap.eBLBaseComponents.RecommendationsType;
 import com.ebay.soap.eBLBaseComponents.ReturnPolicyType;
 import com.ebay.soap.eBLBaseComponents.ReturnsAcceptedCodeType;
 import com.ebay.soap.eBLBaseComponents.ShipmentTrackingDetailsType;
@@ -265,6 +269,13 @@ public class EbayCalls {
 				itemToRevise.setQuantity(Math.max(0, Math.min(FAKE_MAX_QUANTITY, stockAndPrice.left)));
 			}
 			System.out.println("Setting stock for listing id " + listingId + " to " + itemToRevise.getQuantity());
+			final NameValueListArrayType specifics = new NameValueListArrayType();
+			final NameValueListType productSpecific = new NameValueListType();
+			productSpecific.setName("UPC");
+			productSpecific.setValue(new String[] {"Fruit & Dessert"});
+			specifics.setNameValueList(new NameValueListType[] {productSpecific});
+			itemToRevise.setItemSpecifics(specifics);
+			itemToRevise.setIncludeRecommendations(true);
 			call.setItemToBeRevised(itemToRevise);
 			call.reviseFixedPriceItem();
 			logToFile("updateInventory: listingId - " + listingId + ", quantity: " + Math.max(0, Math.min(FAKE_MAX_QUANTITY, itemToRevise.getQuantity())));

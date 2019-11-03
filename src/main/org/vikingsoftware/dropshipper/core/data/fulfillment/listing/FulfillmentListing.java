@@ -8,6 +8,8 @@ public class FulfillmentListing {
 	public final String listing_title;
 	public final String listing_url;
 	public final String product_id;
+	public final String upc;
+	public final String ean;
 
 	private FulfillmentListing(final Builder builder) {
 		this.id = builder.id;
@@ -16,6 +18,8 @@ public class FulfillmentListing {
 		this.listing_title = builder.listing_title;
 		this.listing_url = builder.listing_url;
 		this.product_id = builder.product_id;
+		this.upc = builder.upc;
+		this.ean = builder.ean;
 	}
 
 	public static class Builder {
@@ -25,7 +29,9 @@ public class FulfillmentListing {
 		private String listing_title;
 		private String listing_url;
 		private String product_id;
-
+		private String upc;
+		private String ean;
+		
 		public Builder id(final int id) {
 			this.id = id;
 			return this;
@@ -53,6 +59,16 @@ public class FulfillmentListing {
 		
 		public Builder product_id(final String id) {
 			this.product_id = id;
+			return this;
+		}
+		
+		public Builder upc(final String upc) {
+			this.upc = upc;
+			return this;
+		}
+		
+		public Builder ean(final String ean) {
+			this.ean = ean;
 			return this;
 		}
 
