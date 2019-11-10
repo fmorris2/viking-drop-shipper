@@ -282,7 +282,7 @@ public class EbayCalls {
 			return !call.hasError();
 		} catch(final Exception e) {
 			e.printStackTrace();
-			DBLogging.high(EbayCalls.class, "failed to update inventory for listing " + listingId + " w/ stock and price " + stockAndPrice + ": ", e);
+			DBLogging.medium(EbayCalls.class, "failed to update inventory for listing " + listingId + " w/ stock and price " + stockAndPrice + ": ", e);
 		
 			if(e.getMessage().equals("You are not allowed to revise ended listings.")) {
 				System.out.println("setting ended listing to inactive in database...");
