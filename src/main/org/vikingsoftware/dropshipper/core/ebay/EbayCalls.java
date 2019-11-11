@@ -12,19 +12,17 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.ebay.sdk.ApiContext;
-import com.ebay.sdk.ApiException;
-import com.ebay.sdk.SdkException;
 import com.ebay.sdk.TimeFilter;
 import com.ebay.sdk.call.AddFixedPriceItemCall;
 import com.ebay.sdk.call.CompleteSaleCall;
 import com.ebay.sdk.call.GetApiAccessRulesCall;
-import com.ebay.sdk.call.GetCategorySpecificsCall;
 import com.ebay.sdk.call.GetItemCall;
 import com.ebay.sdk.call.GetItemTransactionsCall;
 import com.ebay.sdk.call.GetOrdersCall;
 import com.ebay.sdk.call.GetSellerTransactionsCall;
 import com.ebay.sdk.call.GetSuggestedCategoriesCall;
 import com.ebay.sdk.call.ReviseFixedPriceItemCall;
+import com.ebay.sdk.call.ReviseInventoryStatusCall;
 import com.ebay.soap.eBLBaseComponents.AmountType;
 import com.ebay.soap.eBLBaseComponents.ApiAccessRuleType;
 import com.ebay.soap.eBLBaseComponents.BuyerPaymentMethodCodeType;
@@ -33,6 +31,7 @@ import com.ebay.soap.eBLBaseComponents.CategoryType;
 import com.ebay.soap.eBLBaseComponents.CountryCodeType;
 import com.ebay.soap.eBLBaseComponents.CurrencyCodeType;
 import com.ebay.soap.eBLBaseComponents.DetailLevelCodeType;
+import com.ebay.soap.eBLBaseComponents.InventoryStatusType;
 import com.ebay.soap.eBLBaseComponents.ItemType;
 import com.ebay.soap.eBLBaseComponents.ListingDurationCodeType;
 import com.ebay.soap.eBLBaseComponents.ListingTypeCodeType;
@@ -43,7 +42,6 @@ import com.ebay.soap.eBLBaseComponents.OrderType;
 import com.ebay.soap.eBLBaseComponents.PaginationType;
 import com.ebay.soap.eBLBaseComponents.PictureDetailsType;
 import com.ebay.soap.eBLBaseComponents.ProductListingDetailsType;
-import com.ebay.soap.eBLBaseComponents.RecommendationsType;
 import com.ebay.soap.eBLBaseComponents.ReturnPolicyType;
 import com.ebay.soap.eBLBaseComponents.ReturnsAcceptedCodeType;
 import com.ebay.soap.eBLBaseComponents.ShipmentTrackingDetailsType;
@@ -187,17 +185,17 @@ public class EbayCalls {
 		try {
 			addCall("updatePrice");
 			final ApiContext api = EbayApiContextManager.getLiveContext();
-			final ReviseFixedPriceItemCall call = new ReviseFixedPriceItemCall(api);
-			final ItemType itemToRevise = new ItemType();
-			itemToRevise.setItemID(listingId);
+			final ReviseInventoryStatusCall call = new ReviseInventoryStatusCall(api);
+			final InventoryStatusType invStatus = new InventoryStatusType();
+			invStatus.setItemID(listingId);
 			
 			final AmountType priceType = new AmountType();
 			priceType.setCurrencyID(CurrencyCodeType.USD);
 			priceType.setValue(price);
-			itemToRevise.setStartPrice(priceType);
+			invStatus.setStartPrice(priceType);
 			
-			call.setItemToBeRevised(itemToRevise);
-			call.reviseFixedPriceItem();
+			call.setInventoryStatus(new InventoryStatusType[]{invStatus});
+			call.reviseInventoryStatus();
 			return !call.hasError();
 		} catch(final Exception e) {
 			e.printStackTrace();
@@ -256,33 +254,26 @@ public class EbayCalls {
 		return Optional.empty();
 	}
 
-	public static boolean updateInventory(final String listingId, final Pair<Integer,Double> stockAndPrice) {
+	public static boolean updateInventory(final String listingId, final int inventory) {
 		try {
 			addCall("updateInventory");
 			final ApiContext api = EbayApiContextManager.getLiveContext();
-			final ReviseFixedPriceItemCall call = new ReviseFixedPriceItemCall(api);
-			final ItemType itemToRevise = new ItemType();
-			itemToRevise.setItemID(listingId);
-			if(stockAndPrice.left < MIN_AVAILABLE_FULFILLMENT_QTY) {
-				itemToRevise.setQuantity(0);
+			final ReviseInventoryStatusCall call = new ReviseInventoryStatusCall(api);
+			final InventoryStatusType invStatus = new InventoryStatusType();
+			invStatus.setItemID(listingId);
+			if(inventory < MIN_AVAILABLE_FULFILLMENT_QTY) {
+				invStatus.setQuantity(0);
 			} else {
-				itemToRevise.setQuantity(Math.max(0, Math.min(FAKE_MAX_QUANTITY, stockAndPrice.left)));
+				invStatus.setQuantity(Math.max(0, Math.min(FAKE_MAX_QUANTITY, inventory)));
 			}
-			System.out.println("Setting stock for listing id " + listingId + " to " + itemToRevise.getQuantity());
-			final NameValueListArrayType specifics = new NameValueListArrayType();
-			final NameValueListType productSpecific = new NameValueListType();
-			productSpecific.setName("UPC");
-			productSpecific.setValue(new String[] {"Fruit & Dessert"});
-			specifics.setNameValueList(new NameValueListType[] {productSpecific});
-			itemToRevise.setItemSpecifics(specifics);
-			itemToRevise.setIncludeRecommendations(true);
-			call.setItemToBeRevised(itemToRevise);
-			call.reviseFixedPriceItem();
-			logToFile("updateInventory: listingId - " + listingId + ", quantity: " + Math.max(0, Math.min(FAKE_MAX_QUANTITY, itemToRevise.getQuantity())));
+			System.out.println("Setting stock for listing id " + listingId + " to " + invStatus.getQuantity());
+			call.setInventoryStatus(new InventoryStatusType[] {invStatus});
+			call.reviseInventoryStatus();
+			logToFile("updateInventory: listingId - " + listingId + ", quantity: " + Math.max(0, Math.min(FAKE_MAX_QUANTITY, invStatus.getQuantity())));
 			return !call.hasError();
 		} catch(final Exception e) {
 			e.printStackTrace();
-			DBLogging.medium(EbayCalls.class, "failed to update inventory for listing " + listingId + " w/ stock and price " + stockAndPrice + ": ", e);
+			DBLogging.medium(EbayCalls.class, "failed to update inventory for listing " + listingId + " w/ stock " + inventory+ ": ", e);
 		
 			if(e.getMessage().equals("You are not allowed to revise ended listings.")) {
 				System.out.println("setting ended listing to inactive in database...");
@@ -298,7 +289,7 @@ public class EbayCalls {
 	}
 	
 	private static void logToFile(final String str) {
-		try(final FileWriter fW = new FileWriter("call-log.txt", true);
+		try(final FileWriter fW = new FileWriter("debug/call-log.txt", true);
 			final BufferedWriter bW = new BufferedWriter(fW)) {
 			bW.write(str);
 			bW.newLine();

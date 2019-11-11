@@ -1,8 +1,10 @@
 package main.org.vikingsoftware.dropshipper.core.data.marketplace.listing;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplace;
 import main.org.vikingsoftware.dropshipper.core.data.misc.Pair;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
@@ -112,6 +114,26 @@ public class MarketplaceListing {
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static MarketplaceListing getMarketplaceListingForFulfillmentListing(final int fulfillmentListingId) {
+		try(final Statement st = VSDSDBManager.get().createStatement();
+			final ResultSet initial = st.executeQuery("SELECT marketplace_listing_id FROM fulfillment_mapping WHERE"
+					+ " fulfillment_listing_id="+fulfillmentListingId)) { // you GOOD??
+			if(initial.next()) {
+				final int marketplaceListingId = initial.getInt("marketplace_listing_id");
+				try(final Statement st2 = VSDSDBManager.get().createStatement();
+					final ResultSet rs2 = st2.executeQuery("SELECT * FROM marketplace_listing WHERE id=" + marketplaceListingId)) {
+					if(rs2.next()) {
+						return Marketplace.loadListingFromResultSet(rs2);
+					}
+				}
+			}
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 	
 	public boolean setCurrentEbayInventory(final long amount) {

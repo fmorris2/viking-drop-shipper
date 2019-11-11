@@ -416,7 +416,7 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 		}
 		driver.setImplicitWait(90);
 		
-		try(final FileWriter fW = new FileWriter("last-order-page.html");
+		try(final FileWriter fW = new FileWriter("debug/last-order-page.html");
 			final BufferedWriter bW = new BufferedWriter(fW);) {
 			bW.write(driver.getPageSource());
 			bW.flush();

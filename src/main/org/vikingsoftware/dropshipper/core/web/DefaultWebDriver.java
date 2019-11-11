@@ -62,7 +62,7 @@ public class DefaultWebDriver extends FirefoxDriver {
 	}
 	
 	public void savePageSource(final String str) {
-		try(final FileWriter fW = new FileWriter(str);
+		try(final FileWriter fW = new FileWriter("debug/" + str);
 				final BufferedWriter bW = new BufferedWriter(fW);) {
 			bW.write(getPageSource());
 		} catch(final Exception e) {}
@@ -134,7 +134,7 @@ public class DefaultWebDriver extends FirefoxDriver {
 		      OutputStream stream = null;
 
 		      try {
-		        File tmpFile = new File(filePath);
+		        File tmpFile = new File("debug/" + filePath);
 
 		        stream = new FileOutputStream(tmpFile);
 		        stream.write(data);
@@ -178,7 +178,7 @@ public class DefaultWebDriver extends FirefoxDriver {
 	public void saveCurrentPageToFile(final String fileName) {
 		final String pageSource = getPageSource();
 
-		try(final FileWriter fR = new FileWriter(fileName + ".html");
+		try(final FileWriter fR = new FileWriter("debug/" + fileName + ".html");
 			final BufferedWriter bR = new BufferedWriter(fR)) {
 			bR.write(pageSource);
 		} catch (final IOException e) {

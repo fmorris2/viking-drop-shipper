@@ -105,7 +105,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 				if(listing.current_ebay_inventory <= 0) {
 					System.out.println("No need to send updated for inactive listing.");
 					return true;
-				} else if(EbayCalls.updateInventory(listing.listingId, new Pair<>(0, -1D))) {
+				} else if(EbayCalls.updateInventory(listing.listingId, 0)) {
 					return listing.setCurrentEbayInventory(0);
 				}
 			}
@@ -136,7 +136,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 				return true;
 			}
 			
-			if(EbayCalls.updateInventory(listing.listingId, stockAndPrice)) {
+			if(EbayCalls.updateInventory(listing.listingId, stockAndPrice.left)) {
 				System.out.println("successfully sent inventory update to ebay - Updating our DB with last inv update.");
 				listing.setCurrentEbayInventory(Math.max(0, Math.min(EbayCalls.FAKE_MAX_QUANTITY, parsedStock)));
 			} else {
