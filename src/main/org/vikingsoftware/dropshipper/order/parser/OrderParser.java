@@ -4,9 +4,11 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 
 import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
+import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrderManager;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
@@ -70,13 +72,16 @@ public class OrderParser implements CycleParticipant {
 			System.out.println("Executed batch of " + numRows + " insert queries.");
 			
 			for(final CustomerOrder newOrder : newOrders) {
-				System.out.println("decrementing current ebay inventory for marketplace listing id: " + newOrder.marketplace_listing_id);
-				MarketplaceListing.decrementCurrentEbayInventory(newOrder.marketplace_listing_id);
-				
-				System.out.println("inserting marketplace income & marketplace sell-fee transactions for customer order w/ order id " + newOrder.marketplace_order_id);
-				if(!TransactionUtils.insertTransactionsForCustomerOrder(newOrder)) {
-					DBLogging.critical(OrderParser.class, "Failed to insert transactions for new customer order " + newOrder.id, null);
-				}
+				final Optional<CustomerOrder> orderWithId = CustomerOrderManager.loadCustomerOrderByMarketplaceOrderId(newOrder.marketplace_order_id);
+				orderWithId.ifPresent(order -> {
+					System.out.println("decrementing current ebay inventory for marketplace listing id: " + order.marketplace_listing_id);
+					MarketplaceListing.decrementCurrentEbayInventory(order.marketplace_listing_id);
+					
+					System.out.println("inserting marketplace income & marketplace sell-fee transactions for customer order w/ order id " + order.marketplace_order_id);
+					if(!TransactionUtils.insertTransactionsForCustomerOrder(order)) {
+						DBLogging.critical(OrderParser.class, "Failed to insert transactions for new customer order " + order.id, null);
+					}
+				});
 				
 			}
 		} catch (final SQLException e) {
