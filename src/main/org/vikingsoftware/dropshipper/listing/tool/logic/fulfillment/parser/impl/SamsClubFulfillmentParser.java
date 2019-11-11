@@ -84,7 +84,12 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 			ListingUtils.makeDescriptionPretty(listing);
 			System.out.println("Description: " + listing.description);
 			
-			listing.price = metaDataParser.getPrice();
+			listing.price = metaDataParser.getPrice().orElse(-1D);
+			if(listing.price < 0) {
+				System.out.println("\tCould not parse listing price. Skipping...");
+				listing.canShip = false;
+				return listing;
+			}
 			System.out.println("Price: " + listing.price);
 			
 			listing.brand = metaDataParser.getBrand();

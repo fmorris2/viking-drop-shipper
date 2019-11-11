@@ -199,6 +199,16 @@ public class EbayCalls {
 			return !call.hasError();
 		} catch(final Exception e) {
 			e.printStackTrace();
+			
+			if(e.getMessage().contains("It looks like this listing is for an item you already have on eBay") ||
+				e.getMessage().equals("This item cannot be accessed because the listing has been deleted or you are not the seller.")) {
+				System.out.println("setting deleted listing to inactive in database...");
+				if(MarketplaceListing.setIsActive(listingId, false)) {
+					System.out.println("\tsuccess");
+				} else {
+					System.out.println("\tfailure");
+				}
+			}
 		}
 		
 		return false;

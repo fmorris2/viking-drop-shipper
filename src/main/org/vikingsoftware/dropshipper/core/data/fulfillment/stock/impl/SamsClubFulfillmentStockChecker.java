@@ -63,7 +63,7 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 			metaData.parse(pageSource);
 			
 			if(!itemId.equalsIgnoreCase(metaData.getItemID())) {
-				System.err.println("Could not parse metadata as the item IDs don't match!");
+				System.out.println("Could not parse metadata as the item IDs don't match!");
 				return 0;
 			}
 			
@@ -86,11 +86,11 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 			metaData.parse(pageSource);
 			
 			if(!itemId.equalsIgnoreCase(metaData.getItemID())) {
-				System.err.println("Could not parse metadata as the item IDs don't match!");
+				System.out.println("Could not parse metadata as the item IDs don't match!");
 				return -1;
 			}
 			
-			return metaData.getPrice();
+			return metaData.getPrice().orElse(-1D);
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}

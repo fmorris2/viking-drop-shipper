@@ -5,11 +5,13 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.jsoup.Jsoup;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -73,7 +75,8 @@ public final class SamsClubMetaDataParser {
 	}
 	
 	public String getItemID() {
-		return internalProduct == null ? null : internalProduct.get("itemNumber").getAsString();
+		final JsonElement itemNumberEl = internalProduct == null ? null : internalProduct.get("itemNumber");
+		return itemNumberEl != null && !itemNumberEl.isJsonNull() ? itemNumberEl.getAsString() : null;
 	}
 	
 	public String getProductID() {
@@ -93,17 +96,25 @@ public final class SamsClubMetaDataParser {
 				.getAsString();
 	}
 	
-	public double getPrice() {
-		return metaData.get("selectedSku")
-				.getAsJsonObject()
-				.get("pricingOptions")
-				.getAsJsonArray()
-				.get(0)
-				.getAsJsonObject()
-				.get("listPrice")
-				.getAsJsonObject()
-				.get("currencyAmount")
-				.getAsDouble();
+	public Optional<Double> getPrice() {
+		final JsonElement selectedSkuEl = metaData.get("selectedSku");
+		if(selectedSkuEl != null && !selectedSkuEl.isJsonNull()) {
+			final JsonObject selectedSkuObj = selectedSkuEl.getAsJsonObject();
+			final JsonElement pricingOptionsEl = selectedSkuObj.get("pricingOptions");
+			if(pricingOptionsEl != null && !pricingOptionsEl.isJsonNull()) {
+				final JsonArray pricingOptionsArr = pricingOptionsEl.getAsJsonArray();
+				if(pricingOptionsArr.size() > 0) {
+					return Optional.of(pricingOptionsArr
+							.get(0)
+							.getAsJsonObject()
+							.get("listPrice")
+							.getAsJsonObject()
+							.get("currencyAmount")
+							.getAsDouble());
+				}
+			}
+		}
+		return Optional.empty();
 	}
 	
 	public int getStock() {
