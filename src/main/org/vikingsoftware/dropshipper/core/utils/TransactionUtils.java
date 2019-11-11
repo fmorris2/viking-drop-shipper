@@ -17,7 +17,7 @@ public final class TransactionUtils {
 		//utils classes need not be instantiated
 	}
 	
-	public static boolean insertTransactionsForCustomerOrder(final CustomerOrder order) {		
+	public static boolean insertTransactionsForCustomerOrder(final float marketplaceSellFee, final CustomerOrder order) {		
 		try {		
 			final Transaction marketplaceIncomeTransaction = new Transaction.Builder()
 					.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.MARKETPLACE_INCOME)
@@ -28,7 +28,7 @@ public final class TransactionUtils {
 			
 			final Transaction marketplaceSellFeeTransaction = new Transaction.Builder()
 					.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.MARKETPLACE_SELL_FEE)
-					.amount((float)(double)order.marketplace_sell_fee)
+					.amount(marketplaceSellFee)
 					.customerOrderId(order.id)
 					.date(order.date_parsed)
 					.build();

@@ -78,7 +78,7 @@ public class OrderParser implements CycleParticipant {
 					MarketplaceListing.decrementCurrentEbayInventory(order.marketplace_listing_id);
 					
 					System.out.println("inserting marketplace income & marketplace sell-fee transactions for customer order w/ order id " + order.marketplace_order_id);
-					if(!TransactionUtils.insertTransactionsForCustomerOrder(order)) {
+					if(!TransactionUtils.insertTransactionsForCustomerOrder((float)(double)newOrder.marketplace_sell_fee, order)) {
 						DBLogging.critical(OrderParser.class, "Failed to insert transactions for new customer order " + order.id, null);
 					}
 				});
