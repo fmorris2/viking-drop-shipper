@@ -16,6 +16,8 @@ public class Listing implements Cloneable {
 	public String productId;
 	public String brand;
 	public String url;
+	public String upc;
+	public String ean;
 	public int fulfillmentPlatformId;
 	public double price;
 	public ShippingServiceCodeType shippingService;
@@ -43,6 +45,8 @@ public class Listing implements Cloneable {
 		clone.propertyItems = new ArrayList<>(propertyItems);
 		clone.variations = new HashMap<>(variations);
 		clone.canShip = canShip;
+		clone.upc = upc;
+		clone.ean = ean;
 		return clone;
 	}
 }

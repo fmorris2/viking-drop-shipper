@@ -14,6 +14,7 @@ import com.ebay.sdk.TimeFilter;
 import com.ebay.sdk.call.AddFixedPriceItemCall;
 import com.ebay.sdk.call.CompleteSaleCall;
 import com.ebay.sdk.call.GetApiAccessRulesCall;
+import com.ebay.sdk.call.GetCategorySpecificsCall;
 import com.ebay.sdk.call.GetItemCall;
 import com.ebay.sdk.call.GetItemTransactionsCall;
 import com.ebay.sdk.call.GetOrdersCall;
@@ -25,6 +26,7 @@ import com.ebay.soap.eBLBaseComponents.AmountType;
 import com.ebay.soap.eBLBaseComponents.ApiAccessRuleType;
 import com.ebay.soap.eBLBaseComponents.BuyerPaymentMethodCodeType;
 import com.ebay.soap.eBLBaseComponents.BuyerRequirementDetailsType;
+import com.ebay.soap.eBLBaseComponents.CategoryItemSpecificsType;
 import com.ebay.soap.eBLBaseComponents.CategoryType;
 import com.ebay.soap.eBLBaseComponents.CountryCodeType;
 import com.ebay.soap.eBLBaseComponents.CurrencyCodeType;
@@ -40,6 +42,7 @@ import com.ebay.soap.eBLBaseComponents.OrderType;
 import com.ebay.soap.eBLBaseComponents.PaginationType;
 import com.ebay.soap.eBLBaseComponents.PictureDetailsType;
 import com.ebay.soap.eBLBaseComponents.ProductListingDetailsType;
+import com.ebay.soap.eBLBaseComponents.RecommendationsType;
 import com.ebay.soap.eBLBaseComponents.ReturnPolicyType;
 import com.ebay.soap.eBLBaseComponents.ReturnsAcceptedCodeType;
 import com.ebay.soap.eBLBaseComponents.ShipmentTrackingDetailsType;
@@ -373,7 +376,7 @@ public class EbayCalls {
 		item.setCountry(CountryCodeType.US);
 		item.setCurrency(CurrencyCodeType.USD);
 		item.setDescription(listing.description);
-		item.setDispatchTimeMax(4);
+		item.setDispatchTimeMax(7);
 		item.setListingDuration(ListingDurationCodeType.GTC.value());
 		item.setListingType(ListingTypeCodeType.FIXED_PRICE_ITEM);
 		item.setLocation("St. Louis, MO");
@@ -395,11 +398,21 @@ public class EbayCalls {
 		brand.setName("Brand");
 		brand.setValue(new String[]{listing.brand});
 
-		final NameValueListType upc = new NameValueListType();
-		upc.setName("UPC");
-		upc.setValue(new String[]{"Does Not Apply"});
+		final NameValueListType upcOrEan = new NameValueListType();
+		if(listing.upc == null && listing.ean == null) {
+			upcOrEan.setName("UPC");
+			upcOrEan.setValue(new String[]{"Does Not Apply"});
+		} else if(listing.upc != null) {
+			upcOrEan.setName("UPC");
+			upcOrEan.setValue(new String[]{listing.upc});
+		} else if(listing.ean != null) {
+			upcOrEan.setName("EAN");
+			upcOrEan.setValue(new String[]{listing.ean});
+		}
+		
+		final List<NameValueListType> recommendedItemSpecifics = getRecommendedItemSpecifics(listing.category.id, upcOrEan);
 
-		final NameValueListType[] specificsVals = {brand, upc};
+		final NameValueListType[] specificsVals = {brand, upcOrEan};
 		specifics.setNameValueList(specificsVals);
 		item.setItemSpecifics(specifics);
 
@@ -412,6 +425,25 @@ public class EbayCalls {
 		price.setValue(listing.price);
 		item.setStartPrice(price);
 		return item;
+	}
+	
+	private static List<NameValueListType> getRecommendedItemSpecifics(final String categoryId, final NameValueListType upcOrEan) {
+		final List<NameValueListType> specifics = new ArrayList<>();
+		try {
+			final ApiContext api = EbayApiContextManager.getLiveContext();
+			final GetCategorySpecificsCall call = new GetCategorySpecificsCall(api);
+			call.setCategoryID(new String[] {categoryId});
+			final CategoryItemSpecificsType categoryItemSpecifics = new CategoryItemSpecificsType();
+			final NameValueListArrayType itemSpecs = new NameValueListArrayType();
+			itemSpecs.setNameValueList(new NameValueListType[] {upcOrEan});
+			categoryItemSpecifics.setItemSpecifics(itemSpecs);
+			call.setCategorySpecific(new CategoryItemSpecificsType[] {categoryItemSpecifics});
+			final RecommendationsType[] recommendations = call.getReturnedRecommendations();
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return specifics;
 	}
 
 	private static BuyerRequirementDetailsType createBuyerRequirementsForListing(final Listing listing) {
