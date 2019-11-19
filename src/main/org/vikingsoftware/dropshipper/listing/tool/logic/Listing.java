@@ -12,6 +12,8 @@ public class Listing implements Cloneable {
 	public String title;
 	public String description;
 	public EbayCategory category;
+	public Map<String, List<String>> requiredItemSpecifics;
+	public Map<String, String> itemSpecifics;
 	public String itemId;
 	public String productId;
 	public String brand;
@@ -19,6 +21,7 @@ public class Listing implements Cloneable {
 	public String upc;
 	public String ean;
 	public int fulfillmentPlatformId;
+	public int handlingTime = 5;
 	public double price;
 	public ShippingServiceCodeType shippingService;
 	public double shipping;
@@ -32,6 +35,9 @@ public class Listing implements Cloneable {
 	public Listing clone() {
 		final Listing clone = new Listing();
 		clone.title = title;
+		clone.category = category;
+		clone.requiredItemSpecifics = requiredItemSpecifics;
+		clone.itemSpecifics = itemSpecifics;
 		clone.description = description;
 		clone.itemId = itemId;
 		clone.productId = productId;
@@ -47,6 +53,7 @@ public class Listing implements Cloneable {
 		clone.canShip = canShip;
 		clone.upc = upc;
 		clone.ean = ean;
+		clone.handlingTime = handlingTime;
 		return clone;
 	}
 }

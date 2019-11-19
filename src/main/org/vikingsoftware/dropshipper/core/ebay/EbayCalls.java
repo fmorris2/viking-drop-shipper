@@ -6,8 +6,12 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.ebay.sdk.ApiContext;
 import com.ebay.sdk.TimeFilter;
@@ -24,9 +28,9 @@ import com.ebay.sdk.call.ReviseFixedPriceItemCall;
 import com.ebay.sdk.call.ReviseInventoryStatusCall;
 import com.ebay.soap.eBLBaseComponents.AmountType;
 import com.ebay.soap.eBLBaseComponents.ApiAccessRuleType;
+import com.ebay.soap.eBLBaseComponents.BrandMPNType;
 import com.ebay.soap.eBLBaseComponents.BuyerPaymentMethodCodeType;
 import com.ebay.soap.eBLBaseComponents.BuyerRequirementDetailsType;
-import com.ebay.soap.eBLBaseComponents.CategoryItemSpecificsType;
 import com.ebay.soap.eBLBaseComponents.CategoryType;
 import com.ebay.soap.eBLBaseComponents.CountryCodeType;
 import com.ebay.soap.eBLBaseComponents.CurrencyCodeType;
@@ -35,6 +39,7 @@ import com.ebay.soap.eBLBaseComponents.InventoryStatusType;
 import com.ebay.soap.eBLBaseComponents.ItemType;
 import com.ebay.soap.eBLBaseComponents.ListingDurationCodeType;
 import com.ebay.soap.eBLBaseComponents.ListingTypeCodeType;
+import com.ebay.soap.eBLBaseComponents.NameRecommendationType;
 import com.ebay.soap.eBLBaseComponents.NameValueListArrayType;
 import com.ebay.soap.eBLBaseComponents.NameValueListType;
 import com.ebay.soap.eBLBaseComponents.OrderIDArrayType;
@@ -42,6 +47,7 @@ import com.ebay.soap.eBLBaseComponents.OrderType;
 import com.ebay.soap.eBLBaseComponents.PaginationType;
 import com.ebay.soap.eBLBaseComponents.PictureDetailsType;
 import com.ebay.soap.eBLBaseComponents.ProductListingDetailsType;
+import com.ebay.soap.eBLBaseComponents.RecommendationValidationRulesType;
 import com.ebay.soap.eBLBaseComponents.RecommendationsType;
 import com.ebay.soap.eBLBaseComponents.ReturnPolicyType;
 import com.ebay.soap.eBLBaseComponents.ReturnsAcceptedCodeType;
@@ -361,28 +367,29 @@ public class EbayCalls {
 	public static Optional<String> createListing(final Listing listing) {
 		final ApiContext api = EbayApiContextManager.getLiveContext();
 		final AddFixedPriceItemCall call = new AddFixedPriceItemCall(api);
-		call.setItem(createItemTypeForListing(listing));
+		call.setItem(createItemTypeForListing(call, listing));
 		try {
-			call.addFixedPriceItem();
+			//call.addFixedPriceItem();
 		} catch (final Exception e) {
 			e.printStackTrace();
 		}
 		return Optional.ofNullable(call.getReturnedItemID());
 	}
 
-	private static ItemType createItemTypeForListing(final Listing listing) {
+	private static ItemType createItemTypeForListing(final AddFixedPriceItemCall call, final Listing listing) {
 		final ItemType item = new ItemType();
 		item.setBuyerRequirementDetails(createBuyerRequirementsForListing(listing));
 		item.setCountry(CountryCodeType.US);
 		item.setCurrency(CurrencyCodeType.USD);
 		item.setDescription(listing.description);
-		item.setDispatchTimeMax(7);
+		item.setDispatchTimeMax(5);
+		listing.handlingTime = 5;
 		item.setListingDuration(ListingDurationCodeType.GTC.value());
 		item.setListingType(ListingTypeCodeType.FIXED_PRICE_ITEM);
 		item.setLocation("St. Louis, MO");
 		item.setPostalCode("63101");
 		item.setPayPalEmailAddress("thevikingmarketplace@gmail.com");
-		item.setProductListingDetails(createProductListingDetailsForListing(listing));
+		item.setProductListingDetails(createProductListingDetailsForListing(listing, listing.upc, listing.ean));
 		item.setPictureDetails(createPictureDetailsForListing(listing));
 		item.setPrimaryCategory(createCategoryTypeForListing(listing));
 		item.setQuantity(0);
@@ -394,6 +401,10 @@ public class EbayCalls {
 
 		final NameValueListArrayType specifics = new NameValueListArrayType();
 
+		final NameValueListType mpn = new NameValueListType();
+		mpn.setName("MPN");
+		mpn.setValue(new String[] {"Does not Apply"});
+		
 		final NameValueListType brand = new NameValueListType();
 		brand.setName("Brand");
 		brand.setValue(new String[]{listing.brand});
@@ -410,9 +421,10 @@ public class EbayCalls {
 			upcOrEan.setValue(new String[]{listing.ean});
 		}
 		
-		final List<NameValueListType> recommendedItemSpecifics = getRecommendedItemSpecifics(listing.category.id, upcOrEan);
+		final Set<String> requiredItemSpecificFields = getRequiredItemSpecificFields(listing.category.id).keySet();
+		System.out.println("Required item specific fields: " + requiredItemSpecificFields);
 
-		final NameValueListType[] specificsVals = {brand, upcOrEan};
+		final NameValueListType[] specificsVals = {brand, upcOrEan, mpn};
 		specifics.setNameValueList(specificsVals);
 		item.setItemSpecifics(specifics);
 
@@ -426,25 +438,6 @@ public class EbayCalls {
 		item.setStartPrice(price);
 		return item;
 	}
-	
-	private static List<NameValueListType> getRecommendedItemSpecifics(final String categoryId, final NameValueListType upcOrEan) {
-		final List<NameValueListType> specifics = new ArrayList<>();
-		try {
-			final ApiContext api = EbayApiContextManager.getLiveContext();
-			final GetCategorySpecificsCall call = new GetCategorySpecificsCall(api);
-			call.setCategoryID(new String[] {categoryId});
-			final CategoryItemSpecificsType categoryItemSpecifics = new CategoryItemSpecificsType();
-			final NameValueListArrayType itemSpecs = new NameValueListArrayType();
-			itemSpecs.setNameValueList(new NameValueListType[] {upcOrEan});
-			categoryItemSpecifics.setItemSpecifics(itemSpecs);
-			call.setCategorySpecific(new CategoryItemSpecificsType[] {categoryItemSpecifics});
-			final RecommendationsType[] recommendations = call.getReturnedRecommendations();
-		} catch(final Exception e) {
-			e.printStackTrace();
-		}
-		
-		return specifics;
-	}
 
 	private static BuyerRequirementDetailsType createBuyerRequirementsForListing(final Listing listing) {
 		final BuyerRequirementDetailsType type = new BuyerRequirementDetailsType();
@@ -452,9 +445,18 @@ public class EbayCalls {
 		return type;
 	}
 	
-	private static ProductListingDetailsType createProductListingDetailsForListing(final Listing listing) {
+	private static ProductListingDetailsType createProductListingDetailsForListing(final Listing listing, final String upc, final String ean) {
 		final ProductListingDetailsType type = new ProductListingDetailsType();
-		type.setUPC("Does not apply");
+		if(upc != null) {
+			type.setUPC(upc);
+		} else if(ean != null) {
+			type.setEAN(ean);
+		}
+		final BrandMPNType brandMpn = new BrandMPNType();
+		brandMpn.setBrand(listing.brand);
+		brandMpn.setMPN("Does Not Apply");
+		type.setBrandMPN(brandMpn);
+		type.setIncludeeBayProductDetails(true);
 		return type;
 	}
 
@@ -500,5 +502,35 @@ public class EbayCalls {
 		type.setShippingServiceCost(shippingCost);
 
 		return new ShippingServiceOptionsType[] {type};
+	}
+	
+	public static Map<String, List<String>> getRequiredItemSpecificFields(final String categoryId) {
+		final Map<String, List<String>> requiredFields = new HashMap<>();
+		try {
+			final ApiContext api = EbayApiContextManager.getLiveContext();
+			final GetCategorySpecificsCall call = new GetCategorySpecificsCall(api);
+			call.setCategoryID(new String[] {categoryId});
+			final RecommendationsType[] recommendations = call.getCategorySpecifics();
+			if(recommendations != null) {
+				for(final RecommendationsType recommendation : recommendations) {
+					final NameRecommendationType[] specificRecommendations = recommendation.getNameRecommendation();
+					for(final NameRecommendationType specificRecommendation : specificRecommendations) {
+						final RecommendationValidationRulesType validationRules = specificRecommendation.getValidationRules();
+						if(validationRules != null && validationRules.getMinValues() != null && validationRules.getMinValues() > 0) {
+							final List<String> recommendedValues = Arrays.stream(specificRecommendation.getValueRecommendation())
+									.map(rec -> rec.getValue())
+									.collect(Collectors.toList());
+							
+							requiredFields.put(specificRecommendation.getName(), recommendedValues);
+						}
+					}
+				}
+			}
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		System.out.println("Required item specific fields: " + requiredFields);
+		return requiredFields;
 	}
 }

@@ -13,6 +13,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.Sams
 import main.org.vikingsoftware.dropshipper.core.utils.ListingUtils;
 import main.org.vikingsoftware.dropshipper.core.utils.SamsClubMetaDataParser;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
+import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsProductAPI;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.AbstractFulfillmentParser;
 
@@ -20,6 +21,7 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 	
 	private static final String PRODUCT_ID_REGEX = "\\/(prod)*(\\d{5,})";
 	private static final Pattern PRODUCT_ID_PATTERN = Pattern.compile(PRODUCT_ID_REGEX);
+	private static final int MAX_LISTING_IMAGES = 8;
 
 	@Override
 	public Class<SamsClubDriverSupplier> getDriverSupplierClass() {
@@ -35,6 +37,7 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 	protected Listing parseListing(final String url) {
 		try {
 			final SamsClubMetaDataParser metaDataParser = new SamsClubMetaDataParser();
+			final SamsProductAPI productApi = new SamsProductAPI();
 			final Listing listing = new Listing();
 			listing.fulfillmentPlatformId = FulfillmentPlatforms.SAMS_CLUB.getId();
 			listing.shippingService = ShippingServiceCodeType.SHIPPING_METHOD_STANDARD;
@@ -68,6 +71,14 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 			
 			listing.canShip = true;
 			
+			if(productApi.parse(metaDataParser.getProductID())) {
+				listing.ean = productApi.getEAN().orElse(null);
+				listing.upc = productApi.getUPC().orElse(null);
+				
+				System.out.println("EAN: " + listing.ean);
+				System.out.println("UPC: " + listing.upc);
+			}
+			
 			listing.title = metaDataParser.getProductName();
 			System.out.println("Product Name: " + listing.title);
 			
@@ -96,6 +107,10 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 			System.out.println("Brand: " + listing.brand);
 			
 			listing.pictures = metaDataParser.getImages();
+			
+			if(listing.pictures.size() > MAX_LISTING_IMAGES) {
+				listing.pictures = listing.pictures.subList(0, MAX_LISTING_IMAGES);
+			}
 			System.out.println("Images loaded: " + listing.pictures.size());
 			
 			listing.propertyItems = Collections.emptyList();

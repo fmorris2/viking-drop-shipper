@@ -21,6 +21,7 @@ import java.sql.PreparedStatement;
 import java.text.DecimalFormat;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -351,16 +352,33 @@ public class ListingToolController {
 	private void publishListing() {
 		//publish...
 		final Listing toPublish = createListingToPublish();
-		final Optional<String> publishedEbayListingItemId = EbayCalls.createListing(toPublish);
-		if(publishedEbayListingItemId.isPresent()) {
-			System.out.println("Successfully published eBay listing: " + toPublish.title);
-			connectListingInDB(toPublish, publishedEbayListingItemId.get());
-			publishedItemIds.add(toPublish.itemId);
-		} else {
-			System.out.println("Failed to publish eBay listing for listing: " + toPublish.title);
+		if(toPublish != null && verifyRequiredItemSpecifics(toPublish)) {
+			final Optional<String> publishedEbayListingItemId = EbayCalls.createListing(toPublish);
+			if(publishedEbayListingItemId.isPresent()) {
+				System.out.println("Successfully published eBay listing: " + toPublish.title);
+				connectListingInDB(toPublish, publishedEbayListingItemId.get());
+				publishedItemIds.add(toPublish.itemId);
+			} else {
+				System.out.println("Failed to publish eBay listing for listing: " + toPublish.title);
+			}
 		}
 		ListingQueue.poll();
 		displayNextListing();
+	}
+	
+	private boolean verifyRequiredItemSpecifics(final Listing listing) {
+		if(listing.requiredItemSpecifics.isEmpty()) {
+			return true;
+		}
+		
+		final Map<String, String> results = ItemSpecificsPanelManager.get().getRequiredItemSpecifics(listing);
+		
+		if(results.isEmpty() || results.size() != listing.requiredItemSpecifics.size()) {
+			return false;
+		}
+		
+		listing.itemSpecifics = results;
+		return true;
 	}
 
 	private void connectListingInDB(final Listing listing, final String listingId) {
@@ -387,7 +405,8 @@ public class ListingToolController {
 	private boolean insertMarketplaceListing(final Listing listing, final String listingId) {
 		try {
 			final String query = "INSERT INTO marketplace_listing(marketplace_id, listing_id, listing_title,"
-					+ " fulfillment_quantity_multiplier, active, target_margin) VALUES(?,?,?,?,?,?)";
+					+ " fulfillment_quantity_multiplier, active, target_margin, current_shipping_cost,"
+					+ " current_price, target_handling_time, last_margin_update, current_handling_time) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
 			final PreparedStatement statement = VSDSDBManager.get().createPreparedStatement(query);
 			statement.setInt(1, Marketplaces.EBAY.getMarketplaceId());
 			statement.setString(2, listingId);
@@ -395,6 +414,11 @@ public class ListingToolController {
 			statement.setInt(4, 1);
 			statement.setInt(5, 1);
 			statement.setDouble(6, listing.targetProfitMargin);
+			statement.setDouble(7, listing.shipping);
+			statement.setDouble(8, listing.price);
+			statement.setInt(9, listing.handlingTime);
+			statement.setLong(10, System.currentTimeMillis());
+			statement.setInt(11, listing.handlingTime);
 			statement.execute();
 			return true;
 		} catch(final Exception e) {
@@ -406,14 +430,17 @@ public class ListingToolController {
 
 	private boolean insertFulfillmentListing(final Listing listing) {
 		try {
-			final String query = "INSERT INTO fulfillment_listing(fulfillment_platform_id, item_id, product_id, listing_title, listing_url)"
-					+ " VALUES(?,?,?,?,?)";
+			final String query = "INSERT INTO fulfillment_listing(fulfillment_platform_id, item_id, product_id, listing_title, listing_url,"
+					+ "upc,ean)"
+					+ " VALUES(?,?,?,?,?,?,?)";
 			final PreparedStatement statement = VSDSDBManager.get().createPreparedStatement(query);
 			statement.setInt(1, listing.fulfillmentPlatformId);
 			statement.setString(2, listing.itemId);
 			statement.setString(3, listing.productId);
 			statement.setString(4, listing.title);
 			statement.setString(5, listing.url);
+			statement.setString(6, listing.upc);
+			statement.setString(7, listing.ean);
 			statement.execute();
 			return true;
 		} catch(final Exception e) {
@@ -437,17 +464,22 @@ public class ListingToolController {
 	}
 
 	private Listing createListingToPublish() {
-		final Listing toPublish = ListingQueue.peek().clone();
-		toPublish.title = gui.listingTitleInput.getText().trim();
-		toPublish.price = Double.parseDouble(gui.listingPriceInput.getText().replace("$", "").trim());
-		if(!gui.shippingPriceInput.getText().isEmpty()) {
-			toPublish.shipping = Double.parseDouble(gui.shippingPriceInput.getText().replace("$", "").trim());
+		if(!ListingQueue.isEmpty()) {
+			final Listing toPublish = ListingQueue.peek().clone();
+			toPublish.title = gui.listingTitleInput.getText().trim();
+			toPublish.price = Double.parseDouble(gui.listingPriceInput.getText().replace("$", "").trim());
+			if(!gui.shippingPriceInput.getText().isEmpty()) {
+				toPublish.shipping = Double.parseDouble(gui.shippingPriceInput.getText().replace("$", "").trim());
+			}
+			toPublish.targetProfitMargin = Double.parseDouble(gui.profitMarginInput.getText().replace("%", "").trim());
+			toPublish.description = gui.descRawInput.getText();
+			toPublish.category = (EbayCategory)gui.categoryDropdown.getSelectedItem();
+			toPublish.requiredItemSpecifics = EbayCalls.getRequiredItemSpecificFields(toPublish.category.id);
+			toPublish.brand = gui.brandInput.getText();
+			return toPublish;
 		}
-		toPublish.targetProfitMargin = Double.parseDouble(gui.profitMarginInput.getText().replace("%", "").trim());
-		toPublish.description = gui.descRawInput.getText();
-		toPublish.category = (EbayCategory)gui.categoryDropdown.getSelectedItem();
-		toPublish.brand = gui.brandInput.getText();
-		return toPublish;
+		
+		return null;
 	}
 
 	private KeyAdapter createFulfillmentUrlKeyAdapter() {
