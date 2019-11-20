@@ -129,8 +129,12 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		
 		System.out.println("\tDetails String: " + detailsStr);
 
-		if(!detailsStr.contains(order.buyer_state_province_region.toLowerCase())) {
-			throw new OrderExecutionException("Confirmation screen state != order state: " + detailsStr + " does not contain " + order.buyer_state_province_region);
+		final String stateCode = StateUtils.isStateCode(order.buyer_state_province_region) 
+				? order.buyer_state_province_region
+				: StateUtils.getCodeFromStateName(order.buyer_state_province_region);
+		
+		if(!detailsStr.contains(stateCode.toLowerCase())) {
+			throw new OrderExecutionException("Confirmation screen state != order state: " + detailsStr + " does not contain " + stateCode);
 		}
 
 		if(!detailsStr.contains(order.buyer_zip_postal_code.substring(0, 4).toLowerCase())) {
@@ -310,8 +314,15 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[aria-label=\"City\"]")), order.buyer_city);
 
 		System.out.println("Selecting state " + order.buyer_state_province_region + "...");
-		final String fullState = StateUtils.getStateNameFromCode(order.buyer_state_province_region);
-		driver.js("document.querySelector('div.sc-select-option[aria-label=\""+fullState+"\"]').click()");
+		String stateSelector;
+		if(StateUtils.isStateCode(order.buyer_state_province_region)) {
+			stateSelector = StateUtils.getStateNameFromCode(order.buyer_state_province_region);
+		} else if(StateUtils.isFullStateName(order.buyer_state_province_region)) {
+			stateSelector = order.buyer_state_province_region;
+		} else {
+			throw new OrderExecutionException("Failed to identify state selector for customer provided state: " + order.buyer_state_province_region);
+		}
+		driver.js("document.querySelector('div.sc-select-option[aria-label=\""+stateSelector+"\"]').click()");
 
 		System.out.println("Entering zip code...");
 		final String[] zipCodeParts = order.buyer_zip_postal_code.split("-");

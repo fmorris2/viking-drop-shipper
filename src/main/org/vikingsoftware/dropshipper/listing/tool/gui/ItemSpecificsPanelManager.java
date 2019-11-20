@@ -1,5 +1,6 @@
 package main.org.vikingsoftware.dropshipper.listing.tool.gui;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
@@ -21,7 +22,9 @@ public final class ItemSpecificsPanelManager {
 	}
 
 	public Map<String, String> getRequiredItemSpecifics(final Listing listing) {
-		return null;
+		final Map<String, String> specifics = new HashMap<>();
+		
+		return specifics;
 	}
 	
 	

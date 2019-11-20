@@ -9,6 +9,7 @@ import com.ebay.soap.eBLBaseComponents.UserType;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
+import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
 
 public class EbayConversionUtils {
 	private EbayConversionUtils(){}
@@ -36,7 +37,7 @@ public class EbayConversionUtils {
 			
 			final PaymentsInformationType monetaryDetails = transaction.getMonetaryDetails();
 			final PaymentTransactionType initialBuyerPayment = monetaryDetails.getPayments().getPayment(0);
-			final Integer handlingTime = item.getDispatchTimeMax();
+			final Integer handlingTime = EbayCalls.getHandlingTime(listingId).orElse(-1);
 			
 			return new CustomerOrder.Builder()
 				.marketplace_listing_id(dbListingId)
@@ -57,7 +58,7 @@ public class EbayConversionUtils {
 				.buyer_phone_number(addr.getPhone())
 				.date_parsed(transaction.getPaidTime().toInstant().toEpochMilli())
 				.marketplace_sell_fee((float)initialBuyerPayment.getFeeOrCreditAmount().getValue() * -1)
-				.handling_time(handlingTime == null ? -1 : handlingTime)
+				.handling_time(handlingTime)
 				.build();
 		} catch(final Exception e) {
 			e.printStackTrace();
