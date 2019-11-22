@@ -350,33 +350,38 @@ public class ListingToolController {
     }
 
 	private void publishListing() {
-		//publish...
-		final Listing toPublish = createListingToPublish();
-		if(toPublish != null && verifyRequiredItemSpecifics(toPublish)) {
-			final Optional<String> publishedEbayListingItemId = EbayCalls.createListing(toPublish);
-			if(publishedEbayListingItemId.isPresent()) {
-				System.out.println("Successfully published eBay listing: " + toPublish.title);
-				connectListingInDB(toPublish, publishedEbayListingItemId.get());
-				publishedItemIds.add(toPublish.itemId);
-			} else {
-				System.out.println("Failed to publish eBay listing for listing: " + toPublish.title);
+		executor.execute(() -> {
+			//publish...
+			final Listing toPublish = createListingToPublish();
+			if(toPublish != null && verifyRequiredItemSpecifics(toPublish)) {
+				final Optional<String> publishedEbayListingItemId = EbayCalls.createListing(toPublish);
+				if(publishedEbayListingItemId.isPresent()) {
+					System.out.println("Successfully published eBay listing: " + toPublish.title);
+					connectListingInDB(toPublish, publishedEbayListingItemId.get());
+					publishedItemIds.add(toPublish.itemId);
+				} else {
+					System.out.println("Failed to publish eBay listing for listing: " + toPublish.title);
+				}
 			}
-		}
-		ListingQueue.poll();
-		displayNextListing();
+			ListingQueue.poll();
+			displayNextListing();
+		});
 	}
 	
 	private boolean verifyRequiredItemSpecifics(final Listing listing) {
 		if(listing.requiredItemSpecifics.isEmpty()) {
+			System.out.println("Listing has no required eBay item specifics - Successfully passed verification");
 			return true;
 		}
 		
 		final Map<String, String> results = ItemSpecificsPanelManager.get().getRequiredItemSpecifics(listing);
 		
 		if(results.isEmpty() || results.size() != listing.requiredItemSpecifics.size()) {
+			System.out.println("Listing has " + listing.requiredItemSpecifics.size() + " and we've provided " + results.size() + ". Failing verification.");
 			return false;
 		}
 		
+		System.out.println("We've provided the required " + listing.requiredItemSpecifics.size() + " required item specifics. Passing verification.");
 		listing.itemSpecifics = results;
 		return true;
 	}

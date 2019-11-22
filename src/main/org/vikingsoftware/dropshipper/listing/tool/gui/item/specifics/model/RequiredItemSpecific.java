@@ -6,14 +6,22 @@ import java.util.function.Function;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 
 public enum RequiredItemSpecific {
-	BRAND("Brand", listing -> listing.brand),
+	BRAND("Brand", true, listing -> listing.brand),
 	PRODUCT("Product", null);
 	
 	public final String name;
-	public final Function<Listing, Object> preFilledValueFunction;
+	public final boolean isProvidedByOtherGUIElement;
+	public final Function<Listing, String> preFilledValueFunction;
 	
-	RequiredItemSpecific(final String name, final Function<Listing, Object> preFilledValueFunction) {
+	RequiredItemSpecific(final String name, final Function<Listing, String> preFilledValueFunction) {
 		this.name = name;
+		this.isProvidedByOtherGUIElement = false;
+		this.preFilledValueFunction = preFilledValueFunction;
+	}
+	
+	RequiredItemSpecific(final String name, final boolean isProvidedByOtherGUIElement, final Function<Listing, String> preFilledValueFunction) {
+		this.name = name;
+		this.isProvidedByOtherGUIElement = isProvidedByOtherGUIElement;
 		this.preFilledValueFunction = preFilledValueFunction;
 	}
 	

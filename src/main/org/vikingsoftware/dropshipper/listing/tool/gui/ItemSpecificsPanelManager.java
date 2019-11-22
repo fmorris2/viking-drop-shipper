@@ -2,7 +2,11 @@ package main.org.vikingsoftware.dropshipper.listing.tool.gui;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.swing.SwingUtilities;
+
+import main.org.vikingsoftware.dropshipper.listing.tool.gui.item.specifics.ItemSpecificsPanel;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 
 public final class ItemSpecificsPanelManager {
@@ -21,10 +25,22 @@ public final class ItemSpecificsPanelManager {
 		return instance;
 	}
 
-	public Map<String, String> getRequiredItemSpecifics(final Listing listing) {
-		final Map<String, String> specifics = new HashMap<>();
+	public Map<String, String> getRequiredItemSpecifics(final Listing listing) {		
+		final AtomicBoolean finished = new AtomicBoolean(false);
 		
-		return specifics;
+		SwingUtilities.invokeLater(() -> {
+			new ItemSpecificsPanel(listing, finished);
+		});
+		
+		while(!finished.get()) {
+			try {
+				Thread.sleep(10);
+			} catch(final Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return listing.itemSpecifics;
 	}
 	
 	

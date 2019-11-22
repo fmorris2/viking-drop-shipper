@@ -69,6 +69,7 @@ import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.EbayConversionUtils;
+import main.org.vikingsoftware.dropshipper.listing.tool.gui.item.specifics.model.RequiredItemSpecific;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.EbayCategory;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 
@@ -369,7 +370,7 @@ public class EbayCalls {
 		final AddFixedPriceItemCall call = new AddFixedPriceItemCall(api);
 		call.setItem(createItemTypeForListing(call, listing));
 		try {
-			//call.addFixedPriceItem();
+			call.addFixedPriceItem();
 		} catch (final Exception e) {
 			e.printStackTrace();
 		}
@@ -421,11 +422,15 @@ public class EbayCalls {
 			upcOrEan.setValue(new String[]{listing.ean});
 		}
 		
-		final Set<String> requiredItemSpecificFields = getRequiredItemSpecificFields(listing.category.id).keySet();
-		System.out.println("Required item specific fields: " + requiredItemSpecificFields);
+		final List<NameValueListType> itemSpecifics = new ArrayList<>(Arrays.asList(brand, upcOrEan, mpn));
+		for(final Map.Entry<String, String> providedItemSpecific : listing.itemSpecifics.entrySet()) {
+			final NameValueListType specific = new NameValueListType();
+			specific.setName(providedItemSpecific.getKey());
+			specific.setValue(new String[] {providedItemSpecific.getValue()});
+			itemSpecifics.add(specific);
+		}
 
-		final NameValueListType[] specificsVals = {brand, upcOrEan, mpn};
-		specifics.setNameValueList(specificsVals);
+		specifics.setNameValueList(itemSpecifics.toArray(new NameValueListType[itemSpecifics.size()]));
 		item.setItemSpecifics(specifics);
 
 		final BuyerPaymentMethodCodeType[] paymentMethods = {BuyerPaymentMethodCodeType.PAY_PAL};
@@ -521,6 +526,10 @@ public class EbayCalls {
 									.map(rec -> rec.getValue())
 									.collect(Collectors.toList());
 							
+							final Optional<RequiredItemSpecific> requiredItemSpec = RequiredItemSpecific.getRequiredItemSpecific(specificRecommendation.getName());
+							if(requiredItemSpec.isPresent() && requiredItemSpec.get().isProvidedByOtherGUIElement) {
+								continue;
+							}
 							requiredFields.put(specificRecommendation.getName(), recommendedValues);
 						}
 					}
