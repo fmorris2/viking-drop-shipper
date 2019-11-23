@@ -10,7 +10,8 @@ public enum TrackingStatus {
 	TRANSIT(2),
 	FAILURE(3),
 	RETURNED(4),
-	TRACKING_NUMBER_PARSED(5);
+	TRACKING_NUMBER_PARSED(5),
+	PRE_TRANSIT(6);
 	
 	private static final Map<Integer, TrackingStatus> valueToStatusCache = new HashMap<>();
 	

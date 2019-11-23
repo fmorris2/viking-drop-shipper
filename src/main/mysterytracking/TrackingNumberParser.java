@@ -14,7 +14,6 @@ class TrackingNumberParser {
         final List<CourierBase> matchingCouriers = new ArrayList<>();
         Matcher match;
 
-        System.out.println("TrackingNumberParser#parse("+trackingNumber+")");
         for (final CourierBase courier : couriers) {
             final Matcher tmpmatch = courier.regex.matcher(trackingNumber);
 
