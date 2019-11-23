@@ -69,7 +69,8 @@ public class ListingToolController {
 	private RecentSalesRenderer recentSalesRenderer;
 	private Listing currentListingClone;
 	private double originalListingPrice;
-
+	private boolean isPublishing;
+	
 	public void setup() {
 		SwingUtilities.invokeLater(() -> {
 			addListeners();
@@ -350,22 +351,29 @@ public class ListingToolController {
     }
 
 	private void publishListing() {
-		executor.execute(() -> {
-			//publish...
-			final Listing toPublish = createListingToPublish();
-			if(toPublish != null && verifyRequiredItemSpecifics(toPublish)) {
-				final Optional<String> publishedEbayListingItemId = EbayCalls.createListing(toPublish);
-				if(publishedEbayListingItemId.isPresent()) {
-					System.out.println("Successfully published eBay listing: " + toPublish.title);
-					connectListingInDB(toPublish, publishedEbayListingItemId.get());
-					publishedItemIds.add(toPublish.itemId);
-				} else {
-					System.out.println("Failed to publish eBay listing for listing: " + toPublish.title);
-				}
+		if(!isPublishing) {
+			isPublishing = true;
+			try {
+				executor.execute(() -> {
+					//publish...
+					final Listing toPublish = createListingToPublish();
+					if(toPublish != null && verifyRequiredItemSpecifics(toPublish)) {
+						final Optional<String> publishedEbayListingItemId = EbayCalls.createListing(toPublish);
+						if(publishedEbayListingItemId.isPresent()) {
+							System.out.println("Successfully published eBay listing: " + toPublish.title);
+							connectListingInDB(toPublish, publishedEbayListingItemId.get());
+							publishedItemIds.add(toPublish.itemId);
+						} else {
+							System.out.println("Failed to publish eBay listing for listing: " + toPublish.title);
+						}
+					}
+					ListingQueue.poll();
+					displayNextListing();
+				});
+			} finally {
+				isPublishing = false;
 			}
-			ListingQueue.poll();
-			displayNextListing();
-		});
+		}
 	}
 	
 	private boolean verifyRequiredItemSpecifics(final Listing listing) {

@@ -3,6 +3,8 @@ package main.org.vikingsoftware.dropshipper.listing.tool.gui.item.specifics;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +50,13 @@ public class ItemSpecificsPanel extends JFrame {
 		this.add(submitButton, BorderLayout.SOUTH);
 		this.pack();
 		this.setVisible(true);
+		this.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosed(WindowEvent e) {
+				finished.set(true);
+				super.windowClosed(e);
+			}
+		});
 	}
 	
 	private void addItemSpecificFields(final Listing listing) {

@@ -423,11 +423,13 @@ public class EbayCalls {
 		}
 		
 		final List<NameValueListType> itemSpecifics = new ArrayList<>(Arrays.asList(brand, upcOrEan, mpn));
-		for(final Map.Entry<String, String> providedItemSpecific : listing.itemSpecifics.entrySet()) {
-			final NameValueListType specific = new NameValueListType();
-			specific.setName(providedItemSpecific.getKey());
-			specific.setValue(new String[] {providedItemSpecific.getValue()});
-			itemSpecifics.add(specific);
+		if(listing.itemSpecifics != null) {
+			for(final Map.Entry<String, String> providedItemSpecific : listing.itemSpecifics.entrySet()) {
+				final NameValueListType specific = new NameValueListType();
+				specific.setName(providedItemSpecific.getKey());
+				specific.setValue(new String[] {providedItemSpecific.getValue()});
+				itemSpecifics.add(specific);
+			}
 		}
 
 		specifics.setNameValueList(itemSpecifics.toArray(new NameValueListType[itemSpecifics.size()]));
