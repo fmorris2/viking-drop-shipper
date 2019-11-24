@@ -48,10 +48,15 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 		
 		final List<ProcessedOrder> orders = getInProgressOrders();
 		for(final ProcessedOrder order : orders) {
-			final List<TrackingHistoryRecord> trackingHistoryRecords = getTrackingHistoryRecords(order);
-			if(!trackingHistoryRecords.isEmpty()) {
-				updateTrackingHistoryTable(order, trackingHistoryRecords);
-			} else { //wasn't able to get tracking status
+			try {
+				final List<TrackingHistoryRecord> trackingHistoryRecords = getTrackingHistoryRecords(order);
+				if(!trackingHistoryRecords.isEmpty()) {
+					updateTrackingHistoryTable(order, trackingHistoryRecords);
+				} else { //wasn't able to get tracking status
+					//empty for now
+				}
+			} catch(final Exception e) {
+				e.printStackTrace();
 			}
 		}
 	}
