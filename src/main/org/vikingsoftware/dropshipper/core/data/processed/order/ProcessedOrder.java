@@ -17,6 +17,7 @@ public class ProcessedOrder {
 	public final long date_processed;
 	public final long date_cancelled;
 	public final boolean is_cancelled;
+	public final int currentNumTrackingHistoryEvents;
 
 	private ProcessedOrder(final Builder builder) {
 		this.id = builder.id;
@@ -34,6 +35,7 @@ public class ProcessedOrder {
 		this.date_processed = builder.date_processed;
 		this.date_cancelled = builder.date_cancelled;
 		this.is_cancelled = builder.is_cancelled;
+		this.currentNumTrackingHistoryEvents = builder.currentNumTrackingHistoryEvents;
 	}
 
 	public static class Builder {
@@ -52,6 +54,7 @@ public class ProcessedOrder {
 		private long date_processed;
 		private long date_cancelled;
 		private boolean is_cancelled;
+		private int currentNumTrackingHistoryEvents;
 
 		public Builder id(final int id) {
 			this.id = id;
@@ -125,6 +128,11 @@ public class ProcessedOrder {
 		
 		public Builder is_cancelled(final boolean val) {
 			this.is_cancelled = val;
+			return this;
+		}
+		
+		public Builder currentNumTrackingHistoryEvents(final int num) {
+			this.currentNumTrackingHistoryEvents = num;
 			return this;
 		}
 

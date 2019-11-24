@@ -3,7 +3,9 @@ package main.org.vikingsoftware.dropshipper.order.tracking.history.strategy;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -24,7 +26,7 @@ public class OntracTrackingHistoryParsingStrategy implements TrackingHistoryPars
 	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MMM d uuuu h:ma");
 	
 	@Override
-	public TrackingHistoryRecord parse(final ProcessedOrder order) {
+	public List<TrackingHistoryRecord> parse(final ProcessedOrder order) {
 		final String trackingNumber = order.tracking_number;
 		System.out.println("OntracTrackingHistoryParsingStrategy#parse("+trackingNumber+")");
 		
@@ -51,10 +53,10 @@ public class OntracTrackingHistoryParsingStrategy implements TrackingHistoryPars
 		return null;
 	}
 	
-	private TrackingHistoryRecord parseTrackingHistoryRecordFromDetailsTable(final ProcessedOrder order, final Element detailsTable) {
+	private List<TrackingHistoryRecord> parseTrackingHistoryRecordFromDetailsTable(final ProcessedOrder order, final Element detailsTable) {
 		
 		System.out.println("OntracTrackingHistoryParsingStrategy#parseTrackingHistoryRecordFromDetailsTable");
-		TrackingHistoryRecord mostRecentUpdate = null;
+		final List<TrackingHistoryRecord> updates = new ArrayList<>();
 		final Element embeddedTable = detailsTable.getElementsByTag("table").first();
 		if(embeddedTable != null) {
 			final Elements rows = embeddedTable.getElementsByTag("tr");
@@ -73,12 +75,18 @@ public class OntracTrackingHistoryParsingStrategy implements TrackingHistoryPars
 						tableRow.cells.put(colIdxToHeaderMappings.get(colIdx), cols.get(colIdx).text());
 					}
 					System.out.println("Parsed table row cells: " + tableRow.cells);
-					mostRecentUpdate = tableRow.convertToTrackingHistoryRecord(order);
+					updates.add(tableRow.convertToTrackingHistoryRecord(order));
 				}
 			}
 		}
 		
-		return mostRecentUpdate;
+		int numEventsToRemove = order.currentNumTrackingHistoryEvents;
+		while(numEventsToRemove > 0 && !updates.isEmpty()) {
+			updates.remove(0);
+			numEventsToRemove--;
+		}
+		
+		return updates;
 	}
 	
 	private final class DetailsTableRow {

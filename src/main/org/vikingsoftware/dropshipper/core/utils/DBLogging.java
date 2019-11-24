@@ -88,6 +88,7 @@ public class DBLogging {
 		HIGH,
 		CRITICAL
 	}
+	
 	private static class LogMessage {
 		private final Class<?> clazz;
 		private final LogLevel level;

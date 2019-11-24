@@ -1,5 +1,8 @@
 package main.org.vikingsoftware.dropshipper.order.tracking.history;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.tracking.ShippingCarrier;
 import main.org.vikingsoftware.dropshipper.core.tracking.TrackingHistoryRecord;
@@ -21,9 +24,9 @@ public final class TrackingHistoryParsingManager {
 		return instance;
 	}
 	
-	public TrackingHistoryRecord parseTrackingHistory(final ProcessedOrder order) {
+	public List<TrackingHistoryRecord> parseTrackingHistory(final ProcessedOrder order) {
 		
-		TrackingHistoryRecord record = null;
+		List<TrackingHistoryRecord> records = new ArrayList<>();
 		final ShippingCarrier carrier = ShippingCarrier.getCarrierFromTrackingNum(order.tracking_number);
 		if(carrier == null) {
 			System.err.println("Could not identify carrier for tracking number " + order.tracking_number);
@@ -32,10 +35,10 @@ public final class TrackingHistoryParsingManager {
 			System.err.println("No tracking history parsing strategy defined for carrier: " + carrier);
 			//TODO LOG IN DB
 		} else {
-			record = carrier.trackingHistoryParsingStrategy.parse(order);
+			records = carrier.trackingHistoryParsingStrategy.parse(order);
 		}
 		
-		return record;
+		return records;
 	}
 
 }

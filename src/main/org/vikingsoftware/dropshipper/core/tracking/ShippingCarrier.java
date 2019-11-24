@@ -121,7 +121,6 @@ public enum ShippingCarrier {
 	}
 	
 	private static ShippingCarrier determineCarrier(final String trackingNumber) {
-		System.out.println("determineCarrier("+trackingNumber+")");
 		if(trackingNumber != null) {
 			for(final Pair<String, ShippingCarrier> regex : REGEX_PATTERNS) {
 				if(trackingNumber.matches(regex.left)) {

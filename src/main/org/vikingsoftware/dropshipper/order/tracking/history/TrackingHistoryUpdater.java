@@ -16,7 +16,19 @@ import main.org.vikingsoftware.dropshipper.core.tracking.TrackingStatus;
 
 public class TrackingHistoryUpdater implements CycleParticipant {
 
-	private static final long CYCLE_TIME = 60_000 * 30;
+	private static final long CYCLE_TIME = 60_000 * 60 * 4;
+	
+	private static final String IN_PROGRESS_ORDERS_QUERY = "SELECT processed_order.id,tracking_number, "
+			+ "count(case when tracking_history.tracking_status != 5 then 1 else null end) as trackCount, "
+			+ "count(case when tracking_history.tracking_status IN (1,4) then 1 else null end) as completedStatusCount" +
+			" FROM processed_order" + 
+			" LEFT JOIN tracking_history ON processed_order.id = tracking_history.processed_order_id" + 
+			" WHERE processed_order.is_cancelled=0" + 
+			" AND processed_order.is_refunded=0" + 
+			" AND tracking_number IS NOT NULL" + 
+			" AND tracking_number != 'N/A'" + 
+			" GROUP BY processed_order.id" + 
+			" ORDER BY processed_order.id ASC, tracking_history.id DESC";
 	
 	private long lastCycle;
 	
@@ -36,9 +48,9 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 		
 		final List<ProcessedOrder> orders = getInProgressOrders();
 		for(final ProcessedOrder order : orders) {
-			final TrackingHistoryRecord trackingHistoryRecord = getTrackingHistoryRecord(order);
-			if(trackingHistoryRecord != null) {
-				updateTrackingHistoryTable(order, trackingHistoryRecord);
+			final List<TrackingHistoryRecord> trackingHistoryRecords = getTrackingHistoryRecords(order);
+			if(!trackingHistoryRecords.isEmpty()) {
+				updateTrackingHistoryTable(order, trackingHistoryRecords);
 			} else { //wasn't able to get tracking status
 			}
 		}
@@ -48,16 +60,16 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 		final List<ProcessedOrder> orders = new ArrayList<>();
 		
 		try (final Statement st = VSDSDBManager.get().createStatement();
-			 final ResultSet res = st.executeQuery("SELECT processed_order.id,tracking_number FROM processed_order "
-					+ "LEFT JOIN tracking_history ON processed_order.id = tracking_history.processed_order_id "
-					+ "WHERE is_cancelled = 0 AND tracking_number IS NOT NULL AND tracking_number != 'N/A' AND tracking_status IS NULL OR tracking_status = 2 "
-					+ "GROUP BY processed_order.id "
-					+ "ORDER BY processed_order.id ASC, tracking_history.id DESC")) {
+			 final ResultSet res = st.executeQuery(IN_PROGRESS_ORDERS_QUERY)) {
 			
 			while(res.next()) {
+				if(res.getInt("completedStatusCount") > 0) {
+					continue;
+				}
 				orders.add(new ProcessedOrder.Builder()
 						.id(res.getInt("id"))
 						.tracking_number(res.getString("tracking_number"))
+						.currentNumTrackingHistoryEvents(res.getInt("trackCount"))
 						.build());
 			}
 		} catch(final SQLException e) {
@@ -69,36 +81,30 @@ public class TrackingHistoryUpdater implements CycleParticipant {
  				.collect(Collectors.toList());
 	}
 	
-	private TrackingHistoryRecord getTrackingHistoryRecord(final ProcessedOrder order) {
+	private List<TrackingHistoryRecord> getTrackingHistoryRecords(final ProcessedOrder order) {
 		
-		TrackingHistoryRecord record = null;
+		List<TrackingHistoryRecord> records = new ArrayList<>();
 		if(order.tracking_number != null) {
-			record = TrackingHistoryParsingManager.get().parseTrackingHistory(order);
+			final List<TrackingHistoryRecord> parsedRecords = TrackingHistoryParsingManager.get().parseTrackingHistory(order);
+			if(parsedRecords != null) {
+				records.addAll(parsedRecords);
+			}
 		}
 		
-		return record;
+		return records;
 	}
 	
-	private void updateTrackingHistoryTable(ProcessedOrder order, final TrackingHistoryRecord record) {
+	private void updateTrackingHistoryTable(ProcessedOrder order, final List<TrackingHistoryRecord> records) {
 		final List<String> insertQueries = new ArrayList<>();
-		final TrackingStatus updatedStatus = record.tracking_status;
-		final long ms = record.tracking_status_date;
-		try (final Statement st = VSDSDBManager.get().createStatement();
-			 final ResultSet res = st.executeQuery("SELECT tracking_status,tracking_status_date FROM tracking_history "
-					+ "WHERE processed_order_id="+order.id + " ORDER BY id DESC LIMIT 1")) {
-			if(!res.next() || res.getInt("tracking_status") != updatedStatus.value ||
-					res.getLong("tracking_status_date") != ms) {
-				System.out.println("New update to tracking history for processed order " + order.id);
-				final String insertQuery = generateInsertQuery(order, record);
-				if(insertQuery != null) {
-					System.out.println(insertQuery);
-					insertQueries.add(insertQuery);
-				}
+		for(final TrackingHistoryRecord record : records) {
+			System.out.println("New update to tracking history for processed order " + order.id);
+			final String insertQuery = generateInsertQuery(order, record);
+			if(insertQuery != null) {
+				System.out.println(insertQuery);
+				insertQueries.add(insertQuery);
 			}
-		} catch(final SQLException e) {
-			e.printStackTrace();
 		}
-		
+			
 		final boolean success = sendInsertQueries(insertQueries);
 		if(success) {
 			System.out.println("Successfully processed tracking history update queries.");
