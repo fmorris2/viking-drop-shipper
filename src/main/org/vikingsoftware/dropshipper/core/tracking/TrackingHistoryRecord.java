@@ -22,6 +22,37 @@ public final class TrackingHistoryRecord {
 		this.tracking_location_zip = builder.tracking_location_zip;
 	}
 	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + processed_order_id;
+		result = prime * result + (int) (tracking_status_date ^ (tracking_status_date >>> 32));
+		result = prime * result + ((tracking_status_details == null) ? 0 : tracking_status_details.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		TrackingHistoryRecord other = (TrackingHistoryRecord) obj;
+		if (processed_order_id != other.processed_order_id)
+			return false;
+		if (tracking_status_date != other.tracking_status_date)
+			return false;
+		if (tracking_status_details == null) {
+			if (other.tracking_status_details != null)
+				return false;
+		} else if (!tracking_status_details.equals(other.tracking_status_details))
+			return false;
+		return true;
+	}
+	
 	public static final class Builder {
 		
 		private int processed_order_id;
