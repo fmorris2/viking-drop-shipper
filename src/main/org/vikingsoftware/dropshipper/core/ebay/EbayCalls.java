@@ -157,7 +157,7 @@ public class EbayCalls {
 	private static void logUnknownMarketplaceMappingsInDB(final List<TransactionType> transactions) {
 		final Set<UnknownMarketplaceMapping> currentDatabaseRecords = UnknownMarketplaceMapping.loadUnknownMarketplaceMappings();
 		try (final Statement st = VSDSDBManager.get().createStatement()) {
-			System.out.println("Logging " + transactions.size() + " unknown eBay marketplace mappings in DB");
+			int numMappingsToInsert = 0;
 			for(final TransactionType trans : transactions) {
 				final int marketplace_id = Marketplaces.EBAY.getMarketplaceId();
 				final String listing_id = trans.getItem().getItemID();
@@ -165,9 +165,13 @@ public class EbayCalls {
 				if(!currentDatabaseRecords.contains(mappingToInsert)) {
 					st.addBatch("INSERT INTO unknown_marketplace_mappings(marketplace_id, listing_id) "
 						+ "VALUES("+marketplace_id+", '"+listing_id+"')");
+					numMappingsToInsert++;
 				}
 			}
-			st.executeBatch();
+			if(numMappingsToInsert > 0) {
+				System.out.println("Logging " + numMappingsToInsert + " unknown eBay marketplace mappings in DB");
+				st.executeBatch();
+			}
 		} catch(final Exception e) {
 			DBLogging.high(EbayCalls.class, "Failed to insert unknown marketplace mappings into DB", e);
 		}
