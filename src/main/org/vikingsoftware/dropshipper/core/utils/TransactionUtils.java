@@ -44,14 +44,16 @@ public final class TransactionUtils {
 	
 	public static boolean insertTransactionForProcessedOrder(final ProcessedOrder order) {
 		try {
-			final Transaction fulfillmentCostTransaction = new Transaction.Builder()
-					.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.FULFILLMENT_COST)
-					.amount((float)order.buy_total * -1)
-					.customerOrderId(order.customer_order_id)
-					.processedOrderId(order.id)
-					.date(order.date_processed)
-					.build();
-			TransactionUtils.insertTransaction(fulfillmentCostTransaction);
+			order.loadIdFromDB().ifPresent(id -> {
+				final Transaction fulfillmentCostTransaction = new Transaction.Builder()
+						.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.FULFILLMENT_COST)
+						.amount((float)order.buy_total * -1)
+						.customerOrderId(order.customer_order_id)
+						.processedOrderId(id)
+						.date(order.date_processed)
+						.build();
+				TransactionUtils.insertTransaction(fulfillmentCostTransaction);
+			});
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}

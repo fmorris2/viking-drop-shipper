@@ -1,5 +1,11 @@
 package main.org.vikingsoftware.dropshipper.core.data.processed.order;
 
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.Optional;
+
+import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
+
 public class ProcessedOrder {
 
 	public final int id;
@@ -36,6 +42,22 @@ public class ProcessedOrder {
 		this.date_cancelled = builder.date_cancelled;
 		this.is_cancelled = builder.is_cancelled;
 		this.currentNumTrackingHistoryEvents = builder.currentNumTrackingHistoryEvents;
+	}
+	
+	public Optional<Integer> loadIdFromDB() {
+		try(final Statement st = VSDSDBManager.get().createStatement();
+		    final ResultSet res = st.executeQuery("SELECT id FROM processed_order"
+		    		+ " WHERE customer_order_id="+this.customer_order_id
+		    		+ " AND date_processed="+this.date_processed)) {
+			
+			if(res.next()) {
+				return Optional.of(res.getInt("id"));
+			}
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return Optional.empty();
 	}
 
 	public static class Builder {

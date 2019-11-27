@@ -151,6 +151,11 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			 * Log the exception as a high severity in our DB, to be examined.
 			 */
 			DBLogging.high(getClass(), "failed to send inventory update to ebay: ", e);
+			final String exceptionMsg = e.getMessage().toLowerCase();
+			if(exceptionMsg.contains("it looks like this listing is for an item you already have on ebay")) {
+				System.out.println("Duplicate listings found on eBay - Flagging for purge examination.");
+				MarketplaceListing.flagForPurgeExamination(listing.id);
+			}
 		}
 
 		return false;

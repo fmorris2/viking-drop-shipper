@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 
 public class MarginAdjuster implements CycleParticipant {
@@ -128,7 +129,7 @@ public class MarginAdjuster implements CycleParticipant {
 			if(listing.currentMargin > MARGIN_FLOOR) {
 				adjustMargin(listing);
 			} else { //flag listing for purge examination
-				flagForPurgeExamination(listing);
+				MarketplaceListing.flagForPurgeExamination(listing.marketplaceListingId);
 			}
 		} else { //productive listing
 			adjustMargin(listing);
@@ -143,18 +144,6 @@ public class MarginAdjuster implements CycleParticipant {
 		try (final Statement st = VSDSDBManager.get().createStatement()) {
 			final long ms = System.currentTimeMillis();
 			st.execute("UPDATE marketplace_listing SET target_margin=" + newMargin + ", last_margin_update="+ms
-					+ " WHERE id=" + listing.marketplaceListingId);
-			System.out.println("\tsuccess.");
-		} catch(final Exception e) {
-			System.out.println("\tfailure.");
-			e.printStackTrace();
-		}
-	}
-	
-	private void flagForPurgeExamination(final ListingDueForMarginAdjustment listing) {
-		debug("Flagging for purge examination: " + listing);
-		try (final Statement st = VSDSDBManager.get().createStatement()) {
-			st.execute("UPDATE marketplace_listing SET needs_purge_examination=1"
 					+ " WHERE id=" + listing.marketplaceListingId);
 			System.out.println("\tsuccess.");
 		} catch(final Exception e) {

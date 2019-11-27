@@ -64,6 +64,22 @@ public class MarketplaceListing {
 		return false;
 	}
 	
+	public static boolean flagForPurgeExamination(final int listingId) {
+		System.out.println("Flagging for purge examination: " + listingId);
+		try (final Statement st = VSDSDBManager.get().createStatement()) {
+			final long ms = System.currentTimeMillis();
+			st.execute("UPDATE marketplace_listing SET needs_purge_examination=1,last_margin_update="+ms
+					+ " WHERE id=" + listingId);
+			System.out.println("\tsuccess.");
+			return true;
+		} catch(final Exception e) {
+			System.out.println("\tfailure.");
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
 	public static boolean decrementCurrentEbayInventory(final int marketplaceListingId) {
 		try (final Statement st = VSDSDBManager.get().createStatement()) {
 			st.execute("UPDATE marketplace_listing SET current_ebay_inventory=(current_ebay_inventory-1)"

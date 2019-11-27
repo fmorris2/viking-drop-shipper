@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.ebay.sdk.ApiContext;
@@ -143,7 +142,7 @@ public class EbayCalls {
 				}
 			}
 
-			logUnknownTransactionMappingsInDB(unknownTransactionMappings);
+			logUnknownMarketplaceMappingsInDB(unknownTransactionMappings);
 			return orders.toArray(new CustomerOrder[orders.size()]);
 
 		} catch(final Exception e) {
@@ -153,16 +152,16 @@ public class EbayCalls {
 		return new CustomerOrder[0];
 	}
 
-	private static void logUnknownTransactionMappingsInDB(final List<TransactionType> transactions) {
+	private static void logUnknownMarketplaceMappingsInDB(final List<TransactionType> transactions) {
 		try (final Statement st = VSDSDBManager.get().createStatement()) {
-			System.out.println("Logging " + transactions.size() + " unknown eBay transactions in DB");
+			System.out.println("Logging " + transactions.size() + " unknown eBay marketplace mappings in DB");
 			for(final TransactionType trans : transactions) {
-				st.addBatch("INSERT INTO unknown_transaction_mappings(marketplace_id, listing_id) "
+				st.addBatch("INSERT INTO unknown_marketplace_mappings(marketplace_id, listing_id) "
 						+ "VALUES("+Marketplaces.EBAY.getMarketplaceId()+", '"+trans.getItem().getItemID()+"')");
 			}
 			st.executeBatch();
 		} catch(final Exception e) {
-			DBLogging.high(EbayCalls.class, "Failed to insert unknown transaction mappings into DB", e);
+			DBLogging.high(EbayCalls.class, "Failed to insert unknown marketplace mappings into DB", e);
 		}
 	}
 	
