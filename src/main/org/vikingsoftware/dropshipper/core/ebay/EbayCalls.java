@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.ebay.sdk.ApiContext;
@@ -61,6 +62,7 @@ import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrde
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrderManager;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.UnknownMarketplaceMapping;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.data.misc.Pair;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
@@ -153,11 +155,17 @@ public class EbayCalls {
 	}
 
 	private static void logUnknownMarketplaceMappingsInDB(final List<TransactionType> transactions) {
+		final Set<UnknownMarketplaceMapping> currentDatabaseRecords = UnknownMarketplaceMapping.loadUnknownMarketplaceMappings();
 		try (final Statement st = VSDSDBManager.get().createStatement()) {
 			System.out.println("Logging " + transactions.size() + " unknown eBay marketplace mappings in DB");
 			for(final TransactionType trans : transactions) {
-				st.addBatch("INSERT INTO unknown_marketplace_mappings(marketplace_id, listing_id) "
-						+ "VALUES("+Marketplaces.EBAY.getMarketplaceId()+", '"+trans.getItem().getItemID()+"')");
+				final int marketplace_id = Marketplaces.EBAY.getMarketplaceId();
+				final String listing_id = trans.getItem().getItemID();
+				final UnknownMarketplaceMapping mappingToInsert = new UnknownMarketplaceMapping(marketplace_id, listing_id);
+				if(!currentDatabaseRecords.contains(mappingToInsert)) {
+					st.addBatch("INSERT INTO unknown_marketplace_mappings(marketplace_id, listing_id) "
+						+ "VALUES("+marketplace_id+", '"+listing_id+"')");
+				}
 			}
 			st.executeBatch();
 		} catch(final Exception e) {
