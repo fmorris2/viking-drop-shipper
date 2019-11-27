@@ -45,10 +45,12 @@ import com.ebay.soap.eBLBaseComponents.NameValueListType;
 import com.ebay.soap.eBLBaseComponents.OrderIDArrayType;
 import com.ebay.soap.eBLBaseComponents.OrderType;
 import com.ebay.soap.eBLBaseComponents.PaginationType;
+import com.ebay.soap.eBLBaseComponents.PaymentsInformationType;
 import com.ebay.soap.eBLBaseComponents.PictureDetailsType;
 import com.ebay.soap.eBLBaseComponents.ProductListingDetailsType;
 import com.ebay.soap.eBLBaseComponents.RecommendationValidationRulesType;
 import com.ebay.soap.eBLBaseComponents.RecommendationsType;
+import com.ebay.soap.eBLBaseComponents.RefundInformationType;
 import com.ebay.soap.eBLBaseComponents.ReturnPolicyType;
 import com.ebay.soap.eBLBaseComponents.ReturnsAcceptedCodeType;
 import com.ebay.soap.eBLBaseComponents.ShipmentTrackingDetailsType;
@@ -135,15 +137,7 @@ public class EbayCalls {
 			final List<TransactionType> unknownTransactionMappings = new ArrayList<>();
 			
 			System.out.println("Num eBay transactions in last " + days + " days: " + transactions.length);
-			for(final TransactionType trans : transactions) {
-				final CustomerOrder order = EbayConversionUtils.convertTransactionTypeToCustomerOrder(trans.getItem().getItemID(), trans);
-				if(order != null) {
-					orders.add(order);
-				} else {
-					unknownTransactionMappings.add(trans);
-				}
-			}
-
+			determineRelevantOrders(transactions, orders, unknownTransactionMappings);
 			logUnknownMarketplaceMappingsInDB(unknownTransactionMappings);
 			return orders.toArray(new CustomerOrder[orders.size()]);
 
@@ -152,6 +146,33 @@ public class EbayCalls {
 		}
 
 		return new CustomerOrder[0];
+	}
+	
+	private static void determineRelevantOrders(final TransactionType[] transactions, final List<CustomerOrder> orders,
+			final List<TransactionType> unknownTransactionMappings) {
+		
+		for(final TransactionType trans : transactions) {
+			if(trans == null || trans.getItem() == null || trans.getAmountPaid() == null
+					|| trans.getActualShippingCost() == null || trans.getMonetaryDetails() == null) {
+				continue;
+			}
+			
+			final PaymentsInformationType monetaryDetails = trans.getMonetaryDetails();
+			final RefundInformationType refundType = monetaryDetails.getRefunds();
+			final int marketplaceListingDbId = Marketplaces.EBAY.getMarketplace().getMarketplaceListingIndex(trans.getItem().getItemID());
+			if(marketplaceListingDbId == -1) {
+				unknownTransactionMappings.add(trans);
+			} else if(refundType != null && refundType.getRefundLength() > 0) { //refunded transaction
+				System.out.println("Encountered refunded transaction: " + trans.getTransactionID());
+				CustomerOrderManager.setOrderRefunded(marketplaceListingDbId, trans.getTransactionID());
+			} else if(trans.getAmountPaid().getValue() <= 0) { //awaiting ebay payment or cancelled
+				System.out.println("Encountered transaction with incomplete payment");
+				continue;
+			} else {
+				final CustomerOrder order = EbayConversionUtils.convertTransactionTypeToCustomerOrder(marketplaceListingDbId, trans.getItem().getItemID(), trans);
+				orders.add(order);
+			}
+		}
 	}
 
 	private static void logUnknownMarketplaceMappingsInDB(final List<TransactionType> transactions) {

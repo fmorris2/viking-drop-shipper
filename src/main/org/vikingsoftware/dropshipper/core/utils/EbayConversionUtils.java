@@ -8,36 +8,22 @@ import com.ebay.soap.eBLBaseComponents.TransactionType;
 import com.ebay.soap.eBLBaseComponents.UserType;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
-import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
 
 public class EbayConversionUtils {
 	private EbayConversionUtils(){}
 
-	public static CustomerOrder convertTransactionTypeToCustomerOrder(final String listingId, final TransactionType transaction) {
-		try {
-			if(transaction == null) {
-				return null;
-			}
-	
-			final int dbListingId = Marketplaces.EBAY.getMarketplace().getMarketplaceListingIndex(listingId);
-	
-			if(dbListingId == -1) {
-				return null;
-			}
-	
+	public static CustomerOrder convertTransactionTypeToCustomerOrder(final int dbListingId, final String transactionId, 
+			final TransactionType transaction) {
+		
+		try {	
 			final UserType buyer = transaction.getBuyer();
 			final AddressType addr = buyer.getBuyerInfo().getShippingAddress();
 			final ItemType item = transaction.getItem();
 			
-			if(transaction.getAmountPaid() == null || transaction.getActualShippingCost() == null
-					|| transaction.getAmountPaid().getValue() <= 0) { //awaiting ebay payment or cancelled
-				return null;
-			}
-			
 			final PaymentsInformationType monetaryDetails = transaction.getMonetaryDetails();
 			final PaymentTransactionType initialBuyerPayment = monetaryDetails.getPayments().getPayment(0);
-			final Integer handlingTime = EbayCalls.getHandlingTime(listingId).orElse(-1);
+			final Integer handlingTime = EbayCalls.getHandlingTime(transactionId).orElse(-1);
 			
 			return new CustomerOrder.Builder()
 				.marketplace_listing_id(dbListingId)
