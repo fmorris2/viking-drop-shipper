@@ -56,7 +56,7 @@ public class FillTransactionTable {
 				}
 			}
 			final ItemType item = transaction.getItem();
-			System.out.println("Total eBay income: "  + transaction.getAmountPaid().getValue());
+			System.out.println("Total eBay income: "  + transaction.getTransactionPrice().getValue());
 			System.out.println("Transaction Paid Time: " + transaction.getPaidTime().toInstant().toEpochMilli());
 			System.out.println("Order ID: " + transaction.getTransactionID());
 			System.out.println("Item ID: " + item.getItemID());
@@ -71,7 +71,7 @@ public class FillTransactionTable {
 			
 			final Transaction marketplaceIncomeTransaction = new Transaction.Builder()
 					.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.MARKETPLACE_INCOME)
-					.amount((float)transaction.getAmountPaid().getValue())
+					.amount((float)transaction.getTransactionPrice().getValue())
 					.customerOrderId(customerOrderId)
 					.processedOrderId(processedOrderId)
 					.date(transaction.getPaidTime().toInstant().toEpochMilli())

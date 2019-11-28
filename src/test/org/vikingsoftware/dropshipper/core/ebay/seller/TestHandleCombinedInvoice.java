@@ -1,10 +1,14 @@
 package test.org.vikingsoftware.dropshipper.core.ebay.seller;
 
+import java.util.Arrays;
+
 import org.junit.Test;
 
 import com.ebay.soap.eBLBaseComponents.OrderType;
 import com.ebay.soap.eBLBaseComponents.TransactionType;
 
+import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
 
 public class TestHandleCombinedInvoice {
@@ -25,5 +29,14 @@ public class TestHandleCombinedInvoice {
 			} else {
 				System.out.println("Order is null!");
 			}
+	}
+	
+	@Test
+	public void testWithOrderParserLogic() {
+		MarketplaceLoader.loadMarketplaces();
+		CustomerOrder[] orders = EbayCalls.getOrdersLastXDays(90);
+		orders = Arrays.stream(orders).filter(order -> "1130567422024".equals(order.marketplace_order_id)).toArray(CustomerOrder[]::new);
+		
+		System.out.println(orders[0].sell_total);
 	}
 }

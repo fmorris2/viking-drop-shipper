@@ -127,14 +127,5 @@
 			<artifactId>swingbox</artifactId>
 			<version>1.1</version>
 		</dependency>	
-		
-		<!-- https://mvnrepository.com/artifact/com.goshippo/shippo-java-client -->
-		<dependency>
-		    <groupId>com.goshippo</groupId>
-		    <artifactId>shippo-java-client</artifactId>
-		    <version>v2.1.5</version>
-		</dependency>
-		
-			
 	</dependencies>
 </project>

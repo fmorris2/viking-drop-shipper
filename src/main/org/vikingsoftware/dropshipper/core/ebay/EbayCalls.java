@@ -116,19 +116,8 @@ public class EbayCalls {
 
 	public static CustomerOrder[] getOrdersLastXDays(final int days) {
 		try {
-			final ApiContext apiContext = EbayApiContextManager.getLiveContext();
-			final GetSellerTransactionsCall call = new GetSellerTransactionsCall(apiContext);
-			call.setIncludeFinalValueFee(true);
-			call.setDetailLevel(new DetailLevelCodeType[]{DetailLevelCodeType.RETURN_ALL});
-			final PaginationType pagination = new PaginationType();
-			pagination.setEntriesPerPage(200);
-			pagination.setPageNumber(1);
-			call.setPagination(pagination);
-			final Calendar cal = Calendar.getInstance();
-			cal.add(Calendar.DAY_OF_YEAR, days * -1);
-			call.setTimeFilter(new TimeFilter(cal, Calendar.getInstance())); //will use number of days filter
-			final TransactionType[] transactions = call.getSellerTransactions();
-			
+
+			final TransactionType[] transactions = loadTransactionsLastXDays(days);
 			if(transactions == null) {
 				return new CustomerOrder[0];
 			}
@@ -146,6 +135,35 @@ public class EbayCalls {
 		}
 
 		return new CustomerOrder[0];
+	}
+	
+	private static TransactionType[] loadTransactionsLastXDays(final int days) throws Exception {
+		final List<TransactionType> totalTransactions = new ArrayList<>();
+		int daysLeft = days;
+		while(daysLeft > 0) {
+			final ApiContext apiContext = EbayApiContextManager.getLiveContext();
+			final GetSellerTransactionsCall call = new GetSellerTransactionsCall(apiContext);
+			call.setIncludeFinalValueFee(true);
+			call.setDetailLevel(new DetailLevelCodeType[]{DetailLevelCodeType.RETURN_ALL});
+			final PaginationType pagination = new PaginationType();
+			pagination.setEntriesPerPage(200);
+			pagination.setPageNumber(1);
+			call.setPagination(pagination);
+			final Calendar from = Calendar.getInstance();
+			from.add(Calendar.DAY_OF_YEAR, daysLeft * -1);
+			final Calendar to = Calendar.getInstance();
+			if(daysLeft > 29) {
+				to.add(Calendar.DAY_OF_YEAR, (daysLeft * -1) + 29);
+			}
+			call.setTimeFilter(new TimeFilter(from, to)); //will use number of days filter
+			final TransactionType[] transactions = call.getSellerTransactions();
+			for(final TransactionType trans : transactions) {
+				totalTransactions.add(trans);
+			}
+			daysLeft -= 29;
+		}
+		
+		return totalTransactions.toArray(new TransactionType[totalTransactions.size()]);
 	}
 	
 	private static void determineRelevantOrders(final TransactionType[] transactions, final List<CustomerOrder> orders,
