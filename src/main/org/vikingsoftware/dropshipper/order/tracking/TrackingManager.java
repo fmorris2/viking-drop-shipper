@@ -13,7 +13,7 @@ import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOr
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
 import main.org.vikingsoftware.dropshipper.order.tracking.handler.impl.AliExpressOrderTrackingHandler;
 import main.org.vikingsoftware.dropshipper.order.tracking.handler.impl.CostcoOrderTrackingHandler;
-import main.org.vikingsoftware.dropshipper.order.tracking.handler.impl.SamsClubOrderTrackingHandler;
+import main.org.vikingsoftware.dropshipper.order.tracking.handler.impl.sams.SamsClubOrderTrackingHandler;
 
 public class TrackingManager {
 

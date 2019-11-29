@@ -1,4 +1,4 @@
-package main.org.vikingsoftware.dropshipper.order.tracking.handler.impl;
+package main.org.vikingsoftware.dropshipper.order.tracking.handler.impl.sams;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,6 +30,15 @@ public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<S
 
 	@Override
 	protected TrackingEntry parseTrackingInfo(final SamsClubWebDriver driver, final ProcessedOrder order) {
+		TrackingEntry entry = parseTrackingEntryFromSamsClubFrontEnd(driver, order);
+		if(entry == null) { //failed to parse from front-end, attempt to check email
+			entry = parseTrackingEntryFromEmail(order);
+		}
+		
+		return entry;
+	}
+	
+	private TrackingEntry parseTrackingEntryFromSamsClubFrontEnd(final SamsClubWebDriver driver, final ProcessedOrder order) {
 		driver.get(BASE_ORDER_DETAILS_URL + order.fulfillment_transaction_id);
 		System.out.println("Navigating to page: " + BASE_ORDER_DETAILS_URL + order.fulfillment_transaction_id);
 		driver.savePageSource();
@@ -62,11 +71,25 @@ public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<S
 		}
 		
 		if(trackingNum == null) {
-			throw new RuntimeException("Could not parse tracking number from page for order " + order.id);
+			System.out.println("Could not parse tracking number from page for order " + order.id);
+			return null;
 		}
 
-		final TrackingNumber carrierDetails = TrackingNumber.parse(trackingNum);
 		driver.savePageSource();
+		return generateTrackingEntryFromTrackingNum(trackingNum);
+	}
+	
+	private TrackingEntry parseTrackingEntryFromEmail(final ProcessedOrder order) {
+		System.out.println("Attempting to parse tracking entry from email...");
+		final String trackingNum = SamsClubTrackingEmailRepository.get().getTrackingNumberForTransactionId(order.fulfillment_transaction_id);
+		if(trackingNum != null) {
+			return generateTrackingEntryFromTrackingNum(trackingNum);
+		}
+		return null;
+	}
+	
+	private TrackingEntry generateTrackingEntryFromTrackingNum(final String trackingNum) {
+		final TrackingNumber carrierDetails = TrackingNumber.parse(trackingNum);
 		if(!carrierDetails.isCourierRecognized()) {
 			throw new UnknownTrackingIdException("Unknown courier for tracking number: " + trackingNum);
 		}

@@ -37,14 +37,6 @@ public final class GmailApi {
 	private GmailApi() throws IOException {
 		jsonFactory = JacksonFactory.getDefaultInstance();
 		service = generateGmailService();
-//		final List<Message> orderHasShippedEmails = getEmailsFromLabels(Collections.singletonList("Label_724940738117254674"));
-//		for(final Message email : orderHasShippedEmails) {
-//			final Message details = getSpecificEmailDetails(email.getId());
-//			final MessagePart payload = details.getPayload();
-//			if(payload != null) {
-//				System.out.println("Payload Headers: " + payload.getHeaders());
-//			}
-//		}
 	}
 	
 	public static synchronized GmailApi get() {

@@ -57,7 +57,7 @@ public class OrderTracking implements CycleParticipant {
 				try {
 					System.out.println("Checking status of inventory update task #" + i + "...");
 					final TrackingEntry entry = futures.get(i).get();
-					if(EbayCalls.setShipmentTrackingInfo(untrackedOrders.get(i), entry)) {
+					if(entry != null && EbayCalls.setShipmentTrackingInfo(untrackedOrders.get(i), entry)) {
 						System.out.println("Successfully executed tracking update task for processed order " + untrackedOrders.get(i).id);
 						final String updateSql = getUpdateTrackingNumberInDBQuery(untrackedOrders.get(i), entry);
 						if(updateSql != null) {
