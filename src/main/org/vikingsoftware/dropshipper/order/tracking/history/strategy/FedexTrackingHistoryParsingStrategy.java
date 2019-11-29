@@ -81,14 +81,7 @@ public class FedexTrackingHistoryParsingStrategy implements TrackingHistoryParsi
 			}
 		}
 		
-		Collections.sort(events, (r1, r2) -> (int)(r1.tracking_status_date - r2.tracking_status_date));
-		
-		int numEventsToRemove = order.currentNumTrackingHistoryEvents;
-		while(numEventsToRemove > 0 && !events.isEmpty()) {
-			events.remove(0);
-			numEventsToRemove--;
-		}
-		return events;
+		return events.size() == order.currentNumTrackingHistoryEvents ? Collections.emptyList() : events;
 	}
 	
 	private long getScanEventTimeMs(final JSONObject scanEvent) {

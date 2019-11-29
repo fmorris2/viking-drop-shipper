@@ -18,7 +18,7 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 
 	private static final long CYCLE_TIME = 60_000 * 60 * 4;
 	
-	private static final String IN_PROGRESS_ORDERS_QUERY = "SELECT processed_order.id,tracking_number, "
+	private static final String IN_PROGRESS_ORDERS_QUERY = "SELECT * FROM (SELECT processed_order.id,tracking_number, "
 			+ "count(case when tracking_history.tracking_status != 5 then 1 else null end) as trackCount, "
 			+ "count(case when tracking_history.tracking_status IN (1,4) then 1 else null end) as completedStatusCount" +
 			" FROM processed_order" + 
@@ -28,7 +28,7 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 			" AND tracking_number IS NOT NULL" + 
 			" AND tracking_number != 'N/A'" + 
 			" GROUP BY processed_order.id" + 
-			" ORDER BY processed_order.id ASC, tracking_history.id DESC";
+			" ORDER BY processed_order.id ASC, tracking_history.id DESC) t2 WHERE completedStatusCount=0";
 	
 	private long lastCycle;
 	
@@ -67,10 +67,8 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 		try (final Statement st = VSDSDBManager.get().createStatement();
 			 final ResultSet res = st.executeQuery(IN_PROGRESS_ORDERS_QUERY)) {
 			
+			System.out.println(IN_PROGRESS_ORDERS_QUERY);
 			while(res.next()) {
-				if(res.getInt("completedStatusCount") > 0) {
-					continue;
-				}
 				orders.add(new ProcessedOrder.Builder()
 						.id(res.getInt("id"))
 						.tracking_number(res.getString("tracking_number"))
@@ -140,13 +138,17 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 	private boolean sendInsertQueries(final List<String> insertQueries) {
 		System.out.println("Sending " + insertQueries.size() + " new tracking history updates...");
 		try (final Statement st = VSDSDBManager.get().createStatement()) {
+			boolean failure = false;
 			for(final String query : insertQueries) {
-				st.addBatch(query);
+				try {
+					st.execute(query);
+				} catch(final Exception e) {
+					failure = true;
+					e.printStackTrace();
+				}
 			}
-			
-			final int[] results = st.executeBatch();
-			System.out.println("Sent tracking history updates successfully.");
-			return Arrays.stream(results).allMatch(i -> i == 1);
+			System.out.println("Sent all tracking updates: " + !failure);
+			return failure;
 		} catch(final SQLException e) {
 			e.printStackTrace();
 		}

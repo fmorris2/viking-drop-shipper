@@ -10,6 +10,7 @@ public class UspsTrackingHistoryParsingStrategy implements TrackingHistoryParsin
 
 	@Override
 	public List<TrackingHistoryRecord> parse(final ProcessedOrder order) {
+		System.out.println("UspsTrackingHistoryParsingStrategy#parse for tracking number: " + order.tracking_number);
 		return null;
 	}
 

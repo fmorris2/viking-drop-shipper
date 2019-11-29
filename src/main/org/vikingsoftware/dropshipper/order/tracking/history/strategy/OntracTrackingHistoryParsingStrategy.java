@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,13 +81,7 @@ public class OntracTrackingHistoryParsingStrategy implements TrackingHistoryPars
 			}
 		}
 		
-		int numEventsToRemove = order.currentNumTrackingHistoryEvents;
-		while(numEventsToRemove > 0 && !updates.isEmpty()) {
-			updates.remove(0);
-			numEventsToRemove--;
-		}
-		
-		return updates;
+		return updates.size() == order.currentNumTrackingHistoryEvents ? Collections.emptyList() : updates;
 	}
 	
 	private final class DetailsTableRow {
