@@ -57,7 +57,7 @@ public final class SamsClubTrackingEmailRepository {
 	
 	private void refresh() {
 		final GmailApi gmailApi = GmailApi.get();
-		final List<Message> messages = gmailApi.getEmailsFromLabels(Collections.singletonList(SHIPPING_EMAILS_LABEL_ID));
+		final List<Message> messages = gmailApi.getEmailsFromLabels(Collections.singletonList(SHIPPING_EMAILS_LABEL_ID), 100L);
 		for(final Message message : messages) {
 			if(parsedEmails.contains(message.getId())) {
 				continue;
@@ -68,6 +68,8 @@ public final class SamsClubTrackingEmailRepository {
 				parseEmail(details);
 			}
 		}
+		
+		lastRefreshMs = System.currentTimeMillis();
 	}
 	
 	private void parseEmail(final Message email) {

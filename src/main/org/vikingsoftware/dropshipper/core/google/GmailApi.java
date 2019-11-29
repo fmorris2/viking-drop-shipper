@@ -51,14 +51,14 @@ public final class GmailApi {
 		return instance;
 	}
 	
-	public List<Message> getEmailsFromLabels(final List<String> labels) {
+	public List<Message> getEmailsFromLabels(final List<String> labels, final long maxResults) {
 		List<Message> emails = new ArrayList<>();
 		try {
 			final ListMessagesResponse res = service.users()
 					.messages()
 					.list(EMAIL_ADDRESS)
 					.setLabelIds(labels)
-					.setMaxResults(1000L)
+					.setMaxResults(maxResults)
 					.execute();
 			emails.addAll(res.getMessages());
 		} catch(final Exception e) {

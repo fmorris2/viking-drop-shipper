@@ -8,10 +8,10 @@ import org.openqa.selenium.WebElement;
 
 import com.ebay.soap.eBLBaseComponents.ShipmentDeliveryStatusCodeType;
 
-import main.mysterytracking.TrackingNumber;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
+import main.org.vikingsoftware.dropshipper.core.tracking.ShippingCarrier;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
 import main.org.vikingsoftware.dropshipper.order.tracking.error.UnknownTrackingIdException;
@@ -85,16 +85,18 @@ public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<S
 		if(trackingNum != null) {
 			return generateTrackingEntryFromTrackingNum(trackingNum);
 		}
+		
+		System.out.println("Tracking number could not be found in email.");
 		return null;
 	}
 	
 	private TrackingEntry generateTrackingEntryFromTrackingNum(final String trackingNum) {
-		final TrackingNumber carrierDetails = TrackingNumber.parse(trackingNum);
-		if(!carrierDetails.isCourierRecognized()) {
+		final ShippingCarrier carrier = ShippingCarrier.getCarrierFromTrackingNum(trackingNum);
+		if(carrier == null) {
 			throw new UnknownTrackingIdException("Unknown courier for tracking number: " + trackingNum);
 		}
 
-		final String courierName = carrierDetails.getCourierName().replaceAll("[^a-zA-Z0-9\\-\\s]", "");
+		final String courierName = carrier.name().replaceAll("[^a-zA-Z0-9\\-\\s]", "").replace("_", " ").toLowerCase();
 		System.out.println("Tracking #: " + trackingNum);
 		System.out.println("Carrier: " + courierName);
 		return new TrackingEntry(courierName, trackingNum, ShipmentDeliveryStatusCodeType.IN_TRANSIT);
