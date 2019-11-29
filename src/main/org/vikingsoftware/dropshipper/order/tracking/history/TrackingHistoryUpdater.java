@@ -4,7 +4,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -144,7 +143,9 @@ public class TrackingHistoryUpdater implements CycleParticipant {
 					st.execute(query);
 				} catch(final Exception e) {
 					failure = true;
-					e.printStackTrace();
+					if(!e.getMessage().toLowerCase().contains("duplicate")) {
+						e.printStackTrace();
+					}
 				}
 			}
 			System.out.println("Sent all tracking updates: " + !failure);
