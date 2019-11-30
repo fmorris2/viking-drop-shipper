@@ -13,7 +13,6 @@ import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoad
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
-import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.TransactionUtils;
 import main.org.vikingsoftware.dropshipper.order.parser.strategy.OrderParsingStrategy;
 
@@ -78,9 +77,7 @@ public class OrderParser implements CycleParticipant {
 					MarketplaceListing.decrementCurrentEbayInventory(order.marketplace_listing_id);
 					
 					System.out.println("inserting marketplace income & marketplace sell-fee transactions for customer order w/ order id " + order.marketplace_order_id);
-					if(!TransactionUtils.insertTransactionsForCustomerOrder((float)(double)newOrder.marketplace_sell_fee, order)) {
-						DBLogging.critical(OrderParser.class, "Failed to insert transactions for new customer order " + order.id, null);
-					}
+					TransactionUtils.insertTransactionsForCustomerOrder((float)(double)newOrder.marketplace_sell_fee, order);
 				});
 				
 			}

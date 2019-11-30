@@ -2,10 +2,12 @@ package main.org.vikingsoftware.dropshipper.core.utils;
 
 import java.sql.PreparedStatement;
 import java.sql.Types;
+import java.util.Optional;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.transaction.Transaction;
+import main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 
 public final class TransactionUtils {
@@ -20,14 +22,14 @@ public final class TransactionUtils {
 	public static boolean insertTransactionsForCustomerOrder(final float marketplaceSellFee, final CustomerOrder order) {		
 		try {		
 			final Transaction marketplaceIncomeTransaction = new Transaction.Builder()
-					.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.MARKETPLACE_INCOME)
+					.type(TransactionType.MARKETPLACE_INCOME)
 					.amount((float)order.sell_total)
 					.customerOrderId(order.id)
 					.date(order.date_parsed)
 					.build();
 			
 			final Transaction marketplaceSellFeeTransaction = new Transaction.Builder()
-					.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.MARKETPLACE_SELL_FEE)
+					.type(TransactionType.MARKETPLACE_SELL_FEE)
 					.amount(marketplaceSellFee)
 					.customerOrderId(order.id)
 					.date(order.date_parsed)
@@ -37,28 +39,32 @@ public final class TransactionUtils {
 			   && TransactionUtils.insertTransaction(marketplaceSellFeeTransaction);
 		} catch(final Exception e) {
 			e.printStackTrace();
+			DBLogging.critical(TransactionUtils.class, "Failed to insert transactions for new customer order " + order.id, e);
 		}
 				
 		return false;
 	}
 	
 	public static boolean insertTransactionForProcessedOrder(final ProcessedOrder order) {
+		boolean success = false;
 		try {
-			order.loadIdFromDB().ifPresent(id -> {
+			final Optional<Integer> id = order.loadIdFromDB();
+			if(id.isPresent()) {
 				final Transaction fulfillmentCostTransaction = new Transaction.Builder()
 						.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.FULFILLMENT_COST)
 						.amount((float)order.buy_total * -1)
 						.customerOrderId(order.customer_order_id)
-						.processedOrderId(id)
+						.processedOrderId(id.get())
 						.date(order.date_processed)
 						.build();
-				TransactionUtils.insertTransaction(fulfillmentCostTransaction);
-			});
+				success = TransactionUtils.insertTransaction(fulfillmentCostTransaction);
+			}
 		} catch(final Exception e) {
 			e.printStackTrace();
+			DBLogging.critical(TransactionUtils.class, "Failed to insert transaction for successful processed order " + order.id, e);
 		}
 		
-		return false;
+		return success;
 	}
 	
 	public static boolean insertTransaction(final Transaction transaction) {
@@ -81,8 +87,8 @@ public final class TransactionUtils {
 			
 			st.setLong(5, transaction.date);
 			
-			return st.execute();
-			
+			st.execute();
+			return true;
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
