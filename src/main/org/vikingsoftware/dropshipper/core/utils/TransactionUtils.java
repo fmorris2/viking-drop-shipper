@@ -1,6 +1,8 @@
 package main.org.vikingsoftware.dropshipper.core.utils;
 
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.Optional;
 
@@ -58,6 +60,7 @@ public final class TransactionUtils {
 						.date(order.date_processed)
 						.build();
 				success = TransactionUtils.insertTransaction(fulfillmentCostTransaction);
+				success = TransactionUtils.updateProcessedOrderIdForExistingTransactions(order) && success;
 			}
 		} catch(final Exception e) {
 			e.printStackTrace();
@@ -91,8 +94,26 @@ public final class TransactionUtils {
 			return true;
 		} catch(final Exception e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				st.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 		
 		return false;
-	} 
+	}
+	
+	private static boolean updateProcessedOrderIdForExistingTransactions(final ProcessedOrder order) {
+		try(final Statement st = VSDSDBManager.get().createStatement()) {
+			st.execute("UPDATE transaction SET processed_order_id="+order.id + " WHERE customer_order_id="+order.customer_order_id);
+			return true;
+		} catch(final Exception e) {
+			e.printStackTrace();
+			DBLogging.critical(TransactionUtils.class, "Failed to update processed order id for existing transactions " + order.id, e);
+		}
+		
+		return false;
+	}
 }
