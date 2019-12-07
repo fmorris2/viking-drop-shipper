@@ -107,7 +107,7 @@ public class OrderExecutor implements CycleParticipant {
 			prepared.setDouble(8, order.buy_product_fees);
 			prepared.setDouble(9, order.buy_total);
 			prepared.setDouble(10, order.profit);
-			prepared.setLong(11, System.currentTimeMillis());
+			prepared.setLong(11, order.date_processed);
 			prepared.execute();
 
 			final String removeSql = "DELETE FROM failed_fulfillment_attempts WHERE customer_order_id="+order.customer_order_id;
