@@ -60,7 +60,7 @@ public final class TransactionUtils {
 						.date(order.date_processed)
 						.build();
 				success = TransactionUtils.insertTransaction(fulfillmentCostTransaction);
-				success = TransactionUtils.updateProcessedOrderIdForExistingTransactions(order) && success;
+				success = TransactionUtils.updateProcessedOrderIdForExistingTransactions(order.customer_order_id, id.get()) && success;
 			}
 		} catch(final Exception e) {
 			e.printStackTrace();
@@ -105,13 +105,13 @@ public final class TransactionUtils {
 		return false;
 	}
 	
-	private static boolean updateProcessedOrderIdForExistingTransactions(final ProcessedOrder order) {
+	private static boolean updateProcessedOrderIdForExistingTransactions(final int customerOrderId, final int processedOrderId) {
 		try(final Statement st = VSDSDBManager.get().createStatement()) {
-			st.execute("UPDATE transaction SET processed_order_id="+order.id + " WHERE customer_order_id="+order.customer_order_id);
+			st.execute("UPDATE transaction SET processed_order_id="+processedOrderId + " WHERE customer_order_id="+customerOrderId);
 			return true;
 		} catch(final Exception e) {
 			e.printStackTrace();
-			DBLogging.critical(TransactionUtils.class, "Failed to update processed order id for existing transactions " + order.id, e);
+			DBLogging.critical(TransactionUtils.class, "Failed to update processed order id for existing transactions " + processedOrderId, e);
 		}
 		
 		return false;
