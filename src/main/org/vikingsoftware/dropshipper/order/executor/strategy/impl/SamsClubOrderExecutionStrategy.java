@@ -347,6 +347,10 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			normalizedName += nameParts[i];
 		}
 		
+		if(nameParts.length == 1) { //sams club requires two words with a space between them.
+			normalizedName += " " + normalizedName;
+		}
+		
 		return normalizedName;
 	}
 
