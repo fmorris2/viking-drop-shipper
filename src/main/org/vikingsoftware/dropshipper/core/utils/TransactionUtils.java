@@ -1,6 +1,7 @@
 package main.org.vikingsoftware.dropshipper.core.utils;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
@@ -15,7 +16,7 @@ import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 public final class TransactionUtils {
 	
 	private static final String INSERT_QUERY = "INSERT INTO transaction(type,amount,customer_order_id,"
-			+ "processed_order_id,date) VALUES (?,?,?,?,?)";
+			+ "processed_order_id,marketplace_listing_id,date,notes) VALUES (?,?,?,?,?,?,?)";
 	
 	private TransactionUtils() {
 		//utils classes need not be instantiated
@@ -26,14 +27,16 @@ public final class TransactionUtils {
 			final Transaction marketplaceIncomeTransaction = new Transaction.Builder()
 					.type(TransactionType.MARKETPLACE_INCOME)
 					.amount((float)order.sell_total)
-					.customerOrderId(order.id)
+					.customer_order_id(order.id)
+					.marketplace_listing_id(order.marketplace_listing_id)
 					.date(order.date_parsed)
 					.build();
 			
 			final Transaction marketplaceSellFeeTransaction = new Transaction.Builder()
 					.type(TransactionType.MARKETPLACE_SELL_FEE)
 					.amount(marketplaceSellFee)
-					.customerOrderId(order.id)
+					.customer_order_id(order.id)
+					.marketplace_listing_id(order.marketplace_listing_id)
 					.date(order.date_parsed)
 					.build();
 			
@@ -47,62 +50,97 @@ public final class TransactionUtils {
 		return false;
 	}
 	
-	public static boolean insertTransactionForProcessedOrder(final ProcessedOrder order) {
+	public static boolean insertTransactionForProcessedOrder(final CustomerOrder customerOrder, final ProcessedOrder processedOrder) {
 		boolean success = false;
 		try {
-			final Optional<Integer> id = order.loadIdFromDB();
+			final Optional<Integer> id = processedOrder.loadIdFromDB();
 			if(id.isPresent()) {
 				final Transaction fulfillmentCostTransaction = new Transaction.Builder()
 						.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.FULFILLMENT_COST)
-						.amount((float)order.buy_total * -1)
-						.customerOrderId(order.customer_order_id)
-						.processedOrderId(id.get())
-						.date(order.date_processed)
+						.amount((float)processedOrder.buy_total * -1)
+						.marketplace_listing_id(customerOrder.marketplace_listing_id)
+						.customer_order_id(processedOrder.customer_order_id)
+						.processed_order_id(id.get())
+						.date(processedOrder.date_processed)
 						.build();
 				success = TransactionUtils.insertTransaction(fulfillmentCostTransaction);
-				success = TransactionUtils.updateProcessedOrderIdForExistingTransactions(order.customer_order_id, id.get()) && success;
+				success = TransactionUtils.updateProcessedOrderIdForExistingTransactions(processedOrder.customer_order_id, id.get()) && success;
 			}
 		} catch(final Exception e) {
 			e.printStackTrace();
-			DBLogging.critical(TransactionUtils.class, "Failed to insert transaction for successful processed order " + order.id, e);
+			DBLogging.critical(TransactionUtils.class, "Failed to insert transaction for successful processed order " + processedOrder.id, e);
 		}
 		
 		return success;
 	}
 	
-	public static boolean insertTransaction(final Transaction transaction) {
-		final PreparedStatement st = VSDSDBManager.get().createPreparedStatement(INSERT_QUERY);
-		try {
-			st.setInt(1, transaction.type.ordinal());
-			st.setFloat(2, transaction.amount);
-			
-			if(transaction.customerOrderId == null) {
-				st.setNull(3, Types.INTEGER);
-			} else {
-				st.setInt(3, transaction.customerOrderId);
-			}
-			
-			if(transaction.processedOrderId == null) {
-				st.setNull(4, Types.INTEGER);
-			} else {
-				st.setInt(4, transaction.processedOrderId);
-			}
-			
-			st.setLong(5, transaction.date);
-			
-			st.execute();
-			return true;
+	public static boolean insertTransaction(final Transaction transaction) {		
+		boolean alreadyExists = true;
+		
+		try (final Statement selectSt = VSDSDBManager.get().createStatement();
+			 final ResultSet rs = selectSt.executeQuery(generateSelectQuery(transaction))){
+				alreadyExists = rs.next();
 		} catch(final Exception e) {
-			e.printStackTrace();
-		} finally {
+ 			e.printStackTrace();
+		}
+		
+		if(!alreadyExists) {
+			final PreparedStatement st = VSDSDBManager.get().createPreparedStatement(INSERT_QUERY);
 			try {
-				st.close();
-			} catch (SQLException e) {
+				st.setInt(1, transaction.type.value);
+				st.setFloat(2, transaction.amount);
+				
+				if(transaction.customer_order_id == null) {
+					st.setNull(3, Types.INTEGER);
+				} else {
+					st.setInt(3, transaction.customer_order_id);
+				}
+				
+				if(transaction.processed_order_id == null) {
+					st.setNull(4, Types.INTEGER);
+				} else {
+					st.setInt(4, transaction.processed_order_id);
+				}
+				
+				if(transaction.marketplace_listing_id == null) {
+					st.setNull(5, Types.INTEGER);
+				} else {
+					st.setInt(5, transaction.marketplace_listing_id);
+				}
+				
+				st.setLong(6, transaction.date);
+				st.setString(7, transaction.notes);
+				
+				st.execute();
+				return true;
+			} catch(final Exception e) {
 				e.printStackTrace();
+			} finally {
+				try {
+					st.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
 			}
+		} else {
+			System.out.println("Transaction already exists... skipping insertion");
 		}
 		
 		return false;
+	}
+	
+	private static String generateSelectQuery(final Transaction transaction) {
+		String query = "SELECT id FROM transaction WHERE type="+transaction.type.value
+				+ " AND amount="+transaction.amount+" AND date="+transaction.date
+				+ " AND " + generateNullableEqualityCheck("customer_order_id", transaction.customer_order_id)
+				+ " AND " + generateNullableEqualityCheck("processed_order_id", transaction.processed_order_id)
+				+ " AND " + generateNullableEqualityCheck("marketplace_listing_id", transaction.marketplace_listing_id);
+		
+		return query;
+	}
+	
+	private static String generateNullableEqualityCheck(final String col, final Integer val) {
+		return val == null ? col + " IS NULL" : col + "=" + val;
 	}
 	
 	private static boolean updateProcessedOrderIdForExistingTransactions(final int customerOrderId, final int processedOrderId) {

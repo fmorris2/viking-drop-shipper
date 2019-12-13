@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.ebay.sdk.ApiContext;
 import com.ebay.sdk.ApiException;
 import com.ebay.sdk.TimeFilter;
 import com.ebay.sdk.call.GetSellerTransactionsCall;
+import com.ebay.soap.eBLBaseComponents.AccountDetailEntryCodeType;
+import com.ebay.soap.eBLBaseComponents.AccountEntryType;
 import com.ebay.soap.eBLBaseComponents.DetailLevelCodeType;
 import com.ebay.soap.eBLBaseComponents.ItemType;
 import com.ebay.soap.eBLBaseComponents.PaginationType;
@@ -18,79 +21,26 @@ import com.ebay.soap.eBLBaseComponents.TransactionType;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrderManager;
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrderManager;
 import main.org.vikingsoftware.dropshipper.core.data.transaction.Transaction;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayApiContextManager;
+import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
 import main.org.vikingsoftware.dropshipper.core.utils.TransactionUtils;
 
 public class FillTransactionTable {
 
 	public static void main(final String[] args) {
-		final List<TransactionType> transactions = getAllTransactions();
-		System.out.println("Loaded " + transactions.size() + " eBay transactions.");
+		final List<TransactionType> orderTransactions = getAllOrderTransactions();
+		System.out.println("Loaded " + orderTransactions.size() + " eBay transactions.");
+		insertOrderTransactions(orderTransactions);
 		
-		for(final TransactionType transaction : transactions) {
-			Integer customerOrderId = null;
-			Integer processedOrderId = null;
-			
-			final Optional<CustomerOrder> mappedCustomerOrder = CustomerOrderManager.loadCustomerOrderByMarketplaceOrderId(transaction.getTransactionID());
-			if(mappedCustomerOrder.isPresent()) {
-				final CustomerOrder customerOrder = mappedCustomerOrder.get();
-				customerOrderId = customerOrder.id;
-				
-				final Optional<ProcessedOrder> mappedProcessedOrder = ProcessedOrderManager.getProcessedOrderForCustomerOrder(customerOrder.id);
-				if(mappedProcessedOrder.isPresent()) {
-					final ProcessedOrder processedOrder = mappedProcessedOrder.get();
-					processedOrderId = processedOrder.id;
-					
-					final Transaction fulfillmentCostTransaction = new Transaction.Builder()
-							.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.FULFILLMENT_COST)
-							.amount((float)processedOrder.buy_total * -1)
-							.customerOrderId(customerOrderId)
-							.processedOrderId(processedOrderId)
-							.date(processedOrder.date_processed)
-							.build();
-					
-					TransactionUtils.insertTransaction(fulfillmentCostTransaction);
-				}
-			}
-			final ItemType item = transaction.getItem();
-			System.out.println("Total eBay income: "  + transaction.getTransactionPrice().getValue());
-			System.out.println("Transaction Paid Time: " + transaction.getPaidTime().toInstant().toEpochMilli());
-			System.out.println("Order ID: " + transaction.getTransactionID());
-			System.out.println("Item ID: " + item.getItemID());
-			System.out.println("Final Value Fees: " + transaction.getFinalValueFee().getValue());
-			
-			final PaymentsInformationType monetaryDetails = transaction.getMonetaryDetails();
-			System.out.println("monetaryDetails: " + monetaryDetails);
-			final PaymentTransactionType initialBuyerPayment = monetaryDetails.getPayments().getPayment(0);
-			System.out.println("Paypal Transaction ID: " + initialBuyerPayment.getReferenceID().getValue());
-			System.out.println("Paypal Fee: " + initialBuyerPayment.getFeeOrCreditAmount().getValue());
-			System.out.println("Paypal Payment Time: " + initialBuyerPayment.getPaymentTime().toInstant().toEpochMilli());
-			
-			final Transaction marketplaceIncomeTransaction = new Transaction.Builder()
-					.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.MARKETPLACE_INCOME)
-					.amount((float)transaction.getTransactionPrice().getValue())
-					.customerOrderId(customerOrderId)
-					.processedOrderId(processedOrderId)
-					.date(transaction.getPaidTime().toInstant().toEpochMilli())
-					.build();
-			
-			final Transaction marketplaceSellFeeTransaction = new Transaction.Builder()
-					.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.MARKETPLACE_SELL_FEE)
-					.amount((float)initialBuyerPayment.getFeeOrCreditAmount().getValue() * -1)
-					.customerOrderId(customerOrderId)
-					.processedOrderId(processedOrderId)
-					.date(initialBuyerPayment.getPaymentTime().toInstant().toEpochMilli())
-					.build();
-			
-			TransactionUtils.insertTransaction(marketplaceIncomeTransaction);
-			TransactionUtils.insertTransaction(marketplaceSellFeeTransaction);
-		}
+		insertAllAccountTransactions(120);
 	}
 	
-	public static List<TransactionType> getAllTransactions() {
+	public static List<TransactionType> getAllOrderTransactions() {
 		final List<TransactionType> allTransactions = new ArrayList<>();
 		try {
 			
@@ -141,5 +91,104 @@ public class FillTransactionTable {
 		}
 
 		return allTransactions;
+	}
+	
+	public static void insertAllAccountTransactions(final int daysInPast) {		
+		try {
+			//last 4 months is max time frame for eBay account activity
+			final List<AccountEntryType> accountEntries = EbayCalls.getAccountActivityLastXDays(daysInPast).stream()
+					.filter(entry -> entry.getAccountDetailsEntryType() == AccountDetailEntryCodeType.FEE_INSERTION
+					 		|| (entry.getAccountDetailsEntryType() == AccountDetailEntryCodeType.SUBSCRIPTIONE_BAY_STORES
+					 		       && entry.getTitle().contains("Store") && entry.getTitle().contains("Subscription Fee")))
+					.collect(Collectors.toList());
+			
+			for(final AccountEntryType entry : accountEntries) {
+				System.out.println("Attempting to insert Account Transaction: " + entry.getItemID() + ", " + entry.getTitle() + ", "
+						+ entry.getDate().getTime() + ", " + entry.getNetDetailAmount().getValue() + ", "
+				        + entry.getAccountDetailsEntryType());
+				
+				final MarketplaceListing marketplaceListing = entry.getItemID() == null ? null : MarketplaceLoader.loadMarketplaceListingByListingId(entry.getItemID());
+				final Integer marketplaceListingId = marketplaceListing == null ? null : marketplaceListing.id;
+				
+				final Transaction transaction = new Transaction.Builder()
+						.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.MARKETPLACE_OPERATING_COST)
+						.amount(0 - (float)entry.getNetDetailAmount().getValue())
+						.date(entry.getDate().getTimeInMillis())
+						.notes(entry.getAccountDetailsEntryType().name())
+						.marketplace_listing_id(marketplaceListingId)
+						.build();
+				
+				TransactionUtils.insertTransaction(transaction);
+			}
+			
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void insertOrderTransactions(final List<TransactionType> orderTransactions) {
+		for(final TransactionType transaction : orderTransactions) {
+			Integer customerOrderId = null;
+			Integer processedOrderId = null;
+			Integer marketplaceListingId = null;
+			
+			final Optional<CustomerOrder> mappedCustomerOrder = CustomerOrderManager.loadCustomerOrderByMarketplaceOrderId(transaction.getTransactionID());
+			if(mappedCustomerOrder.isPresent()) {
+				final CustomerOrder customerOrder = mappedCustomerOrder.get();
+				customerOrderId = customerOrder.id;
+				marketplaceListingId = customerOrder.marketplace_listing_id;
+				
+				final Optional<ProcessedOrder> mappedProcessedOrder = ProcessedOrderManager.getProcessedOrderForCustomerOrder(customerOrder.id);
+				if(mappedProcessedOrder.isPresent()) {
+					final ProcessedOrder processedOrder = mappedProcessedOrder.get();
+					processedOrderId = processedOrder.id;
+					
+					final Transaction fulfillmentCostTransaction = new Transaction.Builder()
+							.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.FULFILLMENT_COST)
+							.amount((float)processedOrder.buy_total * -1)
+							.marketplace_listing_id(marketplaceListingId)
+							.customer_order_id(customerOrderId)
+							.processed_order_id(processedOrderId)
+							.date(processedOrder.date_processed)
+							.build();
+					
+					TransactionUtils.insertTransaction(fulfillmentCostTransaction);
+				}
+			}
+			final ItemType item = transaction.getItem();
+			System.out.println("Total eBay income: "  + transaction.getTransactionPrice().getValue());
+			System.out.println("Transaction Paid Time: " + transaction.getPaidTime().toInstant().toEpochMilli());
+			System.out.println("Order ID: " + transaction.getTransactionID());
+			System.out.println("Item ID: " + item.getItemID());
+			System.out.println("Final Value Fees: " + transaction.getFinalValueFee().getValue());
+			
+			final PaymentsInformationType monetaryDetails = transaction.getMonetaryDetails();
+			System.out.println("monetaryDetails: " + monetaryDetails);
+			final PaymentTransactionType initialBuyerPayment = monetaryDetails.getPayments().getPayment(0);
+			System.out.println("Paypal Transaction ID: " + initialBuyerPayment.getReferenceID().getValue());
+			System.out.println("Paypal Fee: " + initialBuyerPayment.getFeeOrCreditAmount().getValue());
+			System.out.println("Paypal Payment Time: " + initialBuyerPayment.getPaymentTime().toInstant().toEpochMilli());
+			
+			final Transaction marketplaceIncomeTransaction = new Transaction.Builder()
+					.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.MARKETPLACE_INCOME)
+					.amount((float)transaction.getTransactionPrice().getValue())
+					.marketplace_listing_id(marketplaceListingId)
+					.customer_order_id(customerOrderId)
+					.processed_order_id(processedOrderId)
+					.date(transaction.getPaidTime().toInstant().toEpochMilli())
+					.build();
+			
+			final Transaction marketplaceSellFeeTransaction = new Transaction.Builder()
+					.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.MARKETPLACE_SELL_FEE)
+					.amount((float)initialBuyerPayment.getFeeOrCreditAmount().getValue() * -1)
+					.marketplace_listing_id(marketplaceListingId)
+					.customer_order_id(customerOrderId)
+					.processed_order_id(processedOrderId)
+					.date(initialBuyerPayment.getPaymentTime().toInstant().toEpochMilli())
+					.build();
+			
+			TransactionUtils.insertTransaction(marketplaceIncomeTransaction);
+			TransactionUtils.insertTransaction(marketplaceSellFeeTransaction);
+		}
 	}
 }

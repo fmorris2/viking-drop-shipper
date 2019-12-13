@@ -67,7 +67,7 @@ public class OrderExecutor implements CycleParticipant {
 					} else {
 						System.out.println("Successful order from " + FulfillmentPlatforms.getById(listing.fulfillment_platform_id) + "!");
 						if(insertSuccessfulOrderIntoDB(processedOrder)) {
-							TransactionUtils.insertTransactionForProcessedOrder(processedOrder);
+							TransactionUtils.insertTransactionForProcessedOrder(order, processedOrder);
 						}
 						break;
 					}

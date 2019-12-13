@@ -17,6 +17,7 @@ import com.ebay.sdk.ApiContext;
 import com.ebay.sdk.TimeFilter;
 import com.ebay.sdk.call.AddFixedPriceItemCall;
 import com.ebay.sdk.call.CompleteSaleCall;
+import com.ebay.sdk.call.GetAccountCall;
 import com.ebay.sdk.call.GetApiAccessRulesCall;
 import com.ebay.sdk.call.GetCategorySpecificsCall;
 import com.ebay.sdk.call.GetItemCall;
@@ -26,6 +27,9 @@ import com.ebay.sdk.call.GetSellerTransactionsCall;
 import com.ebay.sdk.call.GetSuggestedCategoriesCall;
 import com.ebay.sdk.call.ReviseFixedPriceItemCall;
 import com.ebay.sdk.call.ReviseInventoryStatusCall;
+import com.ebay.soap.eBLBaseComponents.AccountEntrySortTypeCodeType;
+import com.ebay.soap.eBLBaseComponents.AccountEntryType;
+import com.ebay.soap.eBLBaseComponents.AccountHistorySelectionCodeType;
 import com.ebay.soap.eBLBaseComponents.AmountType;
 import com.ebay.soap.eBLBaseComponents.ApiAccessRuleType;
 import com.ebay.soap.eBLBaseComponents.BrandMPNType;
@@ -140,8 +144,8 @@ public class EbayCalls {
 	private static TransactionType[] loadTransactionsLastXDays(final int days) throws Exception {
 		final List<TransactionType> totalTransactions = new ArrayList<>();
 		int daysLeft = days;
+		final ApiContext apiContext = EbayApiContextManager.getLiveContext();
 		while(daysLeft > 0) {
-			final ApiContext apiContext = EbayApiContextManager.getLiveContext();
 			final GetSellerTransactionsCall call = new GetSellerTransactionsCall(apiContext);
 			call.setIncludeFinalValueFee(true);
 			call.setDetailLevel(new DetailLevelCodeType[]{DetailLevelCodeType.RETURN_ALL});
@@ -347,7 +351,39 @@ public class EbayCalls {
 //			updateHandlingTime(listing.listingId, 4);
 //		}
 		
-		getOrdersLastXDays(2);
+//		getOrdersLastXDays(2);
+		
+
+	}
+	
+	public static List<AccountEntryType> getAccountActivityLastXDays(final int days) {
+		final List<AccountEntryType> accountEntries = new ArrayList<>();
+		int daysLeft = days;
+		final ApiContext api = EbayApiContextManager.getLiveContext();
+		while(daysLeft > 0) {
+			try {
+				Calendar from = Calendar.getInstance();
+				from.add(Calendar.DAY_OF_YEAR, daysLeft * -1);
+				Calendar to = Calendar.getInstance();
+				if(daysLeft > 29) {
+					to.add(Calendar.DAY_OF_YEAR, (daysLeft * -1) + 29);
+				}
+				TimeFilter filter = new TimeFilter(from, to);
+				final GetAccountCall call = new GetAccountCall(api);
+				call.setAccountEntrySortType(AccountEntrySortTypeCodeType.ACCOUNT_ENTRY_CREATED_TIME_DESCENDING);
+				call.setViewType(AccountHistorySelectionCodeType.BETWEEN_SPECIFIED_DATES);
+				call.setViewPeriod(filter);
+				final AccountEntryType[] entries = call.getAccount();
+				for(final AccountEntryType entry : entries) {
+					accountEntries.add(entry);
+				}
+				daysLeft -= 29;
+			} catch(final Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return accountEntries;
 	}
 	
 	public static void checkAPIAccessRules() {

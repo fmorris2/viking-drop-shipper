@@ -2,6 +2,7 @@ package main.org.vikingsoftware.dropshipper;
 
 import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
 import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
+import main.org.vikingsoftware.dropshipper.core.ebay.EbayAccountActivityFees;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 import main.org.vikingsoftware.dropshipper.inventory.InventoryUpdater;
 import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
@@ -21,6 +22,7 @@ public class VSDropShipper {
 		new InventoryUpdater(),
 		new OrderTracking(),
 		new TrackingHistoryUpdater(),
+		new EbayAccountActivityFees()	
 	};
 
 	public static void main(final String[] args) throws InterruptedException {
