@@ -176,15 +176,19 @@ public class EbayCalls {
 			final List<TransactionType> unknownTransactionMappings) {
 		
 		for(final TransactionType trans : transactions) {
+			System.out.println("Iterating over transaction: " + trans);
 			if(trans == null || trans.getItem() == null || trans.getAmountPaid() == null
 					|| trans.getActualShippingCost() == null || trans.getMonetaryDetails() == null) {
+				System.out.println("Skipping transaction due to failed conditions...");
 				continue;
 			}
 			
 			final PaymentsInformationType monetaryDetails = trans.getMonetaryDetails();
 			final RefundInformationType refundType = monetaryDetails.getRefunds();
+			System.out.println("Getting marketplaceListingDbId for item ID: " + trans.getItem().getItemID());
 			final int marketplaceListingDbId = Marketplaces.EBAY.getMarketplace().getMarketplaceListingIndex(trans.getItem().getItemID());
 			if(marketplaceListingDbId == -1) {
+				System.out.println("Encountered unknown transaction");
 				unknownTransactionMappings.add(trans);
 			} else if(refundType != null && refundType.getRefundLength() > 0) { //refunded transaction
 				System.out.println("Encountered refunded transaction: " + trans.getTransactionID());
@@ -193,6 +197,7 @@ public class EbayCalls {
 				System.out.println("Encountered transaction with incomplete payment");
 				continue;
 			} else {
+				System.out.println("Converting transaction to customer order...");
 				final CustomerOrder order = EbayConversionUtils.convertTransactionTypeToCustomerOrder(marketplaceListingDbId, trans.getItem().getItemID(), trans);
 				orders.add(order);
 			}
