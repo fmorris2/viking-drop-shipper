@@ -20,11 +20,11 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.Sams
 import main.org.vikingsoftware.dropshipper.core.data.misc.StateUtils;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
-import main.org.vikingsoftware.dropshipper.core.utils.SamsClubMetaDataParser;
 import main.org.vikingsoftware.dropshipper.core.utils.SamsClubUtils;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
+import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsProductAPI;
 import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
 import main.org.vikingsoftware.dropshipper.order.executor.error.OrderExecutionException;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.AbstractOrderExecutionStrategy;
@@ -33,7 +33,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 	private static final String FAKE_PHONE_NUMBER = "(916) 245-0125";
 	private static final int ADDRESS_CHARACTER_LIMIT = 35;
-	private static final SamsClubMetaDataParser parser = new SamsClubMetaDataParser();
+	private static final SamsProductAPI productApi = new SamsProductAPI();
 	
 	/*
 	 * TODO - Use column in DB so we can toggle it on front-end
@@ -57,9 +57,9 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		System.out.println("Getting listing url: " + fulfillmentListing.listing_url);
 		driver.get(fulfillmentListing.listing_url);
 		
-		parser.parse(driver.getPageSource());
+		productApi.parse(fulfillmentListing.product_id);
 		
-		if(parser.getStock() <= 0) {
+		if(productApi.getAvailableToSellQuantity().orElse(0) <= 0) {
 			System.out.println("Listing is out of stock!");
 			throw new OrderExecutionException("Listing is out of stock!");
 		}
