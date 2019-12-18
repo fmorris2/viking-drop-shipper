@@ -131,7 +131,9 @@ public class EbayCalls {
 			
 			System.out.println("Num eBay transactions in last " + days + " days: " + transactions.length);
 			determineRelevantOrders(transactions, orders, unknownTransactionMappings);
+			System.out.println("Determined relevant orders...");
 			logUnknownMarketplaceMappingsInDB(unknownTransactionMappings);
+			System.out.println("Logged unknown marketplace mappings in DB...");
 			return orders.toArray(new CustomerOrder[orders.size()]);
 
 		} catch(final Exception e) {
