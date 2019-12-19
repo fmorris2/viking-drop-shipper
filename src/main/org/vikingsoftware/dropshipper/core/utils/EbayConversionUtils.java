@@ -16,14 +16,17 @@ public class EbayConversionUtils {
 	public static CustomerOrder convertTransactionTypeToCustomerOrder(final int dbListingId, final String transactionId, 
 			final TransactionType transaction) {
 		
-		try {	
+		try {
+			System.out.println("EbayConversionUtils#convertTransactionTypeToCustomerOrder START");
 			final UserType buyer = transaction.getBuyer();
 			final AddressType addr = buyer.getBuyerInfo().getShippingAddress();
 			final ItemType item = transaction.getItem();
 			
 			final PaymentsInformationType monetaryDetails = transaction.getMonetaryDetails();
 			final PaymentTransactionType initialBuyerPayment = monetaryDetails.getPayments().getPayment(0);
+			System.out.println("About to call EbayCalls#getHandlingTime");
 			final Integer handlingTime = EbayCalls.getHandlingTime(transactionId).orElse(-1);
+			System.out.println("\tdone. About to build customer order.");
 			
 			return new CustomerOrder.Builder()
 				.marketplace_listing_id(dbListingId)

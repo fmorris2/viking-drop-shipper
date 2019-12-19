@@ -199,9 +199,12 @@ public class EbayCalls {
 			} else {
 				System.out.println("Converting transaction to customer order...");
 				final CustomerOrder order = EbayConversionUtils.convertTransactionTypeToCustomerOrder(marketplaceListingDbId, trans.getItem().getItemID(), trans);
+				System.out.println("\tdone.");
 				orders.add(order);
 			}
 		}
+		
+		System.out.println("EbayCalls#determineRelevantOrders has finished.");
 	}
 
 	private static void logUnknownMarketplaceMappingsInDB(final List<TransactionType> transactions) {
