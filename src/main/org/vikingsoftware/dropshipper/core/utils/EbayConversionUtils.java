@@ -8,7 +8,7 @@ import com.ebay.soap.eBLBaseComponents.TransactionType;
 import com.ebay.soap.eBLBaseComponents.UserType;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
-import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
+import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 
 public class EbayConversionUtils {
 	private EbayConversionUtils(){}
@@ -25,7 +25,8 @@ public class EbayConversionUtils {
 			final PaymentsInformationType monetaryDetails = transaction.getMonetaryDetails();
 			final PaymentTransactionType initialBuyerPayment = monetaryDetails.getPayments().getPayment(0);
 			System.out.println("About to call EbayCalls#getHandlingTime");
-			final Integer handlingTime = EbayCalls.getHandlingTime(transactionId).orElse(-1);
+			//final Integer handlingTime = EbayCalls.getHandlingTime(transactionId).orElse(-1);
+			final Integer handlingTime = MarketplaceListing.getCurrentHandlingTime(dbListingId).orElse(-1);
 			System.out.println("\tdone. About to build customer order.");
 			
 			return new CustomerOrder.Builder()

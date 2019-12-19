@@ -3,6 +3,7 @@ package main.org.vikingsoftware.dropshipper.core.data.marketplace.listing;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Optional;
 
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplace;
 import main.org.vikingsoftware.dropshipper.core.data.misc.Pair;
@@ -112,6 +113,19 @@ public class MarketplaceListing {
 		}
 		
 		return new Pair<>(current_price, current_shipping_cost);
+	}
+	
+	public static Optional<Integer> getCurrentHandlingTime(final int listingId) {
+		try(final Statement st = VSDSDBManager.get().createStatement();
+			final ResultSet res =st.executeQuery("SELECT current_handling_time FROM marketplace_listing WHERE id="+listingId)) {
+			if(res.next()) {
+				return Optional.of(res.getInt("current_handling_time"));
+			}
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return Optional.empty();
 	}
 	
 	public void updatePrice(final double newPrice) throws SQLException {
