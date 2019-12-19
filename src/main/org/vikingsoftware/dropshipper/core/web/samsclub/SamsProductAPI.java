@@ -1,5 +1,6 @@
 package main.org.vikingsoftware.dropshipper.core.web.samsclub;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Optional;
@@ -8,6 +9,7 @@ import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.UPCUtils;
 
 public final class SamsProductAPI {
@@ -18,7 +20,10 @@ public final class SamsProductAPI {
 	private Optional<JSONObject> payload;
 	private Optional<JSONObject> onlineInventory;
 	private Optional<JSONObject> onlinePricing;
+	private Optional<JSONArray>  skuOptionsArr;
 	private Optional<JSONObject> skuOptions;
+	
+	private String productId;
 	
 	public static void main(final String[] args) {
 		final SamsProductAPI api = new SamsProductAPI();
@@ -26,12 +31,19 @@ public final class SamsProductAPI {
 		System.out.println("Current Stock: " + api.getAvailableToSellQuantity().orElse(0));
 		System.out.println("Final Price: " + api.getFinalPrice().orElse(0D));
 		System.out.println("UPC: " + api.getUPC().orElse(null));
+		System.out.println("Passes all conditions: " + api.passesAllListingConditions());
+		System.out.println("\tisFreeShipping: " + api.isFreeShipping());
+		System.out.println("\tisAvailableOnline: " + api.isAvailableOnline());
+		System.out.println("\thasMinPurchaseQty: " + api.hasMinPurchaseQty());
+		System.out.println("\thasVariations: " + api.hasVariations());
 	}
 	
 	public boolean parse(final String productId) {
+		String apiUrl = null;
 		try {
 			reset();
-			final String apiUrl = API_BASE_URL + productId + API_URL_ARGS;
+			this.productId = productId;
+			apiUrl = API_BASE_URL + productId + API_URL_ARGS;
 			final URL urlObj = new URL(apiUrl);
 			final String apiResponse = IOUtils.toString(urlObj, Charset.forName("UTF-8"));
 			final JSONObject json = new JSONObject(apiResponse);
@@ -39,14 +51,69 @@ public final class SamsProductAPI {
 			payload.ifPresent(obj -> {
 				onlineInventory = Optional.ofNullable(getJsonObj(obj, "onlineInventory"));
 				onlinePricing = Optional.ofNullable(getJsonObj(obj, "onlinePricing"));
-				final JSONArray skuOptionsArr = getJsonArr(obj, "skuOptions");
-				if(skuOptionsArr != null && skuOptionsArr.length() > 0) {
-					skuOptions = Optional.ofNullable(skuOptionsArr.getJSONObject(0));
+				skuOptionsArr = Optional.ofNullable(getJsonArr(obj, "skuOptions"));
+				if(skuOptionsArr.isPresent() && skuOptionsArr.get().length() > 0) {
+					skuOptions = Optional.ofNullable(skuOptionsArr.get().getJSONObject(0));
 				}
 			});
 			return true;
+		} catch(final MalformedURLException e) {
+			System.out.println("Malformed URL: " + apiUrl);
 		} catch(final Exception e) {
 			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
+	public boolean passesAllListingConditions() {
+		try {
+			return isFreeShipping() && isAvailableOnline()
+					&& !hasMinPurchaseQty() && !hasVariations();
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
+	private boolean isFreeShipping() {
+		if(skuOptions.isPresent()) {
+			final String shippingType = getString(skuOptions.get(), "shippingCostType");
+			if(shippingType != null) {
+				switch(shippingType.toLowerCase()) {
+					case "freeeligible":
+					case "free":
+					case "included":
+						return true;
+					case "paid":
+						//TODO FLAG LISTING FOR PURGE EXAMINATION?
+						return false;
+					default:
+						DBLogging.high(SamsProductAPI.class, "Unknown shipping type encountered for product id " + productId + ": " + shippingType, new RuntimeException());
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	private boolean isAvailableOnline() {
+		return getAvailableToSellQuantity().orElse(0) > 0;
+	}
+	
+	private boolean hasMinPurchaseQty() {
+		if(onlineInventory.isPresent()) {
+			final int minPurchaseQty = getInt(onlineInventory.get(), "minPurchaseQuantity");
+			return minPurchaseQty > 1;
+		}
+		
+		return false;
+	}
+	
+	private boolean hasVariations() {
+		if(skuOptionsArr.isPresent()) {
+			return skuOptionsArr.get().length() > 1;
 		}
 		
 		return false;
@@ -82,11 +149,22 @@ public final class SamsProductAPI {
 		return null;
 	}
 	
+	private int getInt(final JSONObject parent, final String key) {
+		try {
+			return parent.getInt(key);
+		} catch(final Exception e) {
+			//swallow exception
+		}
+		
+		return -1;
+	}
+	
 	private void reset() {
 		payload = Optional.empty();
 		onlineInventory = Optional.empty();
 		onlinePricing = Optional.empty();
 		skuOptions = Optional.empty();
+		productId = null;
 	}
 	
 	public Optional<Integer> getAvailableToSellQuantity() {
