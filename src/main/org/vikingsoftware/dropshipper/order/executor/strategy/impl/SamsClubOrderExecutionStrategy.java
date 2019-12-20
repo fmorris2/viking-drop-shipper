@@ -95,11 +95,11 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 	private ProcessedOrder finishCheckoutProcess(final CustomerOrder order, final FulfillmentListing listing) throws InterruptedException {
 
-		final double price = verifyConfirmationDetails(order, listing);
+		final SamsPricingDetails pricingDetails = verifyConfirmationDetails(order, listing);
 
 		System.out.println("Placing order...");
 		try {
-			return finalizeOrder(order, listing, price);
+			return finalizeOrder(order, listing, pricingDetails);
 		} catch(final Exception e) {
 			DBLogging.critical(getClass(), "Failed to submit order: " + order, e);
 			System.out.println("submitting the order failed...");
@@ -112,7 +112,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		throw new OrderExecutionException("Failed to parse submitted order: " + order.id);
 	}
 
-	private double verifyConfirmationDetails(final CustomerOrder order, final FulfillmentListing listing) {
+	private SamsPricingDetails verifyConfirmationDetails(final CustomerOrder order, final FulfillmentListing listing) {
 
 		//verify shipping details
 		System.out.println("Verifying shipping details");
@@ -170,7 +170,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		System.out.println("\tShipping details have been verified.");
 		System.out.println("Verifying pricing...");
 
-		final String total = driver.findElement(By.className("sc-channel-summary-total-price")).getText().replace("$", "");
+		final String total = driver.findElement(By.cssSelector(".sc-channel-summary-total-total .sc-channel-summary-total-price")).getText().replace("$", "");
 		System.out.println("\tTotal fulfillment price: " + total);
 		final double convertedTotal = Double.parseDouble(total);
 		final DecimalFormat df = new DecimalFormat("###.##");
@@ -180,12 +180,25 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			throw new OrderExecutionException("WARNING! POTENTIAL FULFILLMENT AT LOSS FOR FULFILLMENT ID " + listing.id
 					+ "! PROFIT: $" + profit);
 		}
+		
+		double productFees = 0D;
+		try {
+			final String productFeesStr = driver.findElement(By.cssSelector(".sc-channel-summary-total-product-fees .sc-channel-summary-total-price")).getText().replace("$", "");
+			productFees = Double.parseDouble(productFeesStr);
+		} catch(final Exception e) {
+			//swallow
+		}
+		
+		System.out.println("\tProduct Fees: " + productFees);
+		
+		final SamsPricingDetails pricingDetails = new SamsPricingDetails(productFees, convertedTotal);
 
 		System.out.println("\tPricing has been verified.");
-		return convertedTotal;
+		return pricingDetails;
 	}
 
-	private ProcessedOrder finalizeOrder(final CustomerOrder order, final FulfillmentListing listing, final double price) throws InterruptedException {
+	private ProcessedOrder finalizeOrder(final CustomerOrder order, final FulfillmentListing listing, 
+			final SamsPricingDetails pricingDetails) throws InterruptedException {
 
 		final String placeOrderButtonSelector = ".sc-checkout-main .sc-btn-primary > span";
 		driver.findElement(By.cssSelector(placeOrderButtonSelector));
@@ -211,7 +224,8 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		System.out.println("\tSubtotal: " + subtotal);
 		System.out.println("\tShipping: " + shipping);
 		System.out.println("\tSales Tax: " + salesTax);
-		System.out.println("\tGrand total: " + price);
+		System.out.println("\tProduct Fees: " + pricingDetails.productFees);
+		System.out.println("\tGrand total: " + pricingDetails.total);
 
 		System.out.println("Clicking place order button...");
 		if(OrderExecutor.isTestMode) {
@@ -250,8 +264,9 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 					.buy_subtotal(subtotal)
 					.buy_sales_tax(salesTax)
 					.buy_shipping(shipping)
-					.buy_total(price)
-					.profit(order.getProfit(price))
+					.buy_product_fees(pricingDetails.productFees)
+					.buy_total(pricingDetails.total)
+					.profit(order.getProfit(pricingDetails.total))
 					.date_processed(System.currentTimeMillis())
 					.build();
 		} finally {
@@ -508,6 +523,16 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	@Override
 	protected Class<? extends DriverSupplier<SamsClubWebDriver>> getDriverSupplierClass() {
 		return SamsClubDriverSupplier.class;
+	}
+	
+	private static class SamsPricingDetails {
+		public final double productFees;
+		public final double total;
+		
+		public SamsPricingDetails(final double productFees, final double total) {
+			this.productFees = productFees;
+			this.total = total;
+		}
 	}
 
 }
