@@ -101,7 +101,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		try {
 			return finalizeOrder(order, listing, pricingDetails);
 		} catch(final Exception e) {
-			DBLogging.critical(getClass(), "Failed to submit order: " + order, e);
+			DBLogging.critical(getClass(), "Failed to submit customer order with id: " + order.id, e);
 			System.out.println("submitting the order failed...");
 		}
 

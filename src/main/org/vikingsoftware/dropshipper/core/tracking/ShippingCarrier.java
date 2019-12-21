@@ -65,7 +65,8 @@ public enum ShippingCarrier {
 	
 	private static final List<Pair<String, ShippingCarrier>> REGEX_PATTERNS = Arrays.asList(
 	   new Pair<>("1LS\\d{12}", LASERSHIP),
-	   new Pair<>("\\d{22}", USPS)
+	   new Pair<>("\\d{22}", USPS),
+	   new Pair<>("1[zZ]([\\da-zA-Z]){16}", UPS)
 	);
 	
 	public final TrackingHistoryParsingStrategy trackingHistoryParsingStrategy;
