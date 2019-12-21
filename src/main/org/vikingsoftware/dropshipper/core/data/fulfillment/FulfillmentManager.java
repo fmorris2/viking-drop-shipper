@@ -73,21 +73,6 @@ public class FulfillmentManager {
 		return true;
 	}
 
-	public void flagFulfillmentListingForExamination(final FulfillmentListing listing, final String newTitle) {
-		System.out.println("Flagging listing " + listing + " for examination");
-		for(final List<FulfillmentListing> listingsForOrder : listings.values()) {
-			listingsForOrder.remove(listing);
-		}
-
-		try (final Statement st = VSDSDBManager.get().createStatement()) {
-			st.execute("INSERT INTO fulfillment_listings_to_examine(fulfillment_listing_id, current_listing_title)"
-					+ " VALUES("+listing.id+",'"+newTitle+"')");
-			System.out.println("Successfully flagged listing " + listing + " for examination");
-		} catch(final Exception e) {
-			DBLogging.high(FulfillmentManager.class, "failed to flag listing " + listing + " for examination: " , e);
-		}
-	}
-
 	public void load() {
 		frozenFulfillmentPlatforms.clear();
 		listings.clear();
@@ -213,10 +198,7 @@ public class FulfillmentManager {
 			final Statement st = VSDSDBManager.get().createStatement();
 			final ResultSet results = st.executeQuery("SELECT * FROM fulfillment_listing"
 					+ " INNER JOIN fulfillment_mapping ON"
-					+ " fulfillment_listing.id=fulfillment_mapping.fulfillment_listing_id"
-					+ " LEFT JOIN fulfillment_listings_to_examine ON"
-					+ " fulfillment_listing.id=fulfillment_listings_to_examine.fulfillment_listing_id"
-					+ "	WHERE fulfillment_listings_to_examine.id IS NULL")) {
+					+ " fulfillment_listing.id=fulfillment_mapping.fulfillment_listing_id")) {
 			while(results.next()) {
 				final int marketplace_listing_id = results.getInt("marketplace_listing_id");
 				final FulfillmentListing listing = new FulfillmentListing.Builder()

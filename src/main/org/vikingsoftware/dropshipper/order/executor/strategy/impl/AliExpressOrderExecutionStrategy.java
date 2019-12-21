@@ -198,9 +198,6 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 			final String title = browser.findElement(By.className("product-name")).getText();
 			final boolean matches = title.equalsIgnoreCase(listing.listing_title);
 
-			if(!matches) {
-				FulfillmentManager.get().flagFulfillmentListingForExamination(listing, title);
-			}
 			return matches;
 		} catch(final Exception e) {
 			DBLogging.high(getClass(), "failed to verify listing title for " + listing + ": ", e);

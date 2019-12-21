@@ -1,10 +1,7 @@
 package main.org.vikingsoftware.dropshipper.order.executor;
 
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,8 +78,6 @@ public class OrderExecutor implements CycleParticipant {
 				insertSuccessfulOrderIntoDB(order);
 			}
 	
-			System.out.println("Saving failed orders to DB");
-			insertFailedOrdersIntoDB(failedOrders);
 		} finally {
 			manager.endFulfillment();
 		}
@@ -95,8 +90,7 @@ public class OrderExecutor implements CycleParticipant {
 				+ "buy_subtotal, buy_sales_tax, buy_shipping, buy_product_fees, buy_total, profit, date_processed) "
 				+ "VALUES(?,?,?,?,?,?,?,?,?,?,?)";
 
-		try (final PreparedStatement prepared = VSDSDBManager.get().createPreparedStatement(sql);
-			 final Statement deleteSt = VSDSDBManager.get().createStatement()) {
+		try (final PreparedStatement prepared = VSDSDBManager.get().createPreparedStatement(sql)) {
 			prepared.setInt(1, order.customer_order_id);
 			prepared.setInt(2, order.fulfillment_listing_id);
 			prepared.setInt(3, order.fulfillment_account_id);
@@ -109,9 +103,6 @@ public class OrderExecutor implements CycleParticipant {
 			prepared.setDouble(10, order.profit);
 			prepared.setLong(11, order.date_processed);
 			prepared.execute();
-
-			final String removeSql = "DELETE FROM failed_fulfillment_attempts WHERE customer_order_id="+order.customer_order_id;
-			deleteSt.execute(removeSql);
 			
 			successfullyFulfilledOrders.remove(order.customer_order_id);
 			System.out.println("Successfully inserted processed order into DB");
@@ -122,26 +113,6 @@ public class OrderExecutor implements CycleParticipant {
 		}
 		
 		return false;
-	}
-
-	private void insertFailedOrdersIntoDB(final Collection<ProcessedOrder> failedOrders) {
-		//store all new orders in DB
-		final String sql = "INSERT INTO failed_fulfillment_attempts(customer_order_id, fulfillment_listing_id, timestamp) VALUES(?,?,?)";
-
-		final PreparedStatement prepared = VSDSDBManager.get().createPreparedStatement(sql);
-		try {
-			for(final ProcessedOrder order : failedOrders) {
-				prepared.setInt(1, order.customer_order_id);
-				prepared.setInt(2, order.fulfillment_listing_id);
-				prepared.setLong(3, System.currentTimeMillis());
-				prepared.addBatch();
-			}
-
-			final int numRows = prepared.executeBatch().length;
-			System.out.println("Executed batch of " + numRows + " insert queries.");
-		} catch (final SQLException e) {
-			DBLogging.high(getClass(), "failed to insert failed orders into db: " , e);
-		}
 	}
 
 }
