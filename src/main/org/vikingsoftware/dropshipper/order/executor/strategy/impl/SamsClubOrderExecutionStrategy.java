@@ -183,10 +183,13 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		
 		double productFees = 0D;
 		try {
+			driver.setImplicitWait(1);
 			final String productFeesStr = driver.findElement(By.cssSelector(".sc-channel-summary-total-product-fees .sc-channel-summary-total-price")).getText().replace("$", "");
 			productFees = Double.parseDouble(productFeesStr);
 		} catch(final Exception e) {
 			//swallow
+		} finally {
+			driver.resetImplicitWait();
 		}
 		
 		System.out.println("\tProduct Fees: " + productFees);
