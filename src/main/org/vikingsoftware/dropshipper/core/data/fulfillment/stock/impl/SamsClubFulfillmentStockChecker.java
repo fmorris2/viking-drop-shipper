@@ -46,7 +46,7 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 		}
 	}
 	
-	private int parseItemStock(final FulfillmentListing listing) {
+	public int parseItemStock(final FulfillmentListing listing) {
 		try {
 			api.parse(listing.product_id);
 			

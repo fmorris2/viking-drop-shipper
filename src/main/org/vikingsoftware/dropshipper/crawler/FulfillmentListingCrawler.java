@@ -1,8 +1,12 @@
 package main.org.vikingsoftware.dropshipper.crawler;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,13 +24,25 @@ public class FulfillmentListingCrawler {
 	private boolean isCrawling = true;
 	
 	public static void main(final String[] args) throws IOException {
-		final FileWriter fW = new FileWriter("sams-club-urls.txt");
+		final Set<String> savedUrls = new HashSet<>();
+		try(final FileReader fR = new FileReader("sams-club-urls.txt");
+			final BufferedReader bR = new BufferedReader(fR)) {
+			String line;
+			while((line = bR.readLine()) != null) {
+				savedUrls.add(line);
+			}
+		}
+		
+		System.out.println("Loaded " + savedUrls.size() + " saved URLs");
+		final FileWriter fW = new FileWriter("sams-club-urls.txt", true);
 		final BufferedWriter bW = new BufferedWriter(fW);
 		new FulfillmentListingCrawler().start(url -> {
 			try {
-				bW.write(url);
-				bW.newLine();
-				bW.flush();
+				if(!savedUrls.contains(url)) {
+					bW.write(url);
+					bW.newLine();
+					bW.flush();
+				}
 			} catch(final Exception e) {
 				e.printStackTrace();
 			}

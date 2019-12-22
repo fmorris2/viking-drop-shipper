@@ -13,6 +13,7 @@ import java.util.Set;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubFulfillmentStockChecker;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
@@ -20,7 +21,9 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutio
 
 public class FulfillmentManager {
 	
-	private static final long SAMS_ORDER_BATCH_WINDOW = (60_000 * 60) * 24 * 2; //2 days
+	private static final long SAMS_ORDER_BATCH_WINDOW = (60_000 * 60) * 24 * 1; //2 days
+	private static final int SAMS_SAFE_STOCK_THRESHOLD = 50;
+	private static final int SAMS_SAFE_NUM_ORDERS_THRESHOLD = 19;
 
 	private static final Set<Integer> frozenFulfillmentPlatforms = new HashSet<>();
 
@@ -63,13 +66,19 @@ public class FulfillmentManager {
 		if(listing.fulfillment_platform_id == FulfillmentPlatforms.SAMS_CLUB.getId()) {
 			//TODO MODIFY LOGIC TO ACCOUNT FOR MULTIPLE SAMS CLUB ACCOUNTS?
 			final FulfillmentAccount acc = FulfillmentAccountManager.get().peekEnabledAccount(FulfillmentPlatforms.SAMS_CLUB);
-			if(FulfillmentAccountManager.get().getNumProcessedOrdersForAccount(acc.id) == 19) {
-				if(order.date_parsed + SAMS_ORDER_BATCH_WINDOW > System.currentTimeMillis()) {
-					System.out.println("Skipping sams club fulfillment - Waiting to batch orders together");
-					return false;
-				}
+			final int numOrders = FulfillmentAccountManager.get().getNumProcessedOrdersForAccount(acc.id);
+			final boolean failsSafeOrderThreshold = numOrders > SAMS_SAFE_NUM_ORDERS_THRESHOLD;
+			final boolean failsTimeWindowThreshold = order.date_parsed < System.currentTimeMillis() - SAMS_ORDER_BATCH_WINDOW;
+			final int stock = SamsClubFulfillmentStockChecker.get().parseItemStock(listing);
+			final boolean failsLowStockThreshold = stock < SAMS_SAFE_STOCK_THRESHOLD;
+			if(failsSafeOrderThreshold || failsTimeWindowThreshold || failsLowStockThreshold) {
+				return true;
 			}
+			
+			System.out.println("Skipping fulfillment of Sam's Club order for customer order " + order.id + " due to order batching.");
+			return false;
 		}
+		
 		return true;
 	}
 
