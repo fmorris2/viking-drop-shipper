@@ -64,7 +64,7 @@ public class FulfillmentManager {
 	
 	public boolean shouldFulfill(final CustomerOrder order, final FulfillmentListing listing) {
 		if(listing.fulfillment_platform_id == FulfillmentPlatforms.SAMS_CLUB.getId()) {
-			//return shouldFulfillSamsClubOrder(order, listing);
+			return shouldFulfillSamsClubOrder(order, listing);
 		}
 		
 		return true;
