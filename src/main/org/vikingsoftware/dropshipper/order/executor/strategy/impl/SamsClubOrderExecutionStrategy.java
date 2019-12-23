@@ -393,7 +393,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		try {
 			//"Sorry there's a problem" message, for example
 			final WebElement errorEl = driver.findElement(By.className("js-global-error"));
-			if(errorEl.isDisplayed()) {
+			if(errorEl != null && errorEl.isDisplayed()) {
 				System.out.println("Encountered error message on cart. Retrying...");
 				navigateToCart();
 			}
