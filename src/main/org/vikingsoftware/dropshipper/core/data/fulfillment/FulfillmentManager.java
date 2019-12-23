@@ -64,22 +64,26 @@ public class FulfillmentManager {
 	
 	public boolean shouldFulfill(final CustomerOrder order, final FulfillmentListing listing) {
 		if(listing.fulfillment_platform_id == FulfillmentPlatforms.SAMS_CLUB.getId()) {
-			//TODO MODIFY LOGIC TO ACCOUNT FOR MULTIPLE SAMS CLUB ACCOUNTS?
-			final FulfillmentAccount acc = FulfillmentAccountManager.get().peekEnabledAccount(FulfillmentPlatforms.SAMS_CLUB);
-			final int numOrders = FulfillmentAccountManager.get().getNumProcessedOrdersForAccount(acc.id);
-			final boolean failsSafeOrderThreshold = numOrders > SAMS_SAFE_NUM_ORDERS_THRESHOLD;
-			final boolean failsTimeWindowThreshold = order.date_parsed < System.currentTimeMillis() - SAMS_ORDER_BATCH_WINDOW;
-			final int stock = SamsClubFulfillmentStockChecker.get().parseItemStock(listing);
-			final boolean failsLowStockThreshold = stock < SAMS_SAFE_STOCK_THRESHOLD;
-			if(failsSafeOrderThreshold || failsTimeWindowThreshold || failsLowStockThreshold) {
-				return true;
-			}
-			
-			System.out.println("Skipping fulfillment of Sam's Club order for customer order " + order.id + " due to order batching.");
-			return false;
+			//return shouldFulfillSamsClubOrder(order, listing);
 		}
 		
 		return true;
+	}
+	
+	private boolean shouldFulfillSamsClubOrder(final CustomerOrder order, final FulfillmentListing listing) {
+		//TODO MODIFY LOGIC TO ACCOUNT FOR MULTIPLE SAMS CLUB ACCOUNTS?
+		final FulfillmentAccount acc = FulfillmentAccountManager.get().peekEnabledAccount(FulfillmentPlatforms.SAMS_CLUB);
+		final int numOrders = FulfillmentAccountManager.get().getNumProcessedOrdersForAccount(acc.id);
+		final boolean failsSafeOrderThreshold = numOrders > SAMS_SAFE_NUM_ORDERS_THRESHOLD;
+		final boolean failsTimeWindowThreshold = order.date_parsed < System.currentTimeMillis() - SAMS_ORDER_BATCH_WINDOW;
+		final int stock = SamsClubFulfillmentStockChecker.get().parseItemStock(listing);
+		final boolean failsLowStockThreshold = stock < SAMS_SAFE_STOCK_THRESHOLD;
+		if(failsSafeOrderThreshold || failsTimeWindowThreshold || failsLowStockThreshold) {
+			return true;
+		}
+		
+		System.out.println("Skipping fulfillment of Sam's Club order for customer order " + order.id + " due to order batching.");
+		return false;
 	}
 
 	public void load() {

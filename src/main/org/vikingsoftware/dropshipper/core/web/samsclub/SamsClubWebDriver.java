@@ -1,5 +1,13 @@
 package main.org.vikingsoftware.dropshipper.core.web.samsclub;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
@@ -9,17 +17,30 @@ public class SamsClubWebDriver extends LoginWebDriver {
 	
 	private static final int MAX_LOGIN_ATTEMPTS = 2;
 	
+	private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+	
+	private static final Queue<LoginFormElementFindingStrategy> usernameElStrats = new PriorityQueue<>(Arrays.asList(
+		new LoginFormElementFindingStrategy(driver -> driver.findElementNormal(By.id("txtLoginEmailID"))),
+		new LoginFormElementFindingStrategy(driver -> driver.findElementNormal(By.id("email")))
+	));
+	
+	private static final Queue<LoginFormElementFindingStrategy> passwordElStrats = new PriorityQueue<>(Arrays.asList(
+		new LoginFormElementFindingStrategy(driver -> driver.findElementNormal(By.id("txtLoginPwd"))),
+		new LoginFormElementFindingStrategy(driver -> driver.findElementNormal(By.id("password")))
+	));
+	
+	private static final Queue<LoginFormElementFindingStrategy> buttonElStrats = new PriorityQueue<>(Arrays.asList(
+		new LoginFormElementFindingStrategy(driver -> driver.findElementNormal(By.cssSelector("#signInButton"))),
+		new LoginFormElementFindingStrategy(driver -> driver.findElementNormal(By.className("sc-btn-primary")))
+	));
+	
 	private int loginAttempts = 0;
 	
 	private WebElement usernameEl, passwordEl, buttonEl;
 	
 	@Override
 	protected boolean prepareForExecutionViaLoginImpl() {
-		try {
-			usernameEl = null;
-			passwordEl = null;
-			buttonEl = null;
-			
+		try {			
 			if(loginAttempts++ > MAX_LOGIN_ATTEMPTS) {
 				return false;
 			}
@@ -31,9 +52,9 @@ public class SamsClubWebDriver extends LoginWebDriver {
 			savePageSource("sams-login-page.html");
 			
 			this.setImplicitWait(1);
-			findUsernameEl();
-			findPasswordEl();
-			findButtonEl();
+			usernameEl = findElementViaOptimalStrategy(usernameElStrats);
+			passwordEl = findElementViaOptimalStrategy(passwordElStrats);
+			buttonEl = findElementViaOptimalStrategy(buttonElStrats);
 			this.resetImplicitWait();
 			
 			if(usernameEl != null && passwordEl != null && buttonEl != null) {
@@ -55,34 +76,24 @@ public class SamsClubWebDriver extends LoginWebDriver {
 		}
 	}
 	
-	private void findUsernameEl() {
-		System.out.println("Finding username el");
+	private WebElement findElementViaOptimalStrategy(final Queue<LoginFormElementFindingStrategy> strats) {
+		WebElement toReturn = null;
+		lock.writeLock().lock();
+		final List<LoginFormElementFindingStrategy> attemptedStrats = new ArrayList<>();
 		try {
-			usernameEl = findElementNormal(By.id("email"));
-		} catch (Exception e) {
-			usernameEl = findElementNormal(By.id("txtLoginEmailID"));
+			while(!strats.isEmpty()) {
+				final LoginFormElementFindingStrategy strat = strats.poll();
+				attemptedStrats.add(strat);
+				toReturn = strat.apply(this);
+				if(toReturn != null) {
+					break;
+				}
+			}
+		} finally {
+			strats.addAll(attemptedStrats);
+			lock.writeLock().unlock();
 		}
-		System.out.println("Found username el.");
-	}
-	
-	private void findPasswordEl() {
-		System.out.println("Finding password el");
-		try {
-			passwordEl = findElementNormal(By.id("password"));
-		} catch (final Exception e) {
-			passwordEl = findElementNormal(By.id("txtLoginPwd"));
-		}
-		System.out.println("Found password el.");
-	}
-	
-	private void findButtonEl() {
-		System.out.println("Finding button el");
-		try {
-			buttonEl = findElementNormal(By.className("sc-btn-primary"));
-		} catch(final Exception e) {
-			buttonEl = findElementNormal(By.cssSelector("#signInButton"));
-		}
-		System.out.println("Found button el.");
+		return toReturn;
 	}
 
 	@Override
@@ -93,6 +104,15 @@ public class SamsClubWebDriver extends LoginWebDriver {
 	@Override
 	protected boolean verifyLoggedIn() {
 		try {
+			setImplicitWait(1);
+			try {
+				findElementNormal(By.className("sc-account-member-membership-title"));
+				return true;
+			} catch(final Exception e) {
+				//swallow
+			}
+			
+			resetImplicitWait();
 			get("https://www.samsclub.com/account");
 
 			//verify we logged in successfully
@@ -103,5 +123,35 @@ public class SamsClubWebDriver extends LoginWebDriver {
 		}
 
 		return false;
+	}
+	
+	private static class LoginFormElementFindingStrategy implements Function<LoginWebDriver, WebElement>, Comparable<LoginFormElementFindingStrategy> {
+		
+		private final Function<LoginWebDriver, WebElement> wrappedFunction;
+		
+		private int successes = 0;
+		
+		public LoginFormElementFindingStrategy(final Function<LoginWebDriver, WebElement> strategy) {
+			this.wrappedFunction = strategy;
+		}
+		
+		@Override
+		public WebElement apply(final LoginWebDriver driver) {
+			WebElement toReturn = null;
+			try {
+				toReturn = wrappedFunction.apply(driver);
+				successes++;
+			} catch(final Exception e) {
+				//swallow
+			}
+			
+			return toReturn;
+		}
+
+		@Override
+		public int compareTo(LoginFormElementFindingStrategy o) {
+			return o.successes - this.successes;
+		}
+		
 	}
 }

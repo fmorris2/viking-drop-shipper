@@ -184,7 +184,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		double productFees = 0D;
 		try {
 			driver.setImplicitWait(1);
-			final String productFeesStr = driver.findElement(By.cssSelector(".sc-channel-summary-total-product-fees .sc-channel-summary-total-price")).getText().replace("$", "");
+			final String productFeesStr = driver.findElementNormal(By.cssSelector(".sc-channel-summary-total-product-fees .sc-channel-summary-total-price")).getText().replace("$", "");
 			productFees = Double.parseDouble(productFeesStr);
 		} catch(final Exception e) {
 			//swallow
@@ -368,6 +368,8 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		if(nameParts.length == 1) { //sams club requires two words with a space between them.
 			normalizedName += " " + normalizedName;
 		}
+		
+		normalizedName = normalizedName.replace("`", "");
 		
 		return normalizedName;
 	}

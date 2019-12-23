@@ -42,6 +42,7 @@ public class FulfillmentListingCrawler {
 					bW.write(url);
 					bW.newLine();
 					bW.flush();
+					savedUrls.add(url);
 				}
 			} catch(final Exception e) {
 				e.printStackTrace();
