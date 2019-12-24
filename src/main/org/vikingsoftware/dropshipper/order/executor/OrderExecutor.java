@@ -41,7 +41,7 @@ public class OrderExecutor implements CycleParticipant {
 		final FulfillmentManager manager = FulfillmentManager.get();
 		try {
 			manager.prepareForFulfillment();
-	
+			
 			for(final CustomerOrder order : ordersToExecute) {
 				final List<FulfillmentListing> fulfillmentListings = manager.getListingsForOrder(order);
 				for(final FulfillmentListing listing : fulfillmentListings) {

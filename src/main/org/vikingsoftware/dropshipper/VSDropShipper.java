@@ -1,5 +1,8 @@
 package main.org.vikingsoftware.dropshipper;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
 import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayAccountActivityFees;
@@ -14,10 +17,10 @@ import main.org.vikingsoftware.dropshipper.pricing.margins.MarginAdjuster;
 public class VSDropShipper {
 
 	public static final String VS_PHONE_NUM = "9162450125";
+	private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
-	private static final CycleParticipant[] MODULES = {
+	private static final CycleParticipant[] MAIN_THREAD_MODULES = {
 		new OrderParser(),
-		new OrderExecutor(),
 		new MarginAdjuster(),
 		new InventoryUpdater(),
 		new OrderTracking(),
@@ -26,9 +29,36 @@ public class VSDropShipper {
 	};
 
 	public static void main(final String[] args) throws InterruptedException {
+		startConcurrentModules();
+		cycle();
+	}
+	
+	private static void startConcurrentModules() {
+		startOrderExecutionModule();
+	}
+	
+	private static void startOrderExecutionModule() {
+		final CycleParticipant orderExecutor = new OrderExecutor();
+		Executors.newSingleThreadExecutor().execute(() -> {
+			while(true) {
+				lock.writeLock().lock();
+				try {
+					if(orderExecutor.shouldCycle()) {
+						orderExecutor.cycle();
+					}
+				} catch(final Exception e) {
+					e.printStackTrace();
+				} finally {
+					lock.writeLock().unlock();
+				}
+			}
+		});
+	}
+	
+	private static void cycle() {
 		while(true) {
 			System.out.println("Cycling...");
-			for(final CycleParticipant module : MODULES) {
+			for(final CycleParticipant module : MAIN_THREAD_MODULES) {
 				if(!module.shouldCycle()) {
 					continue;
 				}
@@ -42,12 +72,15 @@ public class VSDropShipper {
 			}
 
 			try {
+				lock.writeLock().lock();
 				BrowserRepository.get().replaceAll();
 				LoginWebDriver.clearSessionCaches();
 				Runtime.getRuntime().exec("pkill -9 firefox");
 				Runtime.getRuntime().exec("pkill -9 geckodriver");
 			} catch(final Exception e) {
 				e.printStackTrace();
+			} finally {
+				lock.writeLock().unlock();
 			}
 		}
 	}
