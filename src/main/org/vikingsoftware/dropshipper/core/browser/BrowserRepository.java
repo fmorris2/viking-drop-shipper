@@ -1,7 +1,7 @@
 package main.org.vikingsoftware.dropshipper.core.browser;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.openqa.selenium.WebDriver;
 
@@ -16,7 +16,7 @@ public final class BrowserRepository {
 	private static BrowserRepository instance;
 	private static Object instanceLock = new Object();
 
-	private final Map<Class<? extends DriverSupplier<?>>, WebDriverQueue<? extends WebDriver>> queueCache = new ConcurrentHashMap<>();
+	private final Map<Class<? extends DriverSupplier<?>>, WebDriverQueue<? extends WebDriver>> queueCache = new HashMap<>();
 
 	private BrowserRepository() {
 		queueCache.put(AliExpressDriverSupplier.class, new WebDriverQueue<>(() -> new AliExpressDriverSupplier()));
@@ -48,14 +48,14 @@ public final class BrowserRepository {
 		return null;
 	}
 
-	public synchronized void relinquish(final DriverSupplier<?> supplier) {
+	public void relinquish(final DriverSupplier<?> supplier) {
 		final WebDriverQueue<?> queue = queueCache.get(supplier.getClass());
 		if(queue != null) {
 			queue.relinquish(supplier);
 		}
 	}
 
-	public synchronized void replace(final Class<? extends DriverSupplier<?>> supplierClass) {
+	public void replace(final Class<? extends DriverSupplier<?>> supplierClass) {
 		System.out.println("BrowserRepository#replace("+supplierClass+")");
 		final WebDriverQueue<?> queue = queueCache.get(supplierClass);
 		if(queue != null) {
@@ -64,7 +64,7 @@ public final class BrowserRepository {
 		}
 	}
 
-	public synchronized void replaceAll() {
+	public void replaceAll() {
 		System.out.println("Replacing all WebDrivers in BrowserRepository.");
 		for(final WebDriverQueue<? extends WebDriver> queue : queueCache.values()) {
 			queue.replaceAll();
