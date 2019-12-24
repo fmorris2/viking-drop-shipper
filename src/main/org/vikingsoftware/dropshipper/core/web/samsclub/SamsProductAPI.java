@@ -29,7 +29,7 @@ public final class SamsProductAPI {
 		final SamsProductAPI api = new SamsProductAPI();
 		api.parse("prod21220949");
 		System.out.println("Current Stock: " + api.getAvailableToSellQuantity().orElse(0));
-		System.out.println("Final Price: " + api.getFinalPrice().orElse(0D));
+		System.out.println("List Price: " + api.getListPrice().orElse(0D));
 		System.out.println("UPC: " + api.getUPC().orElse(null));
 		System.out.println("Passes all conditions: " + api.passesAllListingConditions());
 		System.out.println("\tisFreeShipping: " + api.isFreeShipping());
@@ -178,6 +178,17 @@ public final class SamsProductAPI {
 	public Optional<Double> getFinalPrice() {
 		if(onlinePricing.isPresent()) {
 			final JSONObject finalPriceObj = getJsonObj(onlinePricing.get(), "finalPrice");
+			if(finalPriceObj != null) {
+				return Optional.ofNullable(finalPriceObj.getDouble("currencyAmount"));
+			}
+		}
+		
+		return Optional.empty();
+	}
+	
+	public Optional<Double> getListPrice() {
+		if(onlinePricing.isPresent()) {
+			final JSONObject finalPriceObj = getJsonObj(onlinePricing.get(), "listPrice");
 			if(finalPriceObj != null) {
 				return Optional.ofNullable(finalPriceObj.getDouble("currencyAmount"));
 			}

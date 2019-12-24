@@ -79,7 +79,7 @@ public class SamsClubFulfillmentStockChecker extends AbstractFulfillmentStockChe
 				return -1;
 			}
 			
-			return api.getFinalPrice().orElse(-1D);
+			return api.getListPrice().orElse(-1D);
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
