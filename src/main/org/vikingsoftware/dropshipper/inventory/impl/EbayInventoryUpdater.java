@@ -54,14 +54,14 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 				final List<FulfillmentListing> fulfillmentListings = FulfillmentManager.get().getListingsForMarketplaceListing(listing.id);
 				for(final FulfillmentListing fulfillmentListing : fulfillmentListings) {
 					Collection<Pair<Integer,Double>> entries = new ArrayList<>();
-					if(FulfillmentManager.isFrozen(fulfillmentListing.fulfillment_platform_id)) {
-						System.out.println("Fulfillment platform is frozen for fulfillment listing " + fulfillmentListing.id
-								+ ". Setting stock to 0.");
-						entries.add(new Pair<Integer,Double>(0, 0D));
-					} else {
+					if(FulfillmentManager.canUpdateInventory(fulfillmentListing.fulfillment_platform_id)) {
 						System.out.println("Compiling inventory counts for fulfillment listing " + fulfillmentListing.id);
 						entries = //Collections.singletonList(new SkuInventoryEntry(null, 0));
 								FulfillmentStockManager.getStock(listing, fulfillmentListing).get();
+					} else {
+						System.out.println("Fulfillment platform inventory is frozen for fulfillment listing " + fulfillmentListing.id
+								+ ". Setting stock to 0.");
+						entries.add(new Pair<Integer,Double>(0, 0D));
 					}
 					System.out.println("SkuInventoryEntries: " + entries.size());
 					int totalStock = 0;

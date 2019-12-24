@@ -25,7 +25,8 @@ public class FulfillmentManager {
 	private static final int SAMS_SAFE_STOCK_THRESHOLD = 50;
 	private static final int SAMS_SAFE_NUM_ORDERS_THRESHOLD = 19;
 
-	private static final Set<Integer> frozenFulfillmentPlatforms = new HashSet<>();
+	private static final Set<Integer> canExecuteOrdersPlatforms = new HashSet<>();
+	private static final Set<Integer> canUpdateInventoryPlatforms = new HashSet<>();
 
 	private static FulfillmentManager instance;
 
@@ -49,16 +50,20 @@ public class FulfillmentManager {
 		return instance;
 	}
 
-	public static final boolean isFrozen(final int fulfillmentPlatformId) {
-		return frozenFulfillmentPlatforms.contains(fulfillmentPlatformId);
+	public static final boolean canExecuteOrders(final int fulfillmentPlatformId) {
+		return canExecuteOrdersPlatforms.contains(fulfillmentPlatformId);
+	}
+	
+	public static final boolean canUpdateInventory(final int fulfillmentPlatformId) {
+		return canUpdateInventoryPlatforms.contains(fulfillmentPlatformId);
 	}
 
-	public static void freeze(final int fulfillmentPlatformId) {
-		frozenFulfillmentPlatforms.add(fulfillmentPlatformId);
+	public static void disableOrderExecution(final int fulfillmentPlatformId) {
+		canExecuteOrdersPlatforms.add(fulfillmentPlatformId);
 		try (final Statement st = VSDSDBManager.get().createStatement()) {
-			st.execute("UPDATE fulfillment_platform SET frozen=1 WHERE id=" + fulfillmentPlatformId);
+			st.execute("UPDATE fulfillment_platform SET can_execute_orders=0 WHERE id=" + fulfillmentPlatformId);
 		} catch(final Exception e) {
-			DBLogging.critical(FulfillmentManager.class, "failed to freeze fulfillment platform " + fulfillmentPlatformId, e);
+			DBLogging.critical(FulfillmentManager.class, "failed to disable order execution for fulfillment platform " + fulfillmentPlatformId, e);
 		}
 	}
 	
@@ -87,7 +92,8 @@ public class FulfillmentManager {
 	}
 
 	public void load() {
-		frozenFulfillmentPlatforms.clear();
+		canExecuteOrdersPlatforms.clear();
+		canUpdateInventoryPlatforms.clear();
 		listings.clear();
 		platforms.clear();
 		loadValidFulfillmentListings();
@@ -243,12 +249,18 @@ public class FulfillmentManager {
 					.id(results.getInt("id"))
 					.platform_name(results.getString("platform_name"))
 					.platform_url(results.getString("platform_url"))
-					.frozen(results.getBoolean("frozen"))
+					.can_execute_orders(results.getBoolean("can_execute_orders"))
+					.can_update_inventory(results.getBoolean("can_update_inventory"))
 					.build();
 
-				if(platform.frozen) {
-					frozenFulfillmentPlatforms.add(platform.id);
+				if(platform.can_execute_orders) {
+					canExecuteOrdersPlatforms.add(platform.id);
 				}
+				
+				if(platform.can_update_inventory) {
+					canUpdateInventoryPlatforms.add(platform.id);
+				}
+				
 				platforms.put(platform.id, platform);
 			}
 		} catch(final SQLException e) {

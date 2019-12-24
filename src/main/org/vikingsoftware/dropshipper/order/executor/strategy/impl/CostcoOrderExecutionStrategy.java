@@ -435,7 +435,7 @@ public class CostcoOrderExecutionStrategy extends AbstractOrderExecutionStrategy
 			DBLogging.critical(getClass(), "failed to submit order: " + builder.build(), e);
 			//THIS IS VERY VERY BAD!!! COSTCO MIGHT HAVE CHANGED THEIR FRONT END? WE SHOULD NO LONGER PROCESS ORDERS
 			//AND WE SHOULD NOTIFY DEVELOPERS IMMEDIATELY
-			FulfillmentManager.freeze(FulfillmentPlatforms.COSTCO.getId());
+			FulfillmentManager.disableOrderExecution(FulfillmentPlatforms.COSTCO.getId());
 			System.out.println("Submitted an order, but we failed to parse whether it was a success or not. Freezing orders...");
 		}
 

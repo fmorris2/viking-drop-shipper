@@ -46,7 +46,7 @@ public class OrderExecutor implements CycleParticipant {
 				final List<FulfillmentListing> fulfillmentListings = manager.getListingsForOrder(order);
 				for(final FulfillmentListing listing : fulfillmentListings) {
 					
-					if(FulfillmentManager.isFrozen(listing.fulfillment_platform_id)) {
+					if(!FulfillmentManager.canExecuteOrders(listing.fulfillment_platform_id)) {
 						System.out.println("Fulfillment manager " + manager + " is frozen.");
 						continue;
 					}

@@ -257,7 +257,7 @@ public class AliExpressOrderExecutionStrategy implements OrderExecutionStrategy 
 
 		//THIS IS VERY VERY BAD!!! ALIEXPRESS MIGHT HAVE CHANGED THEIR FRONT END? WE SHOULD NO LONGER PROCESS ORDERS
 		//AND WE SHOULD NOTIFY DEVELOPERS IMMEDIATELY
-		FulfillmentManager.freeze(FulfillmentPlatforms.ALI_EXPRESS.getId());
+		FulfillmentManager.disableOrderExecution(FulfillmentPlatforms.ALI_EXPRESS.getId());
 		System.out.println("Submitted an order, but we failed to parse whether it was a success or not. Freezing orders...");
 
 		return builder.build();
