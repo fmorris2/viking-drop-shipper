@@ -26,6 +26,10 @@ public class OrderExecutor implements CycleParticipant {
 	public static boolean hasBeenFulfilled(final int customerOrderId) {
 		return successfullyFulfilledOrders.containsKey(customerOrderId);
 	}
+	
+	public static void main(final String[] args) {
+		new OrderExecutor().cycle();
+	}
 
 	@Override
 	public void cycle() {

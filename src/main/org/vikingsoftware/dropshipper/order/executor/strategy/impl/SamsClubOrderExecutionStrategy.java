@@ -148,9 +148,10 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			throw new OrderExecutionException("Confirmation screen details does not contain buyer name: " + detailsStr + " != " + getNormalizedName(order.normalizedBuyerName).toLowerCase());
 		}
 
-		final String truncatedAdd = order.buyer_street_address.length() > ADDRESS_CHARACTER_LIMIT 
+		String truncatedAdd = order.buyer_street_address.length() > ADDRESS_CHARACTER_LIMIT 
 				? order.buyer_street_address.substring(0, ADDRESS_CHARACTER_LIMIT)
 				: order.buyer_street_address;
+		truncatedAdd = truncatedAdd.replaceAll("\\s{2,}", " ");
 				
 		if(!detailsStr.contains(truncatedAdd.toLowerCase())) {
 			throw new OrderExecutionException("Confirmation screen street address != order street address: "
@@ -370,7 +371,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			normalizedName += " " + normalizedName;
 		}
 		
-		normalizedName = normalizedName.replace("`", "");
+		normalizedName = normalizedName.replace("`", "").replace("'", "");
 		
 		return normalizedName;
 	}

@@ -1,6 +1,7 @@
 package main.org.vikingsoftware.dropshipper.core.web;
 
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 
 import org.openqa.selenium.WebDriver;
@@ -12,6 +13,7 @@ public class WebDriverQueue<T extends WebDriver> {
 	protected final LinkedBlockingDeque<DriverSupplier<T>> webDrivers;
 
 	private final Supplier<DriverSupplier<T>> driverSupplier;
+	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
 
 	public WebDriverQueue(final Supplier<DriverSupplier<T>> driverSupplier) {
 
@@ -31,13 +33,16 @@ public class WebDriverQueue<T extends WebDriver> {
 		}
 	}
 
-	public synchronized DriverSupplier<T> request() {
+	public DriverSupplier<T> request() {
+		lock.writeLock().lock();
 		try {
 			final DriverSupplier<T> supp = webDrivers.take();
 			System.out.println("Request " + supp + " on " + this + ": There are now " + webDrivers.size() + " drivers in the queue");
 			return supp;
 		} catch (final InterruptedException e) {
 			e.printStackTrace();
+		} finally {
+			lock.writeLock().unlock();
 		}
 
 		return null;

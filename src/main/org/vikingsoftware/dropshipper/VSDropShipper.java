@@ -17,7 +17,9 @@ import main.org.vikingsoftware.dropshipper.pricing.margins.MarginAdjuster;
 public class VSDropShipper {
 
 	public static final String VS_PHONE_NUM = "9162450125";
-	private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+	
+	private static final long ORDER_EXECUTOR_CYCLE_TIME = 60_000 * 2;
+	private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
 
 	private static final CycleParticipant[] MAIN_THREAD_MODULES = {
 		new OrderParser(),
@@ -46,6 +48,7 @@ public class VSDropShipper {
 					if(orderExecutor.shouldCycle()) {
 						orderExecutor.cycle();
 					}
+					Thread.sleep(ORDER_EXECUTOR_CYCLE_TIME);
 				} catch(final Exception e) {
 					e.printStackTrace();
 				} finally {
