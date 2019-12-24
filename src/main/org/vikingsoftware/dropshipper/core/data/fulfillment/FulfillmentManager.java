@@ -21,7 +21,7 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutio
 
 public class FulfillmentManager {
 	
-	private static final long SAMS_ORDER_BATCH_WINDOW = (60_000 * 60) * 24 * 2; //2 days
+	private static final long SAMS_ORDER_BATCH_WINDOW = (60_000 * 60) * 24 * 3; //2 days
 	private static final int SAMS_SAFE_STOCK_THRESHOLD = 50;
 	private static final int SAMS_SAFE_NUM_ORDERS_THRESHOLD = 19;
 
