@@ -37,7 +37,7 @@ public class FillTransactionTable {
 		System.out.println("Loaded " + orderTransactions.size() + " eBay transactions.");
 		insertOrderTransactions(orderTransactions);
 		
-		insertAllAccountTransactions(120);
+		//insertAllAccountTransactions(120);
 	}
 	
 	public static List<TransactionType> getAllOrderTransactions() {
@@ -178,8 +178,8 @@ public class FillTransactionTable {
 					.date(transaction.getPaidTime().toInstant().toEpochMilli())
 					.build();
 			
-			final Transaction marketplaceSellFeeTransaction = new Transaction.Builder()
-					.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.MARKETPLACE_SELL_FEE)
+			final Transaction paymentProcessorFeeTransaction = new Transaction.Builder()
+					.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.PAYMENT_PROCESSOR_FEE)
 					.amount((float)initialBuyerPayment.getFeeOrCreditAmount().getValue() * -1)
 					.marketplace_listing_id(marketplaceListingId)
 					.customer_order_id(customerOrderId)
@@ -187,8 +187,18 @@ public class FillTransactionTable {
 					.date(initialBuyerPayment.getPaymentTime().toInstant().toEpochMilli())
 					.build();
 			
+			final Transaction finalValueFeeTransaction = new Transaction.Builder()
+					.type(main.org.vikingsoftware.dropshipper.core.data.transaction.TransactionType.MARKETPLACE_SELL_FEE)
+					.amount((float)transaction.getFinalValueFee().getValue() * -1)
+					.marketplace_listing_id(marketplaceListingId)
+					.customer_order_id(customerOrderId)
+					.processed_order_id(processedOrderId)
+					.date(transaction.getPaidTime().toInstant().toEpochMilli())
+					.build();
+			
 			TransactionUtils.insertTransaction(marketplaceIncomeTransaction);
-			TransactionUtils.insertTransaction(marketplaceSellFeeTransaction);
+			TransactionUtils.insertTransaction(paymentProcessorFeeTransaction);
+			TransactionUtils.insertTransaction(finalValueFeeTransaction);
 		}
 	}
 }

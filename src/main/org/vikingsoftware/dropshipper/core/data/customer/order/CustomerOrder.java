@@ -35,6 +35,8 @@ public class CustomerOrder {
 	public final boolean is_cancelled;
 	
 	public final Double marketplace_sell_fee;
+	public final Double payment_processor_fee;
+	public final Long payment_processor_fee_date;
 
 	private CustomerOrder(final Builder builder) {
 		this.id = builder.id;
@@ -67,6 +69,8 @@ public class CustomerOrder {
 		this.date_cancelled = builder.date_cancelled;
 		this.is_cancelled = builder.is_cancelled;
 		this.marketplace_sell_fee = builder.marketplace_sell_fee;
+		this.payment_processor_fee = builder.payment_processor_fee;
+		this.payment_processor_fee_date = builder.payment_processor_fee_date;
 		this.handling_time = builder.handling_time;
 	}
 	
@@ -111,6 +115,8 @@ public class CustomerOrder {
 		private boolean is_cancelled;
 		
 		private Double marketplace_sell_fee;
+		private Double payment_processor_fee;
+		private Long payment_processor_fee_date;
 
 		public Builder id(final int id) {
 			this.id = id;
@@ -224,6 +230,16 @@ public class CustomerOrder {
 		
 		public Builder marketplace_sell_fee(final double fee) {
 			this.marketplace_sell_fee = fee;
+			return this;
+		}
+		
+		public Builder payment_processor_fee(final double fee) {
+			this.payment_processor_fee = fee;
+			return this;
+		}
+		
+		public Builder payment_processor_fee_date(final long date) {
+			this.payment_processor_fee_date = date;
 			return this;
 		}
 		

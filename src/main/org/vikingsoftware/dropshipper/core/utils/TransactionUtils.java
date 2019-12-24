@@ -22,7 +22,7 @@ public final class TransactionUtils {
 		//utils classes need not be instantiated
 	}
 	
-	public static boolean insertTransactionsForCustomerOrder(final float marketplaceSellFee, final CustomerOrder order) {		
+	public static boolean insertTransactionsForCustomerOrder(final CustomerOrder order) {		
 		try {		
 			final Transaction marketplaceIncomeTransaction = new Transaction.Builder()
 					.type(TransactionType.MARKETPLACE_INCOME)
@@ -32,16 +32,34 @@ public final class TransactionUtils {
 					.date(order.date_parsed)
 					.build();
 			
-			final Transaction marketplaceSellFeeTransaction = new Transaction.Builder()
-					.type(TransactionType.MARKETPLACE_SELL_FEE)
-					.amount(marketplaceSellFee)
+			boolean successfullyInsertedPaymentProcessorFee = true;
+			if(order.payment_processor_fee != null && order.payment_processor_fee > 0 && order.payment_processor_fee_date != null) {
+				final Transaction trans = new Transaction.Builder()
+					.type(TransactionType.PAYMENT_PROCESSOR_FEE)
+					.amount(order.payment_processor_fee.floatValue())
 					.customer_order_id(order.id)
 					.marketplace_listing_id(order.marketplace_listing_id)
-					.date(order.date_parsed)
+					.date(order.payment_processor_fee_date)
 					.build();
+				
+				successfullyInsertedPaymentProcessorFee = TransactionUtils.insertTransaction(trans);
+			}
+			
+			boolean successfullyInsertedMarketplaceFee = true;
+			if(order.marketplace_sell_fee != null && order.marketplace_sell_fee > 0) {
+				final Transaction trans = new Transaction.Builder()
+						.type(TransactionType.MARKETPLACE_SELL_FEE)
+						.amount(order.marketplace_sell_fee.floatValue())
+						.customer_order_id(order.id)
+						.marketplace_listing_id(order.marketplace_listing_id)
+						.date(order.date_parsed)
+						.build();
+					
+				successfullyInsertedMarketplaceFee = TransactionUtils.insertTransaction(trans);
+			}
 			
 			return TransactionUtils.insertTransaction(marketplaceIncomeTransaction)
-			   && TransactionUtils.insertTransaction(marketplaceSellFeeTransaction);
+			   && successfullyInsertedPaymentProcessorFee && successfullyInsertedMarketplaceFee;
 		} catch(final Exception e) {
 			e.printStackTrace();
 			DBLogging.critical(TransactionUtils.class, "Failed to insert transactions for new customer order " + order.id, e);
@@ -111,6 +129,7 @@ public final class TransactionUtils {
 				st.setLong(6, transaction.date);
 				st.setString(7, transaction.notes);
 				
+				System.out.println("Inserting transaction of type " + transaction.type + " of amount " + transaction.amount);
 				st.execute();
 				return true;
 			} catch(final Exception e) {

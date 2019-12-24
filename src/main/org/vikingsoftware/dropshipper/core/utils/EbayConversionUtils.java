@@ -47,7 +47,9 @@ public class EbayConversionUtils {
 				.buyer_zip_postal_code(addr.getPostalCode())
 				.buyer_phone_number(addr.getPhone())
 				.date_parsed(transaction.getPaidTime().toInstant().toEpochMilli())
-				.marketplace_sell_fee((float)initialBuyerPayment.getFeeOrCreditAmount().getValue() * -1)
+				.payment_processor_fee_date(initialBuyerPayment.getPaymentTime().toInstant().toEpochMilli())
+				.payment_processor_fee(initialBuyerPayment.getFeeOrCreditAmount().getValue() * -1)
+				.marketplace_sell_fee(transaction.getFinalValueFee().getValue() * -1)
 				.handling_time(handlingTime)
 				.build();
 		} catch(final Exception e) {
