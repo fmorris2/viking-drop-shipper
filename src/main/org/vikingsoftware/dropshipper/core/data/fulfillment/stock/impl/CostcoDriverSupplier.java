@@ -8,7 +8,7 @@ public class CostcoDriverSupplier extends DriverSupplier<CostcoWebDriver> {
 	private CostcoWebDriver driver = null;
 
 	@Override
-	public CostcoWebDriver get() {
+	public CostcoWebDriver internalGet() {
 		if(driver == null) {
 			driver = new CostcoWebDriver();
 		}

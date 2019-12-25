@@ -8,7 +8,7 @@ public class AliExpressDriverSupplier extends DriverSupplier<AliExpressWebDriver
 	private AliExpressWebDriver driver = null;
 
 	@Override
-	public AliExpressWebDriver get() {
+	public AliExpressWebDriver internalGet() {
 		if(driver == null) {
 			driver = new AliExpressWebDriver();
 		}

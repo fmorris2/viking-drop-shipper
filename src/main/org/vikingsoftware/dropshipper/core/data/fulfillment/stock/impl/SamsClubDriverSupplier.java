@@ -8,7 +8,7 @@ public class SamsClubDriverSupplier extends DriverSupplier<SamsClubWebDriver> {
 	private SamsClubWebDriver driver = null;
 
 	@Override
-	public SamsClubWebDriver get() {
+	public SamsClubWebDriver internalGet() {
 		if(driver == null) {
 			driver = new SamsClubWebDriver();
 		}

@@ -1,7 +1,7 @@
 package main.org.vikingsoftware.dropshipper.core.browser;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.openqa.selenium.WebDriver;
@@ -18,7 +18,7 @@ public final class BrowserRepository {
 	
 	private static BrowserRepository instance;
 
-	private final Map<Class<? extends DriverSupplier<?>>, WebDriverQueue<? extends WebDriver>> queueCache = new HashMap<>();
+	private final Map<Class<? extends DriverSupplier<?>>, WebDriverQueue<? extends WebDriver>> queueCache = new ConcurrentHashMap<>();
 	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
 	
 	private BrowserRepository() {

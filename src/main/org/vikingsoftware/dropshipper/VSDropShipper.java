@@ -48,11 +48,16 @@ public class VSDropShipper {
 					if(orderExecutor.shouldCycle()) {
 						orderExecutor.cycle();
 					}
-					Thread.sleep(ORDER_EXECUTOR_CYCLE_TIME);
 				} catch(final Exception e) {
 					e.printStackTrace();
 				} finally {
 					lock.writeLock().unlock();
+				}
+				
+				try {
+					Thread.sleep(ORDER_EXECUTOR_CYCLE_TIME);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
 			}
 		});
