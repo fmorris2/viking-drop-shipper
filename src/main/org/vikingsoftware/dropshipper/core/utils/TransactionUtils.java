@@ -33,7 +33,7 @@ public final class TransactionUtils {
 					.build();
 			
 			boolean successfullyInsertedPaymentProcessorFee = true;
-			if(order.payment_processor_fee != null && order.payment_processor_fee > 0 && order.payment_processor_fee_date != null) {
+			if(order.payment_processor_fee != null && order.payment_processor_fee < 0 && order.payment_processor_fee_date != null) {
 				final Transaction trans = new Transaction.Builder()
 					.type(TransactionType.PAYMENT_PROCESSOR_FEE)
 					.amount(order.payment_processor_fee.floatValue())
@@ -46,7 +46,7 @@ public final class TransactionUtils {
 			}
 			
 			boolean successfullyInsertedMarketplaceFee = true;
-			if(order.marketplace_sell_fee != null && order.marketplace_sell_fee > 0) {
+			if(order.marketplace_sell_fee != null && order.marketplace_sell_fee < 0) {
 				final Transaction trans = new Transaction.Builder()
 						.type(TransactionType.MARKETPLACE_SELL_FEE)
 						.amount(order.marketplace_sell_fee.floatValue())
