@@ -5,6 +5,7 @@ import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayAccountActivityFees;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 import main.org.vikingsoftware.dropshipper.inventory.InventoryUpdater;
+import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
 import main.org.vikingsoftware.dropshipper.order.parser.OrderParser;
 import main.org.vikingsoftware.dropshipper.order.tracking.OrderTracking;
 import main.org.vikingsoftware.dropshipper.order.tracking.history.TrackingHistoryUpdater;
@@ -16,6 +17,7 @@ public class VSDropShipper {
 	
 	private static final CycleParticipant[] MAIN_THREAD_MODULES = {
 		new OrderParser(),
+		new OrderExecutor(),
 		new InventoryUpdater(),
 		new MarginAdjuster(),
 		new InventoryUpdater(),
