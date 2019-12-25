@@ -117,6 +117,39 @@ public class CustomerOrder {
 		private Double marketplace_sell_fee;
 		private Double payment_processor_fee;
 		private Long payment_processor_fee_date;
+		
+		public Builder() {
+			
+		}
+		
+		public Builder(final CustomerOrder clone) {
+			this.id = clone.id;
+			this.marketplace_listing_id = clone.marketplace_listing_id;
+			this.sku = clone.sku;
+			this.sell_listing_price = clone.sell_listing_price;
+			this.sell_shipping = clone.sell_shipping;
+			this.sell_percentage_cut = clone.sell_percentage_cut;
+			this.sell_total = clone.sell_total;
+			this.quantity = clone.quantity;
+			this.fulfillment_purchase_quantity = clone.fulfillment_purchase_quantity;
+			this.handling_time = clone.handling_time;
+			this.marketplace_order_id = clone.marketplace_order_id;
+			this.buyer_username = clone.buyer_username;
+			this.buyer_name = clone.buyer_name;
+			this.buyer_country = clone.buyer_country;
+			this.buyer_street_address = clone.buyer_street_address;
+			this.buyer_apt_suite_unit_etc = clone.buyer_apt_suite_unit_etc;
+			this.buyer_state_province_region = clone.buyer_state_province_region;
+			this.buyer_city = clone.buyer_city;
+			this.buyer_zip_postal_code = clone.buyer_zip_postal_code;
+			this.buyer_phone_number = clone.buyer_phone_number;
+			this.date_parsed = clone.date_parsed;
+			this.date_cancelled = clone.date_cancelled;
+			this.is_cancelled = clone.is_cancelled;
+			this.marketplace_sell_fee = clone.marketplace_sell_fee;
+			this.payment_processor_fee = clone.payment_processor_fee;
+			this.payment_processor_fee_date = clone.payment_processor_fee_date;
+		}
 
 		public Builder id(final int id) {
 			this.id = id;

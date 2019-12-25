@@ -73,11 +73,17 @@ public class OrderParser implements CycleParticipant {
 			for(final CustomerOrder newOrder : newOrders) {
 				final Optional<CustomerOrder> orderWithId = CustomerOrderManager.loadCustomerOrderByMarketplaceOrderId(newOrder.marketplace_order_id);
 				orderWithId.ifPresent(order -> {
+					//needed to preserve some of the data parsed in the OrderParser, but not stored in the CustomerOrder table.
+					//example: payment processor fee (which will be put in the transaction table, and has nothing to do with the CustomerOrder row)
+					final CustomerOrder fullyBuilt = new CustomerOrder.Builder(newOrder)
+							.id(order.id)
+							.build();
+					
 					System.out.println("decrementing current ebay inventory for marketplace listing id: " + order.marketplace_listing_id);
 					MarketplaceListing.decrementCurrentEbayInventory(order.marketplace_listing_id);
 					
 					System.out.println("inserting marketplace income & marketplace sell-fee transactions for customer order w/ order id " + order.marketplace_order_id);
-					TransactionUtils.insertTransactionsForCustomerOrder(order);
+					TransactionUtils.insertTransactionsForCustomerOrder(fullyBuilt);
 				});
 				
 			}
