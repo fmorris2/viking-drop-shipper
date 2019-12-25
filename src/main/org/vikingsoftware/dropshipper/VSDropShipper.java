@@ -60,30 +60,34 @@ public class VSDropShipper {
 	
 	private static void cycle() {
 		while(true) {
-			System.out.println("Cycling...");
-			for(final CycleParticipant module : MAIN_THREAD_MODULES) {
-				if(!module.shouldCycle()) {
-					continue;
+			try {
+				System.out.println("Cycling...");
+				for(final CycleParticipant module : MAIN_THREAD_MODULES) {
+					if(!module.shouldCycle()) {
+						continue;
+					}
+					System.out.println("Executing module: " + module);
+					try {
+						module.cycle();
+					} catch(final Exception e) {
+						e.printStackTrace();
+						System.out.println("Failed to execute module: " + module);
+					}
 				}
-				System.out.println("Executing module: " + module);
+	
 				try {
-					module.cycle();
+					lock.writeLock().lock();
+					BrowserRepository.get().replaceAll();
+					LoginWebDriver.clearSessionCaches();
+					Runtime.getRuntime().exec("pkill -9 firefox");
+					Runtime.getRuntime().exec("pkill -9 geckodriver");
 				} catch(final Exception e) {
 					e.printStackTrace();
-					System.out.println("Failed to execute module: " + module);
+				} finally {
+					lock.writeLock().unlock();
 				}
-			}
-
-			try {
-				lock.writeLock().lock();
-				BrowserRepository.get().replaceAll();
-				LoginWebDriver.clearSessionCaches();
-				Runtime.getRuntime().exec("pkill -9 firefox");
-				Runtime.getRuntime().exec("pkill -9 geckodriver");
 			} catch(final Exception e) {
 				e.printStackTrace();
-			} finally {
-				lock.writeLock().unlock();
 			}
 		}
 	}
