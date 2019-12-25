@@ -14,6 +14,7 @@ import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 public class DBLogging {
 
 	private static final LogLevel SEND_TO_DB_LEVEL = LogLevel.HIGH;
+	private static final int MAX_EXCEPTION_LENGTH = 2300;
 	
 	private static final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 	private static final Queue<LogMessage> messageQueue = new ConcurrentLinkedQueue<>();
@@ -79,6 +80,10 @@ public class DBLogging {
 		final StringWriter sw = new StringWriter();
 		final PrintWriter pw = new PrintWriter(sw);
 		e.printStackTrace(pw);
+		String str = sw.toString();
+		if(str.length() > MAX_EXCEPTION_LENGTH) {
+			str = str.substring(0, MAX_EXCEPTION_LENGTH);
+		}
 		return sw.toString();
 	}
 

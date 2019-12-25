@@ -34,7 +34,7 @@ public class TestCostcoOrderExecutionStrategy {
 		Assert.assertNotNull(listing);
 
 		for(int i = 0; i < NUM_ITERATIONS; i++) {
-			final FulfillmentAccount account = FulfillmentAccountManager.get().getAndRotateEnabledAccount(FulfillmentPlatforms.COSTCO);
+			final FulfillmentAccount account = FulfillmentAccountManager.get().peekEnabledAccount(FulfillmentPlatforms.COSTCO);
 			Assert.assertTrue(strategy.order(customerOrder, account, listing).fulfillment_transaction_id != null);
 		}
 		strategy.finishExecution();

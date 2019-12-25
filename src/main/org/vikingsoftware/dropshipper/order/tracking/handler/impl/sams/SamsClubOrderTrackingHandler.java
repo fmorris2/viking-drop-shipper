@@ -1,5 +1,6 @@
 package main.org.vikingsoftware.dropshipper.order.tracking.handler.impl.sams;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,8 +45,13 @@ public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<S
 		driver.savePageSource();
 
 		driver.setImplicitWait(1);
-		final WebElement shippedEl = driver.findElement(By.className("sc-account-online-order-details-tracking-info"));
-		final WebElement trackingNumEl = shippedEl.findElements(By.cssSelector("a[href*=\"samsclub.com/tracking\"")).stream().filter(el -> {
+		final WebElement shippedEl = driver.findElementNormal(By.className("sc-account-online-order-details-tracking-info"));
+		final List<WebElement> trackingNumEls = shippedEl.findElements(By.cssSelector("a[href*=\"samsclub.com/tracking\""));
+		if(trackingNumEls == null) {
+			return null;
+		}
+		
+		final WebElement trackingNumEl = trackingNumEls.stream().filter(el -> {
 			try {
 				final String href = el.getAttribute("href");
 				if(href != null) {
@@ -58,6 +64,7 @@ public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<S
 
 			return false;
 		}).findFirst().orElse(null);
+		
 		driver.resetImplicitWait();
 
 		String trackingNum = null;

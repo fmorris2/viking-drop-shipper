@@ -17,6 +17,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.Sams
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
+import main.org.vikingsoftware.dropshipper.order.executor.error.OrderExecutionException;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutionStrategy;
 
 public class FulfillmentManager {
@@ -78,6 +79,11 @@ public class FulfillmentManager {
 	private boolean shouldFulfillSamsClubOrder(final CustomerOrder order, final FulfillmentListing listing) {
 		//TODO MODIFY LOGIC TO ACCOUNT FOR MULTIPLE SAMS CLUB ACCOUNTS?
 		final FulfillmentAccount acc = FulfillmentAccountManager.get().peekEnabledAccount(FulfillmentPlatforms.SAMS_CLUB);
+		if(acc == null) {
+			System.out.println("There are currently no enabled sams club accounts.");
+			return false;
+		}
+		
 		final int numOrders = FulfillmentAccountManager.get().getNumProcessedOrdersForAccount(acc.id);
 		final boolean failsSafeOrderThreshold = numOrders > SAMS_SAFE_NUM_ORDERS_THRESHOLD;
 		final boolean failsTimeWindowThreshold = order.date_parsed < System.currentTimeMillis() - SAMS_ORDER_BATCH_WINDOW;
@@ -121,7 +127,10 @@ public class FulfillmentManager {
 		final FulfillmentPlatforms applicablePlatform = FulfillmentPlatforms.getById(listing.fulfillment_platform_id);
 		System.out.println("Applicable fulfillment platform for order " + order.id + ": " + applicablePlatform);
 		final OrderExecutionStrategy strategy = strategies.get(applicablePlatform);
-		final FulfillmentAccount account = FulfillmentAccountManager.get().getAndRotateEnabledAccount(applicablePlatform);
+		final FulfillmentAccount account = FulfillmentAccountManager.get().peekEnabledAccount(applicablePlatform);
+		if(account == null) {
+			throw new OrderExecutionException("There are currently no enabled accounts for fulfillment platform " + applicablePlatform);
+		}
 		return strategy.order(order, account, listing);
 	}
 
