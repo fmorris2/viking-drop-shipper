@@ -13,6 +13,7 @@ import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
@@ -26,6 +27,7 @@ import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsProductAPI;
 import main.org.vikingsoftware.dropshipper.order.executor.OrderExecutor;
+import main.org.vikingsoftware.dropshipper.order.executor.error.FatalOrderExecutionException;
 import main.org.vikingsoftware.dropshipper.order.executor.error.OrderExecutionException;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.AbstractOrderExecutionStrategy;
 
@@ -55,6 +57,9 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 	private ProcessedOrder orderItem(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws InterruptedException {
 		System.out.println("Getting listing url: " + fulfillmentListing.listing_url);
+		//rakuten test
+		driver.get("https://www.samsclub.com/?pid=_Aff_LS&siteID=AysPbYF8vuM-_xxRlVgh.wbES7nekckO5w&ranMID=38733&ranEAID=AysPbYF8vuM&ranSiteID=AysPbYF8vuM-_xxRlVgh.wbES7nekckO5w&pubNAME=Ebates.com");
+		
 		driver.get(fulfillmentListing.listing_url);
 		
 		productApi.parse(fulfillmentListing.product_id);
@@ -100,17 +105,17 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		System.out.println("Placing order...");
 		try {
 			return finalizeOrder(order, listing, pricingDetails);
-		} catch(final Exception e) {
+		} catch(final FatalOrderExecutionException e) {
 			DBLogging.critical(getClass(), "Failed to submit customer order with id: " + order.id, e);
 			System.out.println("submitting the order failed...");
+			
+			//THIS IS VERY VERY BAD!!! SAMS CLUB MIGHT HAVE CHANGED THEIR FRONT END? WE SHOULD NO LONGER PROCESS ORDERS
+			//AND WE SHOULD NOTIFY DEVELOPERS IMMEDIATELY
+			FulfillmentManager.disableOrderExecution(FulfillmentPlatforms.SAMS_CLUB.getId());
+			System.out.println("Submitted an order, but we failed to parse whether it was a success or not. Freezing orders...");
+			throw new OrderExecutionException("Failed to parse submitted order: " + order.id + ". Ended up on URL: "
+					+ driver.getCurrentUrl());
 		}
-
-		//THIS IS VERY VERY BAD!!! SAMS CLUB MIGHT HAVE CHANGED THEIR FRONT END? WE SHOULD NO LONGER PROCESS ORDERS
-		//AND WE SHOULD NOTIFY DEVELOPERS IMMEDIATELY
-		FulfillmentManager.disableOrderExecution(FulfillmentPlatforms.SAMS_CLUB.getId());
-		System.out.println("Submitted an order, but we failed to parse whether it was a success or not. Freezing orders...");
-		throw new OrderExecutionException("Failed to parse submitted order: " + order.id + ". Ended up on URL: "
-				+ driver.getCurrentUrl());
 	}
 
 	private SamsPricingDetails verifyConfirmationDetails(final CustomerOrder order, final FulfillmentListing listing) {
@@ -175,13 +180,6 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		final String total = driver.findElement(By.cssSelector(".sc-channel-summary-total-total .sc-channel-summary-total-price")).getText().replace("$", "");
 		System.out.println("\tTotal fulfillment price: " + total);
 		final double convertedTotal = Double.parseDouble(total);
-		final DecimalFormat df = new DecimalFormat("###.##");
-		System.out.println("\tProfit: " + df.format(order.getProfit(convertedTotal)));
-		final double profit = order.getProfit(convertedTotal);
-		if(!shouldDisregardProfit(order) && profit < 0) {
-			throw new OrderExecutionException("WARNING! POTENTIAL FULFILLMENT AT LOSS FOR FULFILLMENT ID " + listing.id
-					+ "! PROFIT: $" + profit);
-		}
 		
 		double productFees = 0D;
 		try {
@@ -224,6 +222,18 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 				salesTax = Double.parseDouble(rowContent.replace("$", ""));
 			}
 		}
+		
+		if(shipping > 0) {
+			flagAccountLostFreeShipping();
+		}
+		
+		final DecimalFormat df = new DecimalFormat("###.##");
+		System.out.println("\tProfit: " + df.format(order.getProfit(pricingDetails.total)));
+		final double profit = order.getProfit(pricingDetails.total);
+		if(!shouldDisregardProfit(order) && profit < 0) {
+			throw new OrderExecutionException("WARNING! POTENTIAL FULFILLMENT AT LOSS FOR FULFILLMENT ID " + listing.id
+					+ "! PROFIT: $" + profit);
+		}
 
 		System.out.println("Payment details:");
 		System.out.println("\tSubtotal: " + subtotal);
@@ -255,7 +265,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			System.out.println("orderNum: " + orderNum);
 			
 			if(orderNum == null) {
-				throw new OrderExecutionException("Failed to parse order num from Sams Club receipt page!");
+				throw new FatalOrderExecutionException("Failed to parse order num from Sams Club receipt page!");
 			}
 			
 			driver.clearSession();
@@ -286,7 +296,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		driver.setImplicitWait(5);
 		System.out.println("current url: " + driver.getCurrentUrl());
 		try {
-		driver.findElement(By.cssSelector(".sc-shipping-address-change > span:nth-child(1)"));
+		driver.findElementNormal(By.cssSelector(".sc-shipping-address-change > span:nth-child(1)"));
 		} catch(final NoSuchElementException e) {
 			try {
 				driver.js("document.querySelector(\".sc-btn-secondary > span:nth-child(1)\").click();");
@@ -309,7 +319,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		}
 		System.out.println("\tdone.");
 		System.out.println("Clicking edit on preferred address...");
-		driver.findElement(By.cssSelector("button.sc-address-card-edit-action:nth-child(1) > span:nth-child(1)"));
+		driver.findElementNormal(By.cssSelector("button.sc-address-card-edit-action:nth-child(1) > span:nth-child(1)"));
 		driver.js("document.querySelector(\"button.sc-address-card-edit-action:nth-child(1) > span:nth-child(1)\").click();");
 		System.out.println("\tdone.");
 		
@@ -487,6 +497,11 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			throw new OrderExecutionException("Wrong item ID in cart: " + itemNumStrParts[itemNumStrParts.length - 1] + " != " + listing.item_id);
 		}
 		System.out.println("\tdone.");
+		
+		System.out.println("Verifying we have free shipping...");
+		if(!hasFreeShippingInCart()) {
+			flagAccountLostFreeShipping();
+		}
 
 		System.out.println("Verifying price...");
 		//verify price!
@@ -496,7 +511,22 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 					+ "! PROFIT: $" + order.getProfit(total));
 		}
 		System.out.println("\tdone.");
-
+	}
+	
+	private void flagAccountLostFreeShipping() {
+		FulfillmentAccountManager.get().markAccountAsDisabled(account);
+		throw new OrderExecutionException("Sam's Club Account has lost free shipping: " + account);
+	}
+	
+	private boolean hasFreeShippingInCart() {
+		final String shippingText = driver.findElement(By.id("nc-v2-est-shipping")).getText();
+		System.out.println("Shipping text: " + shippingText);
+		if(shippingText.equalsIgnoreCase("free") || shippingText.equalsIgnoreCase("--")) {
+			return true;
+		}
+		
+		final double shipping = Double.parseDouble(shippingText.contains("$") ? shippingText.substring(1) : shippingText);
+		return shipping <= 0;
 	}
 
 	private void clearCart() {

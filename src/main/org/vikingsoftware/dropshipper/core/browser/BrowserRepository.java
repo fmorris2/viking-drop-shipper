@@ -2,7 +2,6 @@ package main.org.vikingsoftware.dropshipper.core.browser;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.openqa.selenium.WebDriver;
 
@@ -19,7 +18,6 @@ public final class BrowserRepository {
 	private static BrowserRepository instance;
 
 	private final Map<Class<? extends DriverSupplier<?>>, WebDriverQueue<? extends WebDriver>> queueCache = new ConcurrentHashMap<>();
-	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
 	
 	private BrowserRepository() {
 		queueCache.put(AliExpressDriverSupplier.class, new WebDriverQueue<>(() -> new AliExpressDriverSupplier()));
@@ -38,59 +36,39 @@ public final class BrowserRepository {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T extends DriverSupplier<?>> T request(final Class<?> type) {
-		lock.readLock().lock();
-		try {
-			System.out.println("[BrowserRepository] - Request driver supplier of type " + type);
-			final WebDriverQueue<?> queue = queueCache.get(type);
-			if(queue != null) {
-				System.out.println("\trequesting...");
-				final T supplier = (T)queue.request();
-				System.out.println("\tsuccessfully requested driver supplier.");
-				return supplier;
-			}
-		} finally {
-			lock.readLock().unlock();
+	public synchronized <T extends DriverSupplier<?>> T request(final Class<?> type) {
+		System.out.println("[BrowserRepository] - Request driver supplier of type " + type);
+		final WebDriverQueue<?> queue = queueCache.get(type);
+		if(queue != null) {
+			System.out.println("\trequesting...");
+			final T supplier = (T)queue.request();
+			System.out.println("\tsuccessfully requested driver supplier.");
+			return supplier;
 		}
 
 		return null;
 	}
 
 	public void relinquish(final DriverSupplier<?> supplier) {
-		lock.readLock().lock();
-		try {
-			final WebDriverQueue<?> queue = queueCache.get(supplier.getClass());
-			if(queue != null) {
-				queue.relinquish(supplier);
-			}
-		} finally {
-			lock.readLock().unlock();
+		final WebDriverQueue<?> queue = queueCache.get(supplier.getClass());
+		if(queue != null) {
+			queue.relinquish(supplier);
 		}
 	}
 
 	public void replace(final Class<? extends DriverSupplier<?>> supplierClass) {
-		lock.readLock().lock();
-		try {
-			System.out.println("BrowserRepository#replace("+supplierClass+")");
-			final WebDriverQueue<?> queue = queueCache.get(supplierClass);
-			if(queue != null) {
-				System.out.println("Queue is not null for class " + supplierClass);
-				queue.replace(supplierClass);
-			}
-		} finally {
-			lock.readLock().unlock();
+		System.out.println("BrowserRepository#replace("+supplierClass+")");
+		final WebDriverQueue<?> queue = queueCache.get(supplierClass);
+		if(queue != null) {
+			System.out.println("Queue is not null for class " + supplierClass);
+			queue.replace(supplierClass);
 		}
 	}
 
 	public void replaceAll() {
-		lock.readLock().lock();
-		try {
-			System.out.println("Replacing all WebDrivers in BrowserRepository.");
-			for(final WebDriverQueue<? extends WebDriver> queue : queueCache.values()) {
-				queue.replaceAll();
-			}
-		} finally {
-			lock.readLock().unlock();
+		System.out.println("Replacing all WebDrivers in BrowserRepository.");
+		for(final WebDriverQueue<? extends WebDriver> queue : queueCache.values()) {
+			queue.replaceAll();
 		}
 	}
 

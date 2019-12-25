@@ -16,6 +16,7 @@ import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOr
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.TransactionUtils;
+import main.org.vikingsoftware.dropshipper.order.executor.error.OrderExecutionException;
 
 public class OrderExecutor implements CycleParticipant {
 
@@ -60,17 +61,22 @@ public class OrderExecutor implements CycleParticipant {
 						continue;
 					}
 					
-					final ProcessedOrder processedOrder = manager.fulfill(order, listing);
-	
-					if(processedOrder.fulfillment_transaction_id == null) { //TODO LOG UNSUCCESSFUL ORDER
-						System.out.println("Failed to fulfill order.");
-						failedOrders.add(processedOrder);
-					} else {
-						System.out.println("Successful order from " + FulfillmentPlatforms.getById(listing.fulfillment_platform_id) + "!");
-						if(insertSuccessfulOrderIntoDB(processedOrder)) {
-							TransactionUtils.insertTransactionForProcessedOrder(order, processedOrder);
+					try {
+						final ProcessedOrder processedOrder = manager.fulfill(order, listing);						
+		
+						if(processedOrder.fulfillment_transaction_id == null) { //TODO LOG UNSUCCESSFUL ORDER
+							System.out.println("Failed to fulfill order.");
+							failedOrders.add(processedOrder);
+						} else {
+							System.out.println("Successful order from " + FulfillmentPlatforms.getById(listing.fulfillment_platform_id) + "!");
+							if(insertSuccessfulOrderIntoDB(processedOrder)) {
+								TransactionUtils.insertTransactionForProcessedOrder(order, processedOrder);
+							}
+							break;
 						}
-						break;
+					} catch (final OrderExecutionException e) {
+						e.printStackTrace();
+						DBLogging.high(getClass(), "Failed to fulfill processed order", e);
 					}
 				}
 			}

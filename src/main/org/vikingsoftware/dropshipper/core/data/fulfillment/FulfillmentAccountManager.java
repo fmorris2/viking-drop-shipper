@@ -38,7 +38,7 @@ public class FulfillmentAccountManager {
 			final boolean enabled) {
 		final FulfillmentAccount account = accounts.computeIfAbsent(platform, plat -> new LinkedList<>())
 				.stream()
-				.filter(acc -> acc.is_enabled || !enabled)
+				.filter(acc -> acc.isEnabled() || !enabled)
 				.findFirst()
 				.orElse(null);
 		
@@ -64,6 +64,17 @@ public class FulfillmentAccountManager {
 	
 	public FulfillmentAccount peekEnabledAccount(final FulfillmentPlatforms platform) {
 		return peekAccount(platform, true);
+	}
+	
+	public void markAccountAsDisabled(final FulfillmentAccount account) {
+		try(final Statement st = VSDSDBManager.get().createStatement()) {
+			System.out.println("Marking account as disabled: " + account);
+			st.execute("UPDATE fulfillment_account SET is_enabled=0 WHERE id="+account.id);
+			account.setIsEnabled(false);
+			System.out.println("\tsuccess.");
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public int getNumProcessedOrdersForAccount(final int id) {
@@ -101,7 +112,7 @@ public class FulfillmentAccountManager {
 		System.out.println("Peeking fulfillment account for platform " + platform);
 		final FulfillmentAccount account = accounts.computeIfAbsent(platform, plat -> new LinkedList<>())
 			.stream()
-			.filter(acc -> acc.is_enabled || !enabled)
+			.filter(acc -> acc.isEnabled() || !enabled)
 			.findFirst()
 			.orElse(null);
 		
