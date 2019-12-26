@@ -21,7 +21,7 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingImage;
 
 public final class SamsClubMetaDataParser {
 	
-	private static final String META_DATA_PATTERN_STRING = "window.__WML_REDUX_INITIAL_STATE__ = (.+);<\\/script>";
+	private static final String META_DATA_PATTERN_STRING = "<script id=\"tb-djs-wml-redux-state\" type=\"application/json\">(.+);<\\/script>";
 	private static final Pattern META_DATA_PATTERN = Pattern.compile(META_DATA_PATTERN_STRING);
 	
 	private static final String INVALID_IMAGE_URL = "https://scene7.samsclub.com/is/image/samsclub/fgsdfgsdgfsdgds";
@@ -185,7 +185,8 @@ public final class SamsClubMetaDataParser {
 		
 		while((imgDifferencePercent = ImageUtils.getDifferencePercent(currentImage, notFoundImage)) > 0) {
 			System.out.println("currentSuffix: " + currentSuffix + ", imgDifferencePercent = " + imgDifferencePercent);
-			images.add(new ListingImage(imageUrl));
+			final String adjustedResolutionImageUrl = imageUrl.contains("$DT_Zoom$") ? imageUrl : imageUrl + "$DT_Zoom$";
+			images.add(new ListingImage(adjustedResolutionImageUrl));
 			
 			currentSuffix = (char)(((int)currentSuffix) + 1);
 			imageUrl = imageUrl.substring(0, imageUrl.length() - 1) + currentSuffix;

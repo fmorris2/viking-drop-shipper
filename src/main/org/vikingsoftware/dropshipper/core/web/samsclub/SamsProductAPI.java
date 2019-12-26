@@ -1,8 +1,11 @@
 package main.org.vikingsoftware.dropshipper.core.web.samsclub;
 
+import java.awt.image.BufferedImage;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
@@ -10,12 +13,17 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
+import main.org.vikingsoftware.dropshipper.core.utils.ImageUtils;
 import main.org.vikingsoftware.dropshipper.core.utils.UPCUtils;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingImage;
 
 public final class SamsProductAPI {
 	
 	private static final String API_BASE_URL = "https://www.samsclub.com/api/soa/services/v1/catalog/product/";
 	private static final String API_URL_ARGS = "?response_group=LARGE&clubId=6279";
+	
+	private static final String INVALID_IMAGE_URL = "https://scene7.samsclub.com/is/image/samsclub/fgsdfgsdgfsdgds";
+	private static final BufferedImage notFoundImage = ImageUtils.getImageFromUrl(INVALID_IMAGE_URL);
 	
 	private Optional<JSONObject> payload;
 	private Optional<JSONObject> onlineInventory;
@@ -77,7 +85,7 @@ public final class SamsProductAPI {
 		return false;
 	}
 	
-	private boolean isFreeShipping() {
+	public boolean isFreeShipping() {
 		if(skuOptions.isPresent()) {
 			final String shippingType = getString(skuOptions.get(), "shippingCostType");
 			if(shippingType != null) {
@@ -98,11 +106,11 @@ public final class SamsProductAPI {
 		return false;
 	}
 	
-	private boolean isAvailableOnline() {
+	public boolean isAvailableOnline() {
 		return getAvailableToSellQuantity().orElse(0) > 0;
 	}
 	
-	private boolean hasMinPurchaseQty() {
+	public boolean hasMinPurchaseQty() {
 		if(onlineInventory.isPresent()) {
 			final int minPurchaseQty = getInt(onlineInventory.get(), "minPurchaseQuantity");
 			return minPurchaseQty > 1;
@@ -111,7 +119,7 @@ public final class SamsProductAPI {
 		return false;
 	}
 	
-	private boolean hasVariations() {
+	public boolean hasVariations() {
 		if(skuOptionsArr.isPresent()) {
 			return skuOptionsArr.get().length() > 1;
 		}
@@ -205,6 +213,30 @@ public final class SamsProductAPI {
 		return Optional.empty();
 	}
 	
+	public Optional<String> getDescription() {
+		if(payload.isPresent()) {
+			return Optional.ofNullable(getString(payload.get(), "longDescription"));
+		}
+		
+		return Optional.empty();
+	}
+	
+	public Optional<String> getBrandName() {
+		if(payload.isPresent()) {
+			return Optional.ofNullable(getString(payload.get(), "brandName"));
+		}
+		
+		return Optional.empty();
+	}
+	
+	public Optional<String> getModelNumber() {
+		if(payload.isPresent()) {
+			return Optional.ofNullable(getString(payload.get(), "modelNumber"));
+		}
+		
+		return Optional.empty();
+	}
+	
 	public Optional<String> getImageId() {
 		if(skuOptions.isPresent()) {
 			return Optional.ofNullable(getString(skuOptions.get(), "imageId"));
@@ -282,6 +314,37 @@ public final class SamsProductAPI {
 		}
 		
 		return Optional.empty();
+	}
+	
+	public List<ListingImage> getImages() {
+		final List<ListingImage> images = new ArrayList<>();
+		
+		if(skuOptions.isPresent()) {		
+			String imageUrl = getString(skuOptions.get(), "listImage");
+			if(imageUrl.startsWith("//")) {
+				imageUrl = imageUrl.substring(2);
+			}
+			
+			if(!imageUrl.startsWith("http://")) {
+				imageUrl = "http://" + imageUrl;
+			}
+			
+			BufferedImage currentImage = ImageUtils.getImageFromUrl(imageUrl);
+			double imgDifferencePercent = 0.0;
+			char currentSuffix = imageUrl.charAt(imageUrl.length() - 1);
+			
+			while((imgDifferencePercent = ImageUtils.getDifferencePercent(currentImage, notFoundImage)) > 0) {
+				//System.out.println("currentSuffix: " + currentSuffix + ", imgDifferencePercent = " + imgDifferencePercent);
+				final String adjustedResolutionImageUrl = imageUrl.contains("?$DT_Zoom$") ? imageUrl : imageUrl + "?$DT_Zoom$";
+				images.add(new ListingImage(adjustedResolutionImageUrl));
+				
+				currentSuffix = (char)(((int)currentSuffix) + 1);
+				imageUrl = imageUrl.substring(0, imageUrl.length() - 1) + currentSuffix;
+				currentImage = ImageUtils.getImageFromUrl(imageUrl);
+			}
+		}
+		
+		return images;
 	}
 	
 	private String getZeroPaddingString(final int length) {
