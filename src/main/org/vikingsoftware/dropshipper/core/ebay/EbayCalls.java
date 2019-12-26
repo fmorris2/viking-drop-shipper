@@ -498,27 +498,27 @@ public class EbayCalls {
 
 		final NameValueListArrayType specifics = new NameValueListArrayType();
 
-		final NameValueListType mpn = new NameValueListType();
-		mpn.setName("MPN");
-		mpn.setValue(new String[] {"Does not Apply"});
+//		final NameValueListType mpn = new NameValueListType();
+//		mpn.setName("MPN");
+//		mpn.setValue(new String[] {"Does not Apply"});
 		
-		final NameValueListType brand = new NameValueListType();
-		brand.setName("Brand");
-		brand.setValue(new String[]{listing.brand});
+//		final NameValueListType brand = new NameValueListType();
+//		brand.setName("Brand");
+//		brand.setValue(new String[]{listing.brand});
 
-		final NameValueListType upcOrEan = new NameValueListType();
-		if(listing.upc == null && listing.ean == null) {
-			upcOrEan.setName("UPC");
-			upcOrEan.setValue(new String[]{"Does Not Apply"});
-		} else if(listing.upc != null) {
-			upcOrEan.setName("UPC");
-			upcOrEan.setValue(new String[]{listing.upc});
-		} else if(listing.ean != null) {
-			upcOrEan.setName("EAN");
-			upcOrEan.setValue(new String[]{listing.ean});
-		}
+//		final NameValueListType upcOrEan = new NameValueListType();
+//		if(listing.upc == null && listing.ean == null) {
+//			upcOrEan.setName("UPC");
+//			upcOrEan.setValue(new String[]{"Does Not Apply"});
+//		} else if(listing.upc != null) {
+//			upcOrEan.setName("UPC");
+//			upcOrEan.setValue(new String[]{listing.upc});
+//		} else if(listing.ean != null) {
+//			upcOrEan.setName("EAN");
+//			upcOrEan.setValue(new String[]{listing.ean});
+//		}
 		
-		final List<NameValueListType> itemSpecifics = new ArrayList<>(Arrays.asList(brand, upcOrEan, mpn));
+		final List<NameValueListType> itemSpecifics = new ArrayList<>();//Arrays.asList(brand, upcOrEan, mpn));
 		if(listing.itemSpecifics != null) {
 			for(final Map.Entry<String, String> providedItemSpecific : listing.itemSpecifics.entrySet()) {
 				final NameValueListType specific = new NameValueListType();

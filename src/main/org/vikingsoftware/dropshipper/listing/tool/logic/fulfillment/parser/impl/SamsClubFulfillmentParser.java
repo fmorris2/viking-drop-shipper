@@ -36,34 +36,33 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 	@Override
 	protected Listing parseListing(final String url) {
 		try {
-			final SamsClubMetaDataParser metaDataParser = new SamsClubMetaDataParser();
-			final SamsProductAPI productApi = new SamsProductAPI();
+			final String productId = parseProductIdFromListingUrl(url);
+			final SamsProductAPI api = new SamsProductAPI();
+			api.parse(productId);
+			
 			final Listing listing = new Listing();
 			listing.fulfillmentPlatformId = FulfillmentPlatforms.SAMS_CLUB.getId();
 			listing.shippingService = ShippingServiceCodeType.SHIPPING_METHOD_STANDARD;
 			
-			final String pageSource = Jsoup.connect(url).get().html();
-			metaDataParser.parse(pageSource);
-			
-			if(metaDataParser.hasVariations()) {
+			if(api.hasVariations()) {
 				System.out.println("\tListing has multiple variations. Skipping...");
 				listing.canShip = false;
 				return listing;
 			}
 			
-			if(!metaDataParser.isAvailableOnline()) {
+			if(!api.isAvailableOnline()) {
 				System.out.println("\tListing is not available online. Skipping...");
 				listing.canShip = false;
 				return listing;
 			}
 			
-			if(!metaDataParser.isFreeShipping()) {
+			if(!api.isFreeShipping()) {
 				System.out.println("\tListing is not free shipping. Skipping...");
 				listing.canShip = false;
 				return listing;
 			}
 			
-			if(metaDataParser.hasMinPurchaseQty()) {
+			if(api.hasMinPurchaseQty()) {
 				System.out.println("\tListing has a min purchase quantity of > 1. Skipping...");
 				listing.canShip = false;
 				return listing;
@@ -71,31 +70,26 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 			
 			listing.canShip = true;
 			
-			if(productApi.parse(metaDataParser.getProductID())) {
-				listing.ean = productApi.getEAN().orElse(null);
-				listing.upc = productApi.getUPC().orElse(null);
-				
-				System.out.println("EAN: " + listing.ean);
-				System.out.println("UPC: " + listing.upc);
-			}
+			listing.ean = api.getEAN().orElse(null);
+			listing.upc = api.getUPC().orElse(null);
 			
-			listing.title = metaDataParser.getProductName();
+			System.out.println("EAN: " + listing.ean);
+			System.out.println("UPC: " + listing.upc);
+			
+			listing.title = api.getProductName().orElse(null);
 			System.out.println("Product Name: " + listing.title);
 			
-			listing.itemId = metaDataParser.getItemID();
+			listing.itemId = api.getItemNumber().orElse(null);
 			System.out.println("Item ID: " + listing.itemId);
 			
-			listing.productId = metaDataParser.getProductID();
-			if(listing.productId == null) {
-				listing.productId = parseProductIdFromListingUrl(url);
-			}
+			listing.productId = productId;
 			System.out.println("Product ID: " + listing.productId);
 			
-			listing.description = metaDataParser.getDescription();
+			listing.description = api.getDescription().orElse(null);
 			ListingUtils.makeDescriptionPretty(listing);
 			System.out.println("Description: " + listing.description);
 			
-			listing.price = metaDataParser.getPrice().orElse(-1D);
+			listing.price = api.getListPrice().orElse(-1D);
 			if(listing.price < 0) {
 				System.out.println("\tCould not parse listing price. Skipping...");
 				listing.canShip = false;
@@ -103,10 +97,10 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 			}
 			System.out.println("Price: " + listing.price);
 			
-			listing.brand = metaDataParser.getBrand();
+			listing.brand = api.getBrandName().orElse(null);
 			System.out.println("Brand: " + listing.brand);
 			
-			listing.pictures = metaDataParser.getImages();
+			listing.pictures = api.getImages();
 			
 			if(listing.pictures.size() > MAX_LISTING_IMAGES) {
 				listing.pictures = listing.pictures.subList(0, MAX_LISTING_IMAGES);
