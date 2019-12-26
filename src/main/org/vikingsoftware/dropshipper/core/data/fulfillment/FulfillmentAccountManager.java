@@ -120,7 +120,7 @@ public class FulfillmentAccountManager {
 		return account;
 	}
 
-	private void load() {
+	public void load() {
 		try (
 			final Statement st = VSDSDBManager.get().createStatement();
 			final ResultSet res = st.executeQuery("SELECT * FROM fulfillment_account")) {

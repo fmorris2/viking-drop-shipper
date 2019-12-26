@@ -2,6 +2,7 @@ package main.org.vikingsoftware.dropshipper;
 
 import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
 import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayAccountActivityFees;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 import main.org.vikingsoftware.dropshipper.inventory.InventoryUpdater;
@@ -47,6 +48,7 @@ public class VSDropShipper {
 					}
 				}
 				
+				FulfillmentAccountManager.get().load();
 				BrowserRepository.get().replaceAll();
 				LoginWebDriver.clearSessionCaches();
 				Runtime.getRuntime().exec("pkill -9 firefox");
