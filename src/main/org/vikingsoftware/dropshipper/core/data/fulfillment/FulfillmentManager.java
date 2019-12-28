@@ -3,7 +3,15 @@ package main.org.vikingsoftware.dropshipper.core.data.fulfillment;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +22,7 @@ import java.util.Set;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubFulfillmentStockChecker;
+import main.org.vikingsoftware.dropshipper.core.data.misc.Pair;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
@@ -22,9 +31,23 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutio
 
 public class FulfillmentManager {
 	
-	private static final long SAMS_ORDER_BATCH_WINDOW = (60_000 * 60) * 24 * 3; //2 days
+	private static final long ONE_DAY_MS = (60000 * 60) * 24;
+	private static final double SAMS_ORDER_BATCH_WINDOW = 3.0D; //3.0 days is the longest we'll wait before fulfilling an order
 	private static final int SAMS_SAFE_STOCK_THRESHOLD = 50;
 	private static final int SAMS_SAFE_NUM_ORDERS_THRESHOLD = 19;
+	
+	//pair = month,day
+	private static final List<Pair<Integer, Integer>> USPS_HOLIDAYS = Arrays.asList(
+		new Pair<>(1,1), //New Years Day
+		new Pair<>(1,20), //Martin Luther King Jr. Day
+		new Pair<>(2,17), //Washington's Birthday
+		new Pair<>(5,25), // Memorial Day
+		new Pair<>(7,4), //Independence Day
+		new Pair<>(10,12), //Columbus Day
+		new Pair<>(11,11), //Veteran's Day
+		new Pair<>(11,26), //Thanksgiving Day
+		new Pair<>(12,25) //Christmas Day
+	);
 
 	private static final Set<Integer> canExecuteOrdersPlatforms = new HashSet<>();
 	private static final Set<Integer> canUpdateInventoryPlatforms = new HashSet<>();
@@ -95,6 +118,64 @@ public class FulfillmentManager {
 		
 		System.out.println("Skipping fulfillment of Sam's Club order for customer order " + order.id + " due to order batching.");
 		return false;
+	}
+	
+	private static double getBusinessDaysSinceOrder(final long orderDateParsed) {
+		final LocalDateTime current = LocalDateTime.now();
+		final LocalDateTime truncatedCurrent = current.truncatedTo(ChronoUnit.DAYS);
+		final LocalDateTime orderDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(orderDateParsed), ZoneId.systemDefault());
+		final ZoneOffset offset = OffsetDateTime.now().getOffset();
+		
+		double businessDaysSinceOrder = 0;
+		
+		LocalDateTime temp = orderDate;
+		while(!temp.truncatedTo(ChronoUnit.DAYS).isEqual(truncatedCurrent)) {
+			if(isBusinessDay(temp)) {
+				if(temp.isEqual(orderDate)) {
+					final long tempMs = temp.toInstant(offset).toEpochMilli();
+					final long firstDayTruncated = temp.truncatedTo(ChronoUnit.DAYS).toInstant(offset).toEpochMilli();
+					
+					businessDaysSinceOrder += ((double)tempMs - firstDayTruncated) / ONE_DAY_MS;
+				} else {
+					businessDaysSinceOrder += 1;
+				}
+			}
+			temp = temp.plusDays(1);
+		}
+		
+		if(isBusinessDay(current)) {
+			final long currentMs = current.toInstant(offset).toEpochMilli();
+			final long tempMs = temp.toInstant(offset).toEpochMilli();
+			
+			businessDaysSinceOrder += ((double)currentMs - tempMs) / ONE_DAY_MS;
+		}
+		return businessDaysSinceOrder;
+	}
+	
+	private static boolean isBusinessDay(final LocalDateTime date) {
+		final DayOfWeek day = date.getDayOfWeek();
+		return day != DayOfWeek.SATURDAY && day != DayOfWeek.SUNDAY
+				&& !isHoliday(date);
+	}
+	
+	private static boolean isHoliday(final LocalDateTime date) {
+		for(final Pair<Integer,Integer> holiday : USPS_HOLIDAYS) {
+			if(date.getMonthValue() == holiday.left && date.getDayOfMonth() == holiday.right) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	public static void main(final String[] args) {
+		System.out.println(getBusinessDaysSinceOrder(1577557816004L));
+		System.out.println(getBusinessDaysSinceOrder(1577552732653L));
+		System.out.println(getBusinessDaysSinceOrder(1577530625782L));
+		System.out.println(getBusinessDaysSinceOrder(1577502409032L));
+		System.out.println(getBusinessDaysSinceOrder(1577484718366L));
+		System.out.println(getBusinessDaysSinceOrder(1577474604448L));
+		System.out.println(getBusinessDaysSinceOrder(1577293916170L));
 	}
 
 	public void load() {
