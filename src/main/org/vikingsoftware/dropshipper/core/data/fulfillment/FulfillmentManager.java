@@ -109,7 +109,7 @@ public class FulfillmentManager {
 		
 		final int numOrders = FulfillmentAccountManager.get().getNumProcessedOrdersForAccount(acc.id);
 		final boolean failsSafeOrderThreshold = numOrders > SAMS_SAFE_NUM_ORDERS_THRESHOLD;
-		final boolean failsTimeWindowThreshold = order.date_parsed < System.currentTimeMillis() - SAMS_ORDER_BATCH_WINDOW;
+		final boolean failsTimeWindowThreshold = getBusinessDaysSinceOrder(order.date_parsed) > SAMS_ORDER_BATCH_WINDOW;
 		final int stock = SamsClubFulfillmentStockChecker.get().parseItemStock(listing);
 		final boolean failsLowStockThreshold = stock < SAMS_SAFE_STOCK_THRESHOLD;
 		if(failsSafeOrderThreshold || failsTimeWindowThreshold || failsLowStockThreshold) {
