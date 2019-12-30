@@ -84,7 +84,7 @@ public class DBLogging {
 		if(str.length() > MAX_EXCEPTION_LENGTH) {
 			str = str.substring(0, MAX_EXCEPTION_LENGTH);
 		}
-		return sw.toString();
+		return str;
 	}
 
 	public static enum LogLevel {

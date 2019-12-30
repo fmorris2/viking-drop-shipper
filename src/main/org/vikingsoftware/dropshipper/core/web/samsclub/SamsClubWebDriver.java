@@ -9,6 +9,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
@@ -62,9 +63,7 @@ public class SamsClubWebDriver extends LoginWebDriver {
 				usernameEl.sendKeys(account.username);
 				passwordEl.sendKeys(account.password);
 				buttonEl.click();
-				sleep(4000);
-				
-				return true;
+				return verifyLoggedIn();
 			}
 			
 			return false;
@@ -105,21 +104,40 @@ public class SamsClubWebDriver extends LoginWebDriver {
 	protected boolean verifyLoggedIn() {
 		try {
 			setImplicitWait(1);
+			
+			try {
+				final WebElement accountWrapper = findElementNormal(By.className("account-wrapper"));
+				try {
+					accountWrapper.findElement(By.className("sign-in"));
+				} catch(final NoSuchElementException e) {
+					System.out.println("Account Wrapper found w/ no sign-in link. Success!");
+					return true;
+				}
+			} catch(final NoSuchElementException e) {
+				//swallow
+			}
+			
 			try {
 				findElementNormal(By.className("sc-account-member-membership-title"));
+				System.out.println("SamsClubWebDriver#verifyLoggedIn returning true");
 				return true;
 			} catch(final Exception e) {
 				//swallow
 			}
 			
-			resetImplicitWait();
 			get("https://www.samsclub.com/account");
-
+			setImplicitWait(4);
+			
 			//verify we logged in successfully
-			findElement(By.className("sc-account-member-membership-title"));
+			findElementNormal(By.className("sc-account-member-membership-title"));
+			System.out.println("SamsClubWebDriver#verifyLoggedIn returning true");
 			return true;
+		} catch(final NoSuchElementException e) {
+			System.err.println("SamsClubWebDriver#verifyLoggedIn failed - Could not find membership title element.");
 		} catch(final Exception e) {
 			e.printStackTrace();
+		} finally {
+			resetImplicitWait();
 		}
 
 		return false;

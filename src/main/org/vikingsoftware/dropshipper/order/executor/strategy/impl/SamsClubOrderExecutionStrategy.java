@@ -49,8 +49,6 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		try {
 			return orderItem(order, fulfillmentListing);
 		} catch(final Exception e) {
-			driver.clearSession();
-			driver.manage().deleteAllCookies();
 			throw new RuntimeException(e);
 		}
 	}
@@ -92,9 +90,9 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		driver.findElement(By.cssSelector(".summary .continue-btn .js-checkout-btn"));
 		driver.js("document.querySelector(\".summary .continue-btn .js-checkout-btn\").click();");
 		driver.screenshot("enter-address-page.png");
-		driver.sleep(7000);
+		driver.sleep(5000);
 		enterAddress(order);
-		driver.sleep(6000);
+		driver.sleep(5000);
 		return finishCheckoutProcess(order, fulfillmentListing);
 	}
 
@@ -128,8 +126,10 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 				+ " " + addressEl.findElement(By.className("sc-address-city-state")).getText();
 		
 		try {
-			detailsStr += addressEl.findElement(By.className("sc-address-street-two")).getText();
+			driver.setImplicitWait(1);
+			detailsStr += driver.findElementNormal(By.cssSelector(".sc-address .sc-address-street-two")).getText();
 		} catch(final Exception e) {}
+		driver.resetImplicitWait();
 		
 		detailsStr = detailsStr.toLowerCase();
 		
@@ -267,9 +267,6 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			if(orderNum == null) {
 				throw new FatalOrderExecutionException("Failed to parse order num from Sams Club receipt page!");
 			}
-			
-			driver.clearSession();
-			driver.manage().deleteAllCookies();
 
 			return new ProcessedOrder.Builder()
 					.customer_order_id(order.id)
@@ -323,7 +320,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		driver.js("document.querySelector(\"button.sc-address-card-edit-action:nth-child(1) > span:nth-child(1)\").click();");
 		System.out.println("\tdone.");
 		
-		driver.sleep(3000);
+		//driver.sleep(3000);
 		//enter details
 		System.out.println("Entering name...");
 		
@@ -419,7 +416,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	private boolean clearErroneousItems(final CustomerOrder order, final FulfillmentListing listing) {
 		
 		System.out.println("Clearing erroneous items from cart.");
-		final Supplier<List<WebElement>> cartItemsSupp = () -> driver.findElements(By.className("nc-v2-cart-item"));
+		final Supplier<List<WebElement>> cartItemsSupp = () -> driver.findElements(By.cssSelector(".cart-table .nc-v2-cart-item"));
 		System.out.println("cartItems: " + cartItemsSupp.get().size());
 		
 		List<WebElement> cartItems = cartItemsSupp.get();
@@ -434,20 +431,23 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 				final String id = item.getAttribute("id");
 				System.out.println("Item: " + id);
 				if(id == null || id.isEmpty()) {
+					System.out.println("id == null || id is empty - Skipping...");
 					continue;
 				}
+				driver.setImplicitWait(1);
 				final String itemNum = item.findElement(By.cssSelector(".item_no")).getText().split(" ")[2];
 				System.out.println("itemNum: " + itemNum + ", listing.item_id: " + listing.item_id);
 				if(!itemNum.equals(listing.item_id)) {
 					System.out.println("Removing erroneous cart item on page " + driver.getCurrentUrl());
 					driver.screenshot("remove_cart_item.png");
 					item.findElement(By.className("js_remove")).click();
-					driver.sleep(2000); //wait for sluggish sams club to remove the item
+					driver.sleep(3000); //wait for sluggish sams club to remove the item
 					i = 0;
 					cartItems = cartItemsSupp.get();
 				} else if(Integer.parseInt(item.findElement(By.cssSelector(".nc-item-count")).getAttribute("value")) != order.fulfillment_purchase_quantity) {
 					System.out.println("Updating item to correct quantity...");
 					clearAndSendKeys(item.findElement(By.cssSelector(".nc-item-count")), Integer.toString(order.fulfillment_purchase_quantity));
+					driver.sleep(3000); //wait for sluggish sams club to remove the item
 				}
 			} catch(final StaleElementReferenceException e) {
 				System.out.println("Stale element detected - Refreshing cart items collection...");
@@ -460,7 +460,6 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			}
 		}
 		
-		driver.sleep(3000);
 		verifyCart(order, listing, false);
 		return true;
 	}
