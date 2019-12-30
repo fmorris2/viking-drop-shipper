@@ -58,7 +58,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	private ProcessedOrder orderItem(final CustomerOrder order, final FulfillmentListing fulfillmentListing) throws InterruptedException {
 		System.out.println("Getting listing url: " + fulfillmentListing.listing_url);
 		//rakuten test
-		driver.get("https://www.samsclub.com/?pid=_Aff_LS&siteID=AysPbYF8vuM-_xxRlVgh.wbES7nekckO5w&ranMID=38733&ranEAID=AysPbYF8vuM&ranSiteID=AysPbYF8vuM-_xxRlVgh.wbES7nekckO5w&pubNAME=Ebates.com");
+		//driver.get("https://www.samsclub.com/?pid=_Aff_LS&siteID=AysPbYF8vuM-_xxRlVgh.wbES7nekckO5w&ranMID=38733&ranEAID=AysPbYF8vuM&ranSiteID=AysPbYF8vuM-_xxRlVgh.wbES7nekckO5w&pubNAME=Ebates.com");
 		
 		driver.get(fulfillmentListing.listing_url);
 		
