@@ -66,7 +66,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		
 		if(productApi.getAvailableToSellQuantity().orElse(0) <= 0) {
 			System.out.println("Listing is out of stock!");
-			throw new OrderExecutionException("Listing is out of stock!");
+			throw new OrderExecutionException("Listing " + fulfillmentListing.listing_url + " is out of stock!");
 		}
 		
 		System.out.println("Finding orderOnlineBox...");
@@ -468,7 +468,12 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	private void verifyCart(final CustomerOrder order, final FulfillmentListing listing, final boolean correctMistakes) {
 		System.out.println("Verifying cart...");
 		//verify expected item quantity in cart
-		final int numCartItems = Integer.parseInt(driver.findElement(By.id("orderCount")).getText());
+		final WebElement numCartItemsEl = driver.findElement(By.id("orderCount"));
+		if(numCartItemsEl == null) {
+			throw new OrderExecutionException("Could not find number of cart items element w/ id 'orderCount'");
+		}
+		
+		final int numCartItems = Integer.parseInt(numCartItemsEl.getText());
 		System.out.println("numCartItems: " + numCartItems);
 		if(numCartItems != order.fulfillment_purchase_quantity) {
 			System.out.println("num cart items != fulfillment purchase quantity.");

@@ -15,6 +15,10 @@ public class EbayOrderParsingStrategy implements OrderParsingStrategy {
 		final CustomerOrder[] allOrders = EbayCalls.getOrdersLastXDays(2);
 		final Collection<CustomerOrder> newOrders = new ArrayList<>();
 		for(final CustomerOrder order : allOrders) {
+			if(order == null) {
+				continue;
+			}
+			
 			if(!Marketplaces.EBAY.getMarketplace().isOrderIdKnown(order.marketplace_order_id)) {
 				System.out.println("New eBay order found: " + order.marketplace_order_id);
 				newOrders.add(order);
