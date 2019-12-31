@@ -32,7 +32,7 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutio
 public class FulfillmentManager {
 	
 	private static final long ONE_DAY_MS = (60000 * 60) * 24;
-	private static final double SAMS_ORDER_BATCH_WINDOW = 3.0D; //3.0 days is the longest we'll wait before fulfilling an order
+	private static final double SAMS_ORDER_BATCH_WINDOW = 2.0D; //2.0 days is the longest we'll wait before fulfilling an order
 	private static final int SAMS_SAFE_STOCK_THRESHOLD = 50;
 	private static final int SAMS_SAFE_NUM_ORDERS_THRESHOLD = 19;
 	
@@ -108,9 +108,12 @@ public class FulfillmentManager {
 		}
 		
 		final int numOrders = FulfillmentAccountManager.get().getNumProcessedOrdersForAccount(acc.id);
-		final boolean failsSafeOrderThreshold = numOrders > SAMS_SAFE_NUM_ORDERS_THRESHOLD;
-		final boolean failsTimeWindowThreshold = getBusinessDaysSinceOrder(order.date_parsed) > SAMS_ORDER_BATCH_WINDOW;
+		final double businessDaysSinceOrder = getBusinessDaysSinceOrder(order.date_parsed);
 		final int stock = SamsClubFulfillmentStockChecker.get().parseItemStock(listing);
+		System.out.println("Business Days Since Order: " + businessDaysSinceOrder);
+		
+		final boolean failsSafeOrderThreshold = numOrders > SAMS_SAFE_NUM_ORDERS_THRESHOLD;
+		final boolean failsTimeWindowThreshold = businessDaysSinceOrder > SAMS_ORDER_BATCH_WINDOW;
 		final boolean failsLowStockThreshold = stock < SAMS_SAFE_STOCK_THRESHOLD;
 		if(failsSafeOrderThreshold || failsTimeWindowThreshold || failsLowStockThreshold) {
 			return true;
