@@ -38,4 +38,12 @@ public final class ProcessedOrderManager {
 		
 		return Optional.empty();
 	}
+	
+	public static void markAsCancelled(final int processedOrderId) {
+		try(final Statement st = VSDSDBManager.get().createStatement()) {
+				st.execute("UPDATE processed_order SET is_cancelled=1 WHERE id="+processedOrderId);
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+	}
 }

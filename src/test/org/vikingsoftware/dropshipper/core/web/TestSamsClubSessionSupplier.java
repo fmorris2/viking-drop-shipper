@@ -22,7 +22,7 @@ public class TestSamsClubSessionSupplier {
 			Map<String, String> session = supplier.getSession(acc);
 			System.out.println("Session: " + session);
 			Assert.assertTrue(!session.isEmpty());
-			supplier.clearSession();
+			supplier.clearSession(acc);
 			System.out.println("Session has been cleared.");
 			System.out.println("Attempting to grab session again...");
 			session = supplier.getSession(acc);

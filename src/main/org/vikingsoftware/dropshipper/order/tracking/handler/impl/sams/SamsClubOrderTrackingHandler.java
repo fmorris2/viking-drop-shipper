@@ -1,89 +1,53 @@
 package main.org.vikingsoftware.dropshipper.order.tracking.handler.impl.sams;
 
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
+import java.util.Optional;
 
 import com.ebay.soap.eBLBaseComponents.ShipmentDeliveryStatusCodeType;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
+import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrderManager;
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
 import main.org.vikingsoftware.dropshipper.core.tracking.ShippingCarrier;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
+import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsOrderDetailsAPI;
+import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsOrderState;
 import main.org.vikingsoftware.dropshipper.order.tracking.error.UnknownTrackingIdException;
 import main.org.vikingsoftware.dropshipper.order.tracking.handler.AbstractOrderTrackingHandler;
 
 public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<SamsClubWebDriver> {
 
-	private static final String BASE_ORDER_DETAILS_URL = "https://www.samsclub.com/order/details/";
-	private static final String TRACKING_NUM_PATTERN_STR = "tracking.+=(.+)";
-	private static final Pattern TRACKING_NUM_PATTERN = Pattern.compile(TRACKING_NUM_PATTERN_STR);
-
 	@Override
 	public boolean prepareToTrack() {
 		return true;
 	}
-
-	@Override
-	protected TrackingEntry parseTrackingInfo(final SamsClubWebDriver driver, final ProcessedOrder order) {
-		TrackingEntry entry = parseTrackingEntryFromSamsClubFrontEnd(driver, order);
-		if(entry == null) { //failed to parse from front-end, attempt to check email
-			entry = parseTrackingEntryFromEmail(order);
-		}
-		
-		return entry;
-	}
 	
-	private TrackingEntry parseTrackingEntryFromSamsClubFrontEnd(final SamsClubWebDriver driver, final ProcessedOrder order) {
-		driver.get(BASE_ORDER_DETAILS_URL + order.fulfillment_transaction_id);
-		System.out.println("Navigating to page: " + BASE_ORDER_DETAILS_URL + order.fulfillment_transaction_id);
-		driver.savePageSource();
-
-		driver.setImplicitWait(1);
-		final WebElement shippedEl = driver.findElementNormal(By.className("sc-account-online-order-details-tracking-info"));
-		final List<WebElement> trackingNumEls = shippedEl.findElements(By.cssSelector("a[href*=\"samsclub.com/tracking\""));
-		if(trackingNumEls == null) {
-			return null;
-		}
-		
-		final WebElement trackingNumEl = trackingNumEls.stream().filter(el -> {
-			try {
-				final String href = el.getAttribute("href");
-				if(href != null) {
-					return href.contains("tracking/tracking.htm?trackingId=")
-							|| href.contains("fedex?tracking_numbers=");
+	@Override
+	protected TrackingEntry getTrackingInfoImpl(ProcessedOrder order) {
+		final SamsOrderDetailsAPI api = new SamsOrderDetailsAPI();
+		TrackingEntry trackingEntry = null;
+		if(api.parse(order.fulfillment_transaction_id)) {
+			final Optional<String> orderState = api.getOrderState();
+			if(orderState.isPresent()) {
+				final SamsOrderState state = SamsOrderState.getStateForApiResponse(orderState.get());
+				if(state == SamsOrderState.CANCELLED) {
+					System.err.println("Identified cancelled Sam's Club order, marking processed order in DB...");
+					ProcessedOrderManager.markAsCancelled(order.id);
 				}
-			} catch(final Exception e) {
-				e.printStackTrace();
 			}
-
-			return false;
-		}).findFirst().orElse(null);
-		
-		driver.resetImplicitWait();
-
-		String trackingNum = null;
-		if(trackingNumEl != null) {
-			final String href = trackingNumEl.getAttribute("href");
-			final Matcher matcher = TRACKING_NUM_PATTERN.matcher(href);
-			System.out.println("href found by regex: " + href);
-			if(matcher.find()) {
-				trackingNum = matcher.group(1);
+			
+			final Optional<String> trackingNum = api.getTrackingNumber();
+			if(trackingNum.isPresent()) {
+				trackingEntry = generateTrackingEntryFromTrackingNum(trackingNum.get());
 			}
 		}
 		
-		if(trackingNum == null) {
-			System.out.println("Could not parse tracking number from page for order " + order.id);
-			return null;
+		if(trackingEntry == null) {
+			trackingEntry = parseTrackingEntryFromEmail(order);
 		}
-
-		driver.savePageSource();
-		return generateTrackingEntryFromTrackingNum(trackingNum);
+		
+		return trackingEntry;
 	}
 	
 	private TrackingEntry parseTrackingEntryFromEmail(final ProcessedOrder order) {
@@ -116,6 +80,11 @@ public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<S
 	@Override
 	protected Class<? extends DriverSupplier<SamsClubWebDriver>> getDriverSupplierClass() {
 		return SamsClubDriverSupplier.class;
+	}
+
+	@Override
+	protected TrackingEntry parseTrackingInfo(SamsClubWebDriver driver, ProcessedOrder order) {
+		return null;
 	}
 
 }

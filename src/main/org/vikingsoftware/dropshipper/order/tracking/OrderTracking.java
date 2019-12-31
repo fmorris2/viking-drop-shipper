@@ -88,7 +88,7 @@ public class OrderTracking implements CycleParticipant {
 	private List<ProcessedOrder> getUntrackedOrders() {
 		final List<ProcessedOrder> orders = new ArrayList<>();
 		try (final Statement st = VSDSDBManager.get().createStatement();
-			 final ResultSet res = st.executeQuery("SELECT * FROM processed_order WHERE tracking_number IS NULL")) {
+			 final ResultSet res = st.executeQuery("SELECT * FROM processed_order WHERE tracking_number IS NULL AND is_cancelled=0")) {
 			while(res.next()) {
 				final ProcessedOrder order = new ProcessedOrder.Builder()
 					.id(res.getInt("id"))

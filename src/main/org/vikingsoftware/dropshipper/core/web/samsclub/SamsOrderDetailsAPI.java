@@ -57,10 +57,10 @@ public final class SamsOrderDetailsAPI extends JsonAPIParser {
 	public boolean parse(final String orderId) {
 		String apiUrl = null;
 		final SamsClubDriverSupplier driver = BrowserRepository.get().request(SamsClubDriverSupplier.class);
+		final FulfillmentAccount acc = FulfillmentAccountManager.get().getAccountByTransactionId(orderId);
 		try {
 			reset();
 			apiUrl = API_BASE_URL + orderId + API_URL_ARGS;
-			final FulfillmentAccount acc = FulfillmentAccountManager.get().getAccountByTransactionId(orderId);
 			if(acc == null) {
 				return false;
 			}
@@ -87,7 +87,7 @@ public final class SamsOrderDetailsAPI extends JsonAPIParser {
 		} catch(final HttpStatusException e) {
 			if(e.getStatusCode() == 400) { //unauthorized
 				System.err.println("Unauthorized Http Status to Order Details API - Clearing session...");
-				driver.clearSession();
+				driver.clearSession(acc);
 			} else {
 				e.printStackTrace();
 			}

@@ -7,5 +7,5 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAcco
 public interface SessionSupplier {
 	
 	public Map<String, String> getSession(final FulfillmentAccount account);
-	public void clearSession();
+	public void clearSession(final FulfillmentAccount account);
 }
