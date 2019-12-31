@@ -63,6 +63,7 @@ public class SamsClubWebDriver extends LoginWebDriver {
 				usernameEl.sendKeys(account.username);
 				passwordEl.sendKeys(account.password);
 				buttonEl.click();
+				sleep(2000);
 				return verifyLoggedIn();
 			}
 			

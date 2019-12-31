@@ -15,9 +15,10 @@ import org.json.JSONObject;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.ImageUtils;
 import main.org.vikingsoftware.dropshipper.core.utils.UPCUtils;
+import main.org.vikingsoftware.dropshipper.core.web.JsonAPIParser;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingImage;
 
-public final class SamsProductAPI {
+public final class SamsProductAPI extends JsonAPIParser {
 	
 	private static final String API_BASE_URL = "https://www.samsclub.com/api/soa/services/v1/catalog/product/";
 	private static final String API_URL_ARGS = "?response_group=LARGE&clubId=6279";
@@ -125,46 +126,6 @@ public final class SamsProductAPI {
 		}
 		
 		return false;
-	}
-	
-	private JSONObject getJsonObj(final JSONObject parent, final String obj) {
-		try {
-			return parent.getJSONObject(obj);
-		} catch(final Exception e) {
-			//swallow exception
-		}
-		
-		return null;
-	}
-	
-	private JSONArray getJsonArr(final JSONObject parent, final String obj) {
-		try {
-			return parent.getJSONArray(obj);
-		} catch(final Exception e) {
-			//swallow exception
-		}
-		
-		return null;
-	}
-	
-	private String getString(final JSONObject parent, final String key) {
-		try {
-			return parent.getString(key);
-		} catch(final Exception e) {
-			//swallow exception
-		}
-		
-		return null;
-	}
-	
-	private int getInt(final JSONObject parent, final String key) {
-		try {
-			return parent.getInt(key);
-		} catch(final Exception e) {
-			//swallow exception
-		}
-		
-		return -1;
 	}
 	
 	private void reset() {
