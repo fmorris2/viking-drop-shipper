@@ -62,6 +62,22 @@ public class FulfillmentAccountManager {
 		return null;
 	}
 	
+	public FulfillmentAccount getAccountByTransactionId(final String transactionId) {
+		FulfillmentAccount acc = null;
+		try(final Statement st = VSDSDBManager.get().createStatement();
+			final ResultSet res = st.executeQuery("SELECT fulfillment_account_id FROM processed_order "
+					+ "WHERE fulfillment_transaction_id='"+transactionId+"'")) {
+			if(res.next()) {
+				acc = FulfillmentAccountManager.get().getAccountById(res.getInt("fulfillment_account_id"));
+			}
+			 
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return acc;
+	} 
+	
 	public FulfillmentAccount peekEnabledAccount(final FulfillmentPlatforms platform) {
 		return peekAccount(platform, true);
 	}

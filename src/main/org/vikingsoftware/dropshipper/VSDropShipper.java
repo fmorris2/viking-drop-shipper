@@ -21,7 +21,6 @@ public class VSDropShipper {
 		new OrderExecutor(),
 		new InventoryUpdater(),
 		new MarginAdjuster(),
-		new InventoryUpdater(),
 		new OrderTracking(),
 		new TrackingHistoryUpdater(),
 		new EbayAccountActivityFees()	
