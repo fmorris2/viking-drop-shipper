@@ -117,6 +117,27 @@ public class EbayCalls {
 		
 		return null;
 	}
+	
+	public static Optional<Integer> getListingStock(final String ebayListingID) {
+		Optional<Integer> stock = Optional.empty();
+		
+		final ApiContext api = EbayApiContextManager.getLiveContext();
+		final GetItemCall call = new GetItemCall(api);
+		try {
+			call.getItem(ebayListingID);
+			final ItemType returnedItem = call.getReturnedItem();
+			if(returnedItem != null) {
+				final int totalQty = returnedItem.getQuantity(); //qty sold + qty available
+				final int totalSold = returnedItem.getSellingStatus().getQuantitySold();
+				final int qtyAvailable = totalQty - totalSold;
+				stock = Optional.of(qtyAvailable);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return stock;
+	}
 
 	public static CustomerOrder[] getOrdersLastXDays(final int days) {
 		try {
@@ -354,6 +375,7 @@ public class EbayCalls {
 	}
 	
 	public static void main(final String[] args) throws Exception {
+		System.out.println(getListingStock("372748630490").orElse(-5));
 //		checkAPIAccessRules();
 //		MarketplaceLoader.loadMarketplaces();
 //		final Set<MarketplaceListing> listings = Marketplaces.EBAY.getMarketplace().getMarketplaceListings();

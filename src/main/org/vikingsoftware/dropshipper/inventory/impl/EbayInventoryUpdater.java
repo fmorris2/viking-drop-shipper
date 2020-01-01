@@ -101,8 +101,9 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			 * we sent to eBay was 0. This if statement cuts down on extra unnecessary
 			 * processing
 			 */
+			final int currentEbayInventory = EbayCalls.getListingStock(listing.listingId).orElse(-1);//listing.current_ebay_inventory;
 			if(!listing.active) {
-				if(listing.current_ebay_inventory <= 0) {
+				if(currentEbayInventory <= 0) {
 					System.out.println("No need to send updated for inactive listing.");
 					return true;
 				} else if(EbayCalls.updateInventory(listing.listingId, 0)) {
@@ -128,10 +129,11 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			 * the API if we don't need to. Therefore, if we already have the correct stock in our DB,
 			 * we should simply return instead of updating the listing on eBay.
 			 */
-			if(listing.current_ebay_inventory > 0 && parsedStock > 0) {
+			
+			if(currentEbayInventory > 0 && parsedStock > 0) {
 				System.out.println("eBay still has inventory - No need to update.");
 				return true;
-			} else if(listing.current_ebay_inventory <= 0 && parsedStock <= 0) {
+			} else if(currentEbayInventory <= 0 && parsedStock <= 0) {
 				System.out.println("Parsed stock was 0 and eBay inventory is currently 0. No need to update");
 				return true;
 			}
