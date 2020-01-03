@@ -130,28 +130,31 @@ public class FulfillmentManager {
 		final ZoneOffset offset = OffsetDateTime.now().getOffset();
 		
 		double businessDaysSinceOrder = 0;
-		
+
 		LocalDateTime temp = orderDate;
 		while(!temp.truncatedTo(ChronoUnit.DAYS).isEqual(truncatedCurrent)) {
 			if(isBusinessDay(temp)) {
-				if(temp.isEqual(orderDate)) {
-					final long tempMs = temp.toInstant(offset).toEpochMilli();
-					final long firstDayTruncated = temp.truncatedTo(ChronoUnit.DAYS).toInstant(offset).toEpochMilli();
-					
-					businessDaysSinceOrder += ((double)tempMs - firstDayTruncated) / ONE_DAY_MS;
-				} else {
-					businessDaysSinceOrder += 1;
-				}
+				businessDaysSinceOrder += 1;
+			} else if(businessDaysSinceOrder > 0) {
+				businessDaysSinceOrder -= (temp.toInstant(offset).toEpochMilli() - temp.truncatedTo(ChronoUnit.DAYS).toInstant(offset).toEpochMilli()) / (double)ONE_DAY_MS;
+				temp = temp.truncatedTo(ChronoUnit.DAYS);
 			}
 			temp = temp.plusDays(1);
 		}
 		
 		if(isBusinessDay(current)) {
 			final long currentMs = current.toInstant(offset).toEpochMilli();
+			final long truncatedCurrentMs = truncatedCurrent.toInstant(offset).toEpochMilli();
 			final long tempMs = temp.toInstant(offset).toEpochMilli();
+			final boolean orderedToday = truncatedCurrent.isEqual(orderDate.truncatedTo(ChronoUnit.DAYS));
 			
-			businessDaysSinceOrder += ((double)currentMs - tempMs) / ONE_DAY_MS;
+			businessDaysSinceOrder += (currentMs < tempMs || (businessDaysSinceOrder == 0 && !orderedToday) 
+					? (double)currentMs - truncatedCurrentMs 
+					: (double)currentMs - tempMs) / ONE_DAY_MS;
 		}
+		System.out.println("Order Date: " + orderDate);
+		System.out.println("Current Date: " + current);
+		System.out.println("Business Days Since Order: " + businessDaysSinceOrder);
 		return businessDaysSinceOrder;
 	}
 	
