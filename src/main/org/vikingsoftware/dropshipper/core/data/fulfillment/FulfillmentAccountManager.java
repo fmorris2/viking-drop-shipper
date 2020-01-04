@@ -137,6 +137,7 @@ public class FulfillmentAccountManager {
 	}
 
 	public void load() {
+		accounts.clear();
 		try (
 			final Statement st = VSDSDBManager.get().createStatement();
 			final ResultSet res = st.executeQuery("SELECT * FROM fulfillment_account")) {
