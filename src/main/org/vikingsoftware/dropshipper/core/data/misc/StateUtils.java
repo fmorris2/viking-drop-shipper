@@ -82,7 +82,7 @@ public class StateUtils {
 	}
 	
 	public static String getStateNameFromCode(final String code) {
-		return ABBREV_TO_FULL_STATE_MAP.get(code);
+		return ABBREV_TO_FULL_STATE_MAP.get(code.toUpperCase());
 	}
 	
 	public static String getCodeFromStateName(final String stateName) {
@@ -90,7 +90,7 @@ public class StateUtils {
 	}
 	
 	public static boolean isStateCode(final String code) {
-		return ABBREV_TO_FULL_STATE_MAP.containsKey(code);
+		return ABBREV_TO_FULL_STATE_MAP.containsKey(code.toUpperCase());
 	}
 	
 	public static boolean isFullStateName(final String stateName) {
