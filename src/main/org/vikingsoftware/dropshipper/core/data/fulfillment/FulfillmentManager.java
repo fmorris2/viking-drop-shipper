@@ -125,37 +125,36 @@ public class FulfillmentManager {
 	
 	private static double getBusinessDaysSinceOrder(final long orderDateParsed) {
 		final LocalDateTime current = LocalDateTime.now();
-		final LocalDateTime truncatedCurrent = current.truncatedTo(ChronoUnit.DAYS);
-		final LocalDateTime orderDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(orderDateParsed), ZoneId.systemDefault());
-		final ZoneOffset offset = OffsetDateTime.now().getOffset();
 		
+		LocalDateTime temp = LocalDateTime.ofInstant(Instant.ofEpochMilli(orderDateParsed), ZoneId.systemDefault());	
 		double businessDaysSinceOrder = 0;
-
-		LocalDateTime temp = orderDate;
-		while(!temp.truncatedTo(ChronoUnit.DAYS).isEqual(truncatedCurrent)) {
+		
+		while(temp.isBefore(current)) {
+			final LocalDateTime tempPlusOneDay = temp.plusDays(1);
 			if(isBusinessDay(temp)) {
-				businessDaysSinceOrder += 1;
-			} else if(businessDaysSinceOrder > 0) {
-				businessDaysSinceOrder -= (temp.toInstant(offset).toEpochMilli() - temp.truncatedTo(ChronoUnit.DAYS).toInstant(offset).toEpochMilli()) / (double)ONE_DAY_MS;
-				temp = temp.truncatedTo(ChronoUnit.DAYS);
+				if(isBusinessDay(tempPlusOneDay)) {
+					if(tempPlusOneDay.isAfter(current)) {
+						businessDaysSinceOrder += getDaysBetween(temp, current);
+						temp = current;
+					} else {
+						temp = tempPlusOneDay;
+						businessDaysSinceOrder += 1;
+					}
+				} else {
+					businessDaysSinceOrder += getDaysBetween(temp, tempPlusOneDay.truncatedTo(ChronoUnit.DAYS));
+					temp = tempPlusOneDay.truncatedTo(ChronoUnit.DAYS);
+				}
+			} else {
+				temp = temp.plusDays(1).truncatedTo(ChronoUnit.DAYS);
 			}
-			temp = temp.plusDays(1);
 		}
 		
-		if(isBusinessDay(current)) {
-			final long currentMs = current.toInstant(offset).toEpochMilli();
-			final long truncatedCurrentMs = truncatedCurrent.toInstant(offset).toEpochMilli();
-			final long tempMs = temp.toInstant(offset).toEpochMilli();
-			final boolean orderedToday = truncatedCurrent.isEqual(orderDate.truncatedTo(ChronoUnit.DAYS));
-			
-			businessDaysSinceOrder += (currentMs < tempMs || (businessDaysSinceOrder == 0 && !orderedToday) 
-					? (double)currentMs - truncatedCurrentMs 
-					: (double)currentMs - tempMs) / ONE_DAY_MS;
-		}
-		System.out.println("Order Date: " + orderDate);
-		System.out.println("Current Date: " + current);
-		System.out.println("Business Days Since Order: " + businessDaysSinceOrder);
 		return businessDaysSinceOrder;
+	}
+	
+	private static double getDaysBetween(final LocalDateTime min, final LocalDateTime max) {
+		final ZoneOffset offset = OffsetDateTime.now().getOffset();
+		return (max.toInstant(offset).toEpochMilli() - min.toInstant(offset).toEpochMilli()) / (double)ONE_DAY_MS;
 	}
 	
 	private static boolean isBusinessDay(final LocalDateTime date) {
