@@ -7,6 +7,7 @@ import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 public enum SamsOrderState {
 	RECENTLY_PLACED("recently placed order"),
+	ORDER_RECEIVED("order received"),
 	IN_PROGRESS("in progress"),
 	PACKAGE_DATA_TRANSMITTED("package data transmitted to fedex"),
 	SHIPPED("shipped"),
