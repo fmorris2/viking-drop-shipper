@@ -1,167 +1,60 @@
 package main.org.vikingsoftware.dropshipper.crawler.strategy.impl;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptException;
-import org.openqa.selenium.StaleElementReferenceException;
-import org.openqa.selenium.WebElement;
-
-import main.org.vikingsoftware.dropshipper.core.web.DefaultWebDriver;
 import main.org.vikingsoftware.dropshipper.crawler.strategy.FulfillmentListingCrawlerStrategy;
 
 public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
-
-	private static final String ALL_CATEGORIES_URL = "https://www.samsclub.com/c";
 	
-	private static final String CATEGORY_PAGE_SUBSTRING = "/c/";
-	private static final String SUB_CATEGORY_PAGE_SUBSTRING = "/b/";
-	private static final String PRODUCT_PAGE_SUBSTRING = "/p/";
+	private static final Map<String, String> CATEGORY_MAP = new HashMap<>();
 	
-	private static final String ONLINE_ONLY_FILTER = "?selectedFilter=online";
-	
-	private final Set<String> visitedUrls = new HashSet<>();
-	
-	private DefaultWebDriver driver = null;
+	static {
+		CATEGORY_MAP.put("Apparel & Shoes", "1959");
+		CATEGORY_MAP.put("Appliances", "1004");
+		CATEGORY_MAP.put("Auto & Tires", "1055");
+		CATEGORY_MAP.put("Baby & Toddler", "1946");
+		CATEGORY_MAP.put("Books & Entertainment", "15740371");
+		CATEGORY_MAP.put("Cigarettes & Tobacco", "1580");
+		CATEGORY_MAP.put("Clearance", "1150109");
+		CATEGORY_MAP.put("Computers", "1116");
+		CATEGORY_MAP.put("Electronics & Computers", "1086");
+		CATEGORY_MAP.put("Furniture", "1286");
+		CATEGORY_MAP.put("Gift Cards", "1003");
+		CATEGORY_MAP.put("Grocery", "1444");
+		CATEGORY_MAP.put("Home", "1285");
+		CATEGORY_MAP.put("Home Improvement", "1390");
+		CATEGORY_MAP.put("Household Essentials", "450203");
+		CATEGORY_MAP.put("Jewelry, Flowers & Gifts", "7520117");
+		CATEGORY_MAP.put("Member's Mark", "4710101");																													CATEGORY_MAP.put("New Items", "8131");
+		CATEGORY_MAP.put("Office", "1706");
+		CATEGORY_MAP.put("Outdoor & Patio", "1852");
+		CATEGORY_MAP.put("Pet Supplies", "2011");
+		CATEGORY_MAP.put("Pharmacy, Health & Beauty", "1585");
+		CATEGORY_MAP.put("Photo Center", "1020193");
+		CATEGORY_MAP.put("Restaurant Supplies", "2209");
+		CATEGORY_MAP.put("Seasonal & Occasions", "1900101");
+		CATEGORY_MAP.put("Shop by Business", "100002");
+		CATEGORY_MAP.put("Shops & Promotions", "7130108");
+		CATEGORY_MAP.put("Tech Savings", "1240109");
+		CATEGORY_MAP.put("Toys & Games", "1929");
+	}
 	
 	public void crawl() {
-		try {
-			driver = new DefaultWebDriver();
-//			driver = new DefaultWebDriver(DefaultWebDriver.getSettingsBuilder()
-//					.blockMedia(true)
-//					.blockAds(true)
-//					.quickRender(true)
-//					.build());
-			System.out.println("[SamsClubCrawlerStrategy] - crawl");
-			crawlCategoryPage(ALL_CATEGORIES_URL);
-		} finally {
-			driver.close();
-		}
-	}
-	
-	private void crawlCategoryPage(final String url) {
-		System.out.println("[SamsClubCrawlerStrategy] - crawling category page: " + url);
-		visitedUrls.add(url);
-		System.out.println("[SamsClubCrawlerStrategy] - loading page...");
-		driver.get(url);
-		System.out.println("\tdone.");
-		
-		final List<String> linksOnPage = new ArrayList<>(parseAllLinksOnPage());
-		Collections.shuffle(linksOnPage);
-		
-		for(final String link : linksOnPage) {
-			final PageType pageType = getPageTypeForUrl(link);
-			System.out.println(pageType + ": " + link);
-			switch(pageType) {
-				case CATEGORY:
-					System.out.println("[SamsClubCrawlerStrategy] - Found category link on page: " + link);
-					crawlCategoryPage(link);
-				break;
-				case SUB_CATEGORY:
-					System.out.println("[SamsClubCrawlerStrategy] - Found sub category link on page: " + link);
-					crawlSubCategoryPage(link + ONLINE_ONLY_FILTER);
-				break;
-				default:
+		final SamsCategoryAPI api = new SamsCategoryAPI();
+		System.out.println("[SamsClubCrawlerStrategy] - crawl");
+		for(final Map.Entry<String, String> category : CATEGORY_MAP.entrySet()) {
+			System.out.println("Parsing products from category: " + category.getKey());
+			if(api.parse(category.getValue())) {
+				final Set<String> urls = api.getProductUrls();
+				System.out.println("\tParsed " + urls.size() + " urls");
+				for(final String url : urls) {
+					urlFound(url);
+				}		
 			}
-		}
-	}
-	
-	private Set<String> parseAllLinksOnPage() {
-		final Set<String> links = new HashSet<>();
-		try {
-			System.out.println("parseAllLinksOnPage");
-			final Supplier<List<WebElement>> aElements = () -> driver.findElements(By.tagName("a"));
-			for(final WebElement el : aElements.get()) {
-				try {
-					final String href = el.getAttribute("href");
-					if(href != null && href.contains("samsclub.com/") && !visitedUrls.contains(href)) {
-						final int queryStart = href.indexOf("?");
-						if(queryStart != -1) {
-							links.add(href.substring(0, queryStart));
-						} else {
-							links.add(href);
-						}
-					}
-				} catch(final StaleElementReferenceException e) {
-					return parseAllLinksOnPage();
-				}
-			}
-		} catch(final Exception e) {
-			e.printStackTrace();
-		}
-		
-		return links;
-	}
-	
-	private void crawlSubCategoryPage(final String url) {
-		System.out.println("[SamsClubCrawlerStrategy] - Attempting to crawl sub category page");
-		visitedUrls.add(url);
-		driver.get(url);
-		try {
-			int numProducts = parseProductsOnCurrentPage();
 			
-			while(numProducts > 0) {
-				driver.setImplicitWait(1);
-				try {
-					System.out.println("[SamsClubCrawlerStrategy] - Navigating to next page of products...");
-					driver.js("document.querySelector(\".sc-pagination-next > a:nth-child(1)\").click();");
-					driver.sleep(3000); //sluggish sams club front end
-					numProducts = parseProductsOnCurrentPage();
-				} catch(final JavascriptException e) {
-					numProducts = 0;
-				} catch(final Exception e) {
-					e.printStackTrace();
-					numProducts = 0;
-				}
-			}
-		} catch(final Exception e) {
-			e.printStackTrace();
 		}
-	}
-	
-	private int parseProductsOnCurrentPage() {
-		System.out.println("[SamsClubCrawlerStrategy] - Parsing products on current page");
-		int numProducts = 0;
-		final Set<String> links = parseAllLinksOnPage();
-		visitedUrls.addAll(links);
-		
-		for(final String url : links) {
-			if(getPageTypeForUrl(url) == PageType.PRODUCT) {
-				System.out.println("[SamsClubCrawlerStrategy] - Found product url: " + url);
-				urlFound(url);
-				numProducts++;
-			}
-		}	
-		
-		return numProducts;
-	}
-	
-	private PageType getPageTypeForUrl(final String url) {
-		if(url.contains(CATEGORY_PAGE_SUBSTRING)) {
-			return PageType.CATEGORY;
-		} 
-		
-		if(url.contains(SUB_CATEGORY_PAGE_SUBSTRING)) {
-			return PageType.SUB_CATEGORY;
-		}
-		
-		if(url.contains(PRODUCT_PAGE_SUBSTRING)) {
-			return PageType.PRODUCT;
-		}
-		
-		return PageType.UNKNOWN;
-	}
-	
-	private enum PageType {
-		CATEGORY,
-		SUB_CATEGORY,
-		PRODUCT,
-		UNKNOWN
 	}
 
 }
