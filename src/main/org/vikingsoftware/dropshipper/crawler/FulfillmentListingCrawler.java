@@ -70,7 +70,9 @@ public class FulfillmentListingCrawler {
 		while(isCrawling) {
 			try {
 				System.out.println("About to crawl using strategy " + strategy);
-				strategy.crawl();
+				if(strategy.isCrawling()) {
+					strategy.crawl();
+				}
 				System.out.println("Done crawling using strategy " + strategy);
 			} catch(final Exception e) {
 				e.printStackTrace();
