@@ -8,7 +8,8 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 public enum RequiredItemSpecific {
 	BRAND("Brand", ItemSpecificType.PROVIDED_BY_GUI, listing -> listing.brand),
 	PRODUCT("Product", listing -> listing.category.name),
-	MPN("MPN", ItemSpecificType.PROVIDED_BY_LISTING, listing -> listing.mpn);
+	MPN("MPN", ItemSpecificType.PROVIDED_BY_LISTING, listing -> listing.mpn),
+	UPC("UPC", ItemSpecificType.PROVIDED_BY_LISTING, listing -> listing.upc);
 	
 	public final String name;
 	public final ItemSpecificType type;
