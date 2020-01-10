@@ -2,6 +2,7 @@ package main.org.vikingsoftware.dropshipper.listing.tool.logic;
 
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.swing.SwingUtilities;
 
@@ -10,37 +11,73 @@ import main.org.vikingsoftware.dropshipper.listing.tool.gui.ListingToolGUI;
 public final class ListingQueue {
 
 	private static final LinkedList<Listing> queue = new LinkedList<>();
-
+	private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+	
 	public static int size() {
-		return queue.size();
+		lock.readLock().lock();
+		try {
+			return queue.size();
+		} finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	public static void replaceFirst(final Listing listing) {
-		queue.poll();
-		queue.addFirst(listing);
+		lock.writeLock().lock();
+		try {
+			queue.poll();
+			queue.addFirst(listing);
+		} finally {
+			lock.writeLock().unlock();
+		}
 	}
 
 	public static void add(final Listing listing) {
-		queue.add(listing);
-		updateQueueSizeLabel();
+		lock.writeLock().lock();
+		try {
+			queue.add(listing);
+			updateQueueSizeLabel();
+		} finally {
+			lock.writeLock().unlock();
+		}
 	}
 
 	public static Listing peek() {
-		return queue.peek();
+		lock.readLock().lock();
+		try {
+			return queue.peek();
+		} finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	public static Listing poll() {
-		final Listing listing = queue.poll();
-		updateQueueSizeLabel();
-		return listing;
+		lock.writeLock().lock();
+		try {
+			final Listing listing = queue.poll();
+			updateQueueSizeLabel();
+			return listing;
+		} finally {
+			lock.writeLock().unlock();
+		}
 	}
 	
 	public static void shuffle() {
-		Collections.shuffle(queue);
+		lock.writeLock().lock();
+		try {
+			Collections.shuffle(queue);
+		} finally {
+			lock.writeLock().unlock();
+		}
 	}
 
 	public static boolean isEmpty() {
-		return queue.isEmpty();
+		lock.readLock().lock();
+		try {
+			return queue.isEmpty();
+		} finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	private static void updateQueueSizeLabel() {

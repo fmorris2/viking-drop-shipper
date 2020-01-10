@@ -2,15 +2,16 @@ package main.org.vikingsoftware.dropshipper.listing.tool.logic.workers;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
@@ -34,9 +35,10 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 
 	private static FulfillmentListingParserWorker instance;
 
+	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	private final ExecutorService threadPool = Executors.newFixedThreadPool(ThreadUtils.NUM_THREADS);
-	private final Queue<String> urlQueue = new ConcurrentLinkedQueue<>();
-	private final Queue<Listing> completedListings = new ConcurrentLinkedQueue<>();
+	private final LinkedList<String> urlQueue = new LinkedList<>();
+	private final LinkedList<Listing> completedListings = new LinkedList<>();
 	
 	private int urlsToParse = 0;
 
@@ -60,14 +62,28 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 	public static boolean isPreExistingItemTitle(final int platform, final String title) {
 		return platformToFulfillmentTitles.getOrDefault(platform, new HashSet<>()).contains(title);
 	}
+	
+	public void shuffle() {
+		lock.writeLock().lock();
+		try {
+			Collections.shuffle(urlQueue);
+		} finally {
+			lock.writeLock().unlock();
+		}
+	}
 
 	public void addUrlToQueue(final String url) {
-		if(!preExistingFulfillmentURLs.contains(url)) {
-			urlQueue.add(url);
-			urlsToParse++;
-			updateUrlsToParse();
-		} else {
-			System.out.println("We already have the fulfillment URL " + url + " in the DB... Skipping...");
+		lock.writeLock().lock();
+		try {
+			if(!preExistingFulfillmentURLs.contains(url)) {
+				urlQueue.add(url);
+				urlsToParse++;
+				updateUrlsToParse();
+			} else {
+				System.out.println("We already have the fulfillment URL " + url + " in the DB... Skipping...");
+			}
+		} finally {
+			lock.writeLock().unlock();
 		}
 	}
 
@@ -87,10 +103,14 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 	protected Void doInBackground() throws Exception {
 		while(true) {
 			try {
+				lock.writeLock().lock();
 				if(ListingQueue.size() < MAX_COMPLETED_LISTINGS_SIZE) {
 					if(!urlQueue.isEmpty()) {
-						final String url = urlQueue.poll();
-						threadPool.execute(() -> parse(url));
+						threadPool.execute(() -> {
+							if(ListingQueue.size() < MAX_COMPLETED_LISTINGS_SIZE) {
+								parse();
+							}
+						});
 					}
 				}
 				
@@ -99,16 +119,21 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 				}
 			} catch(final Exception e) {
 				e.printStackTrace();
+			} finally {
+				lock.writeLock().unlock();
 			}
 			Thread.sleep(CYCLE_TIME);
 		}
 	}
 	
-	private void parse(final String url) {
+	private void parse() {
 		try {
-			if(ListingQueue.size() >= MAX_COMPLETED_LISTINGS_SIZE) {
-				urlQueue.add(url);
-				return;
+			lock.writeLock().lock();
+			String url = null;
+			try {
+				url = urlQueue.poll();
+			} finally {
+				lock.writeLock().unlock();
 			}
 			System.out.println("Attempting to parse listing for " + url);
 			final Listing listing = FulfillmentParsingManager.parseListing(url);
@@ -117,15 +142,25 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 					System.out.println("Gift card detected... Skipping...");
 				} else {
 					System.out.println("Adding completed listing: " + listing);
-					completedListings.add(listing);
+					lock.writeLock().lock();
+					try {
+						completedListings.add(listing);
+					} finally {
+						lock.writeLock().unlock();
+					}
 				}
 			}
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
 		
-		urlsToParse--;
-		updateUrlsToParse();
+		lock.writeLock().lock();
+		try {
+			urlsToParse--;
+			updateUrlsToParse();
+		} finally {
+			lock.writeLock().unlock();
+		}
 	}
 	
 	private void handleCompletedListing(final Listing listing) {

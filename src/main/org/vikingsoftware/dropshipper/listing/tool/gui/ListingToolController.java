@@ -80,6 +80,12 @@ public class ListingToolController {
 		});
 	}
 	
+	public void shuffle() {
+		FulfillmentListingParserWorker.instance().shuffle();
+		ListingQueue.shuffle();
+		displayNextListing();
+	}
+	
 	public void startCrawler() {
 		System.out.println("Starting Crawler");
 		crawler.start(this::addFulfillmentURLToQueue);

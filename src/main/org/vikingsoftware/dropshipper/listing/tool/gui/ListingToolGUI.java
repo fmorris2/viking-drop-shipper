@@ -107,7 +107,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
 //        recentSalesPanel = new javax.swing.JPanel();
         soldItemsCheckbox = new javax.swing.JCheckBox();
         shuffleUrlQueue = new JButton("Shuffle URLs");
-        shuffleUrlQueue.addActionListener(e -> ListingQueue.shuffle());
+        shuffleUrlQueue.addActionListener(e -> controller.shuffle());
         imagesPanelContainer = new javax.swing.JPanel();
         imagesPanelHeaderText = new javax.swing.JLabel();
         imagesPanelScrollPane = new javax.swing.JScrollPane();
