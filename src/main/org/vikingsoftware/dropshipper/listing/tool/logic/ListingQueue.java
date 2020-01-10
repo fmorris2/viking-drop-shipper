@@ -1,5 +1,6 @@
 package main.org.vikingsoftware.dropshipper.listing.tool.logic;
 
+import java.util.Collections;
 import java.util.LinkedList;
 
 import javax.swing.SwingUtilities;
@@ -32,6 +33,10 @@ public final class ListingQueue {
 		final Listing listing = queue.poll();
 		updateQueueSizeLabel();
 		return listing;
+	}
+	
+	public static void shuffle() {
+		Collections.shuffle(queue);
 	}
 
 	public static boolean isEmpty() {

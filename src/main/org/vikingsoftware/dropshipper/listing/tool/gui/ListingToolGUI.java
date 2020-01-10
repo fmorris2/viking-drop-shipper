@@ -7,6 +7,10 @@ package main.org.vikingsoftware.dropshipper.listing.tool.gui;
 
 import java.awt.Dimension;
 
+import javax.swing.JButton;
+
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingQueue;
+
 /**
  *
  * @author Bren
@@ -102,6 +106,8 @@ public class ListingToolGUI extends javax.swing.JFrame {
 //        recentSalesScrollPane = new javax.swing.JScrollPane();
 //        recentSalesPanel = new javax.swing.JPanel();
         soldItemsCheckbox = new javax.swing.JCheckBox();
+        shuffleUrlQueue = new JButton("Shuffle URLs");
+        shuffleUrlQueue.addActionListener(e -> ListingQueue.shuffle());
         imagesPanelContainer = new javax.swing.JPanel();
         imagesPanelHeaderText = new javax.swing.JLabel();
         imagesPanelScrollPane = new javax.swing.JScrollPane();
@@ -277,6 +283,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
                 .addComponent(generalInfoPanelHeaderText)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(soldItemsCheckbox)
+                .addComponent(shuffleUrlQueue)
                 .addComponent(resetListingInformation))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, generalInfoPanelLayout.createSequentialGroup()
                 .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -310,6 +317,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
                 .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(generalInfoPanelHeaderText)
                     .addComponent(soldItemsCheckbox)
+                    .addComponent(shuffleUrlQueue)
                     .addComponent(resetListingInformation))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(generalInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -553,6 +561,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
     public javax.swing.JLabel shippingPriceLabel;
     public javax.swing.JButton skipListingBtn;
     public javax.swing.JCheckBox soldItemsCheckbox;
+    public JButton shuffleUrlQueue;
     public javax.swing.JPanel statusAreaPanel;
     public javax.swing.JLabel statusTextValue;
     public javax.swing.JLabel urlsToParseLabel;
