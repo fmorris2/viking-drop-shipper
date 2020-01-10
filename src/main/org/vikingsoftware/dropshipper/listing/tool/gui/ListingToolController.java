@@ -357,7 +357,8 @@ public class ListingToolController {
 				executor.execute(() -> {
 					//publish...
 					final Listing toPublish = createListingToPublish();
-					if(toPublish != null && verifyRequiredItemSpecifics(toPublish)) {
+					final boolean isAlreadyListed = FulfillmentManager.get().getListingForItemId(toPublish.fulfillmentPlatformId, toPublish.itemId).isPresent();
+					if(toPublish != null && verifyRequiredItemSpecifics(toPublish) && !isAlreadyListed) {
 						final Optional<String> publishedEbayListingItemId = EbayCalls.createListing(toPublish);
 						if(publishedEbayListingItemId.isPresent()) {
 							System.out.println("Successfully published eBay listing: " + toPublish.title);

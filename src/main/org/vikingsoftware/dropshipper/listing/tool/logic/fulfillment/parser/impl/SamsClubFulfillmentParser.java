@@ -38,6 +38,7 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 		try {
 			final String productId = parseProductIdFromListingUrl(url);
 			final SamsProductAPI api = new SamsProductAPI();
+			System.out.println("Product ID: " + productId);
 			api.parse(productId);
 			
 			final Listing listing = new Listing();
@@ -102,6 +103,8 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 			
 			listing.pictures = api.getImages();
 			
+			listing.mpn = api.getModelNumber().orElse(null);
+			
 			if(listing.pictures.size() > MAX_LISTING_IMAGES) {
 				listing.pictures = listing.pictures.subList(0, MAX_LISTING_IMAGES);
 			}
@@ -120,7 +123,7 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 	private String parseProductIdFromListingUrl(final String url) {
 		final Matcher matcher = PRODUCT_ID_PATTERN.matcher(url);
 		if(matcher.find()) {
-			return matcher.group(2);
+			return (matcher.group(1) != null ? matcher.group(1) : "") + matcher.group(2);
 		}
 		
 		return null;

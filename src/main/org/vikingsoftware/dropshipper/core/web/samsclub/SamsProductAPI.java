@@ -78,7 +78,8 @@ public final class SamsProductAPI extends JsonAPIParser {
 	public boolean passesAllListingConditions() {
 		try {
 			return isFreeShipping() && isAvailableOnline()
-					&& !hasMinPurchaseQty() && !hasVariations();
+					&& !hasMinPurchaseQty() && !hasVariations()
+					&& !isGiftCard();
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
@@ -123,6 +124,14 @@ public final class SamsProductAPI extends JsonAPIParser {
 	public boolean hasVariations() {
 		if(skuOptionsArr.isPresent()) {
 			return skuOptionsArr.get().length() > 1;
+		}
+		
+		return false;
+	}
+	
+	public boolean isGiftCard() {
+		if(payload.isPresent()) {
+			return getBoolean(payload.get(), "giftCardTemplateProduct");
 		}
 		
 		return false;

@@ -20,6 +20,7 @@ public class Listing implements Cloneable {
 	public String url;
 	public String upc;
 	public String ean;
+	public String mpn;
 	public int fulfillmentPlatformId;
 	public int handlingTime = 5;
 	public double price;

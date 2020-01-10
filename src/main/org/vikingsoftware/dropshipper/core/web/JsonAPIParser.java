@@ -44,4 +44,14 @@ public class JsonAPIParser {
 		
 		return -1;
 	}
+	
+	protected boolean getBoolean(final JSONObject parent, final String key) {
+		try {
+			return parent.getBoolean(key);
+		} catch(final Exception e) {
+			//swallow exception
+		}
+		
+		return false;
+	}
 }

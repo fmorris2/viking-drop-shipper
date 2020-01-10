@@ -520,25 +520,9 @@ public class EbayCalls {
 
 		final NameValueListArrayType specifics = new NameValueListArrayType();
 
-//		final NameValueListType mpn = new NameValueListType();
-//		mpn.setName("MPN");
-//		mpn.setValue(new String[] {"Does not Apply"});
-		
-//		final NameValueListType brand = new NameValueListType();
-//		brand.setName("Brand");
-//		brand.setValue(new String[]{listing.brand});
-
-//		final NameValueListType upcOrEan = new NameValueListType();
-//		if(listing.upc == null && listing.ean == null) {
-//			upcOrEan.setName("UPC");
-//			upcOrEan.setValue(new String[]{"Does Not Apply"});
-//		} else if(listing.upc != null) {
-//			upcOrEan.setName("UPC");
-//			upcOrEan.setValue(new String[]{listing.upc});
-//		} else if(listing.ean != null) {
-//			upcOrEan.setName("EAN");
-//			upcOrEan.setValue(new String[]{listing.ean});
-//		}
+		final NameValueListType brand = new NameValueListType();
+		brand.setName("Brand");
+		brand.setValue(new String[]{listing.brand});
 		
 		final List<NameValueListType> itemSpecifics = new ArrayList<>();//Arrays.asList(brand, upcOrEan, mpn));
 		if(listing.itemSpecifics != null) {
@@ -549,6 +533,8 @@ public class EbayCalls {
 				itemSpecifics.add(specific);
 			}
 		}
+		
+		itemSpecifics.add(brand);
 
 		specifics.setNameValueList(itemSpecifics.toArray(new NameValueListType[itemSpecifics.size()]));
 		item.setItemSpecifics(specifics);
@@ -578,10 +564,14 @@ public class EbayCalls {
 			type.setEAN(ean);
 		}
 		final BrandMPNType brandMpn = new BrandMPNType();
+		System.out.println("Setting brand: " + listing.brand + " and mpn: " + listing.mpn);
 		brandMpn.setBrand(listing.brand);
-		brandMpn.setMPN("Does Not Apply");
+		brandMpn.setMPN(listing.mpn != null ? listing.mpn : "Does Not Apply");
 		type.setBrandMPN(brandMpn);
 		type.setIncludeeBayProductDetails(true);
+		type.setIncludeStockPhotoURL(false);
+		type.setUseStockPhotoURLAsGallery(false);
+		type.setUseFirstProduct(true);
 		return type;
 	}
 

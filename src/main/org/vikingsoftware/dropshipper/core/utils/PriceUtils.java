@@ -21,12 +21,12 @@ public final class PriceUtils {
 		final double totalMoneySpent = (buyPriceWithTax + eBayFinalValueFee + paypalFee);
 		final double profit = sellPrice - totalMoneySpent;
 		final double margin = (profit / totalMoneySpent) * 100;
-		System.out.println("Buy price with tax: " + buyPriceWithTax);
-		System.out.println("eBay final value fee: " + eBayFinalValueFee);
-		System.out.println("Paypal fee: " + paypalFee);
-		System.out.println("Total money spent: " + totalMoneySpent);
-		System.out.println("Profit: " + profit);
-		System.out.println("Margin: " + margin + "%");
+//		System.out.println("Buy price with tax: " + buyPriceWithTax);
+//		System.out.println("eBay final value fee: " + eBayFinalValueFee);
+//		System.out.println("Paypal fee: " + paypalFee);
+//		System.out.println("Total money spent: " + totalMoneySpent);
+//		System.out.println("Profit: " + profit);
+//		System.out.println("Margin: " + margin + "%");
 		return margin;
 	}
 	

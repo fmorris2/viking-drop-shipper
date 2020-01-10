@@ -7,7 +7,8 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 
 public enum RequiredItemSpecific {
 	BRAND("Brand", true, listing -> listing.brand),
-	PRODUCT("Product", listing -> listing.category.name);
+	PRODUCT("Product", listing -> listing.category.name),
+	MPN("MPN", listing -> listing.mpn);
 	
 	public final String name;
 	public final boolean isProvidedByOtherGUIElement;
