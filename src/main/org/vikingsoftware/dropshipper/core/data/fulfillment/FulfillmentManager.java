@@ -31,7 +31,7 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutio
 
 public class FulfillmentManager {
 	
-	public static final int SAFE_STOCK_THRESHOLD = 200;
+	public static final int SAFE_STOCK_THRESHOLD = 100;
 	
 	private static final long ONE_DAY_MS = (60000 * 60) * 24;
 	private static final double SAMS_ORDER_BATCH_WINDOW = 2.0D; //2.0 days is the longest we'll wait before fulfilling an order
