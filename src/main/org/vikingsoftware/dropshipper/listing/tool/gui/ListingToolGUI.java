@@ -146,11 +146,11 @@ public class ListingToolGUI extends javax.swing.JFrame {
             .addGroup(queuePanelContainerLayout.createSequentialGroup()
                 .addComponent(urlsToParseLabel)
                 .addGap(0, 0, 0)
-                .addComponent(urlsToParseValue, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(urlsToParseValue, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
             .addGroup(queuePanelContainerLayout.createSequentialGroup()
                 .addComponent(parsedQueueLabel)
                 .addGap(0, 0, 0)
-                .addComponent(parsedQueueValue, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(parsedQueueValue, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         queuePanelContainerLayout.setVerticalGroup(
             queuePanelContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
