@@ -6,23 +6,23 @@ import java.util.function.Function;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 
 public enum RequiredItemSpecific {
-	BRAND("Brand", true, listing -> listing.brand),
+	BRAND("Brand", ItemSpecificType.PROVIDED_BY_GUI, listing -> listing.brand),
 	PRODUCT("Product", listing -> listing.category.name),
-	MPN("MPN", true, listing -> listing.mpn);
+	MPN("MPN", ItemSpecificType.PROVIDED_BY_LISTING, listing -> listing.mpn);
 	
 	public final String name;
-	public final boolean isProvidedByOtherGUIElement;
+	public final ItemSpecificType type;
 	public final Function<Listing, String> preFilledValueFunction;
 	
 	RequiredItemSpecific(final String name, final Function<Listing, String> preFilledValueFunction) {
 		this.name = name;
-		this.isProvidedByOtherGUIElement = false;
+		this.type = ItemSpecificType.NEEDS_MANUAL_SELECTION;
 		this.preFilledValueFunction = preFilledValueFunction;
 	}
 	
-	RequiredItemSpecific(final String name, final boolean isProvidedByOtherGUIElement, final Function<Listing, String> preFilledValueFunction) {
+	RequiredItemSpecific(final String name, final ItemSpecificType type, final Function<Listing, String> preFilledValueFunction) {
 		this.name = name;
-		this.isProvidedByOtherGUIElement = isProvidedByOtherGUIElement;
+		this.type = type;
 		this.preFilledValueFunction = preFilledValueFunction;
 	}
 	
@@ -34,5 +34,11 @@ public enum RequiredItemSpecific {
 		}
 		
 		return Optional.empty();
+	}
+	
+	public enum ItemSpecificType {
+		PROVIDED_BY_GUI,
+		PROVIDED_BY_LISTING,
+		NEEDS_MANUAL_SELECTION;
 	}
 }

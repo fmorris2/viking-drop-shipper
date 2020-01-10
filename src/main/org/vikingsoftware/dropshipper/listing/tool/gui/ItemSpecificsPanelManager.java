@@ -26,7 +26,7 @@ public final class ItemSpecificsPanelManager {
 		return instance;
 	}
 
-	public Map<String, String> getRequiredItemSpecifics(final Component gui, final Listing listing) {		
+	public Map<String, String> getRequiredItemSpecifics(final ListingToolGUI gui, final Listing listing) {		
 		final AtomicBoolean finished = new AtomicBoolean(false);
 		
 		SwingUtilities.invokeLater(() -> {

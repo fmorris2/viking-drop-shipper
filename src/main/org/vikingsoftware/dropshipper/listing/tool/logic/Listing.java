@@ -13,7 +13,7 @@ public class Listing implements Cloneable {
 	public String description;
 	public EbayCategory category;
 	public Map<String, List<String>> requiredItemSpecifics;
-	public Map<String, String> itemSpecifics;
+	public Map<String, String> itemSpecifics = new HashMap<>();
 	public String itemId;
 	public String productId;
 	public String brand;

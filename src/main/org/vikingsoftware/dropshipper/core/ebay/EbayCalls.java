@@ -77,7 +77,6 @@ import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.EbayConversionUtils;
-import main.org.vikingsoftware.dropshipper.listing.tool.gui.item.specifics.model.RequiredItemSpecific;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.EbayCategory;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 
@@ -636,10 +635,6 @@ public class EbayCalls {
 									.map(rec -> rec.getValue())
 									.collect(Collectors.toList());
 							
-							final Optional<RequiredItemSpecific> requiredItemSpec = RequiredItemSpecific.getRequiredItemSpecific(specificRecommendation.getName());
-							if(requiredItemSpec.isPresent() && requiredItemSpec.get().isProvidedByOtherGUIElement) {
-								continue;
-							}
 							requiredFields.put(specificRecommendation.getName(), recommendedValues);
 						}
 					}

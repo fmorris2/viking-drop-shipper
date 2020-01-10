@@ -19,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import main.org.vikingsoftware.dropshipper.listing.tool.gui.item.specifics.model.RequiredItemSpecific;
+import main.org.vikingsoftware.dropshipper.listing.tool.gui.item.specifics.model.RequiredItemSpecific.ItemSpecificType;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 
 public class ItemSpecificsPanel extends JFrame {
@@ -42,33 +43,39 @@ public class ItemSpecificsPanel extends JFrame {
 		this.scrollPane = new JScrollPane(specificsPanel);
 		this.setLayout(borderLayout);
 		this.specificsPanel.setLayout(gridLayout);
-		addItemSpecificFields(listing);
-		this.add(new JLabel("Item Specifics Panel"), BorderLayout.NORTH);
-		this.add(scrollPane, BorderLayout.CENTER);
-		final JButton submitButton = new JButton("Submit");
-		submitButton.addActionListener(this::submit);
-		this.add(submitButton, BorderLayout.SOUTH);
-		this.pack();
-		this.setVisible(true);
-		this.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosed(WindowEvent e) {
-				finished.set(true);
-				super.windowClosed(e);
-			}
-		});
+		if(addItemSpecificFields(listing)) {
+			this.add(new JLabel("Item Specifics Panel"), BorderLayout.NORTH);
+			this.add(scrollPane, BorderLayout.CENTER);
+			final JButton submitButton = new JButton("Submit");
+			submitButton.addActionListener(this::submit);
+			this.add(submitButton, BorderLayout.SOUTH);
+			this.pack();
+			this.setVisible(true);
+			this.addWindowListener(new WindowAdapter() {
+				@Override
+				public void windowClosed(WindowEvent e) {
+					finished.set(true);
+					super.windowClosed(e);
+				}
+			});
+		} else {
+			finished.set(true);
+		}
 	}
 	
-	private void addItemSpecificFields(final Listing listing) {
+	private boolean addItemSpecificFields(final Listing listing) {
+		boolean addedToPanel = false;
 		final Map<String, List<String>> requiredSpecs = listing.requiredItemSpecifics;
 		for(final String itemSpecificName : requiredSpecs.keySet()) {
 			final List<String> recommendedOptions = requiredSpecs.get(itemSpecificName);
 			String preFilledValue = null;
 			final Optional<RequiredItemSpecific> requiredItemSpec = RequiredItemSpecific.getRequiredItemSpecific(itemSpecificName);
 			if(requiredItemSpec.isPresent()) {
-				if(requiredItemSpec.get().isProvidedByOtherGUIElement) {
+				if(requiredItemSpec.get().type != ItemSpecificType.NEEDS_MANUAL_SELECTION) {
+					listing.itemSpecifics.put(requiredItemSpec.get().name, requiredItemSpec.get().preFilledValueFunction.apply(listing));
 					continue;
 				}
+				addedToPanel = true;
 				if(requiredItemSpec.get().preFilledValueFunction != null) {
 					preFilledValue = requiredItemSpec.get().preFilledValueFunction.apply(listing);
 					if(preFilledValue != null) {
@@ -85,11 +92,12 @@ public class ItemSpecificsPanel extends JFrame {
 			this.specificsPanel.add(new JLabel(itemSpecificName));
 			this.specificsPanel.add(comboBox);
 		}
+		
+		return addedToPanel;
 	}
 	
 	private void submit(final ActionEvent e) {
 		
-		listing.itemSpecifics = new HashMap<>();
 		for(final Map.Entry<String, JComboBox<String>> entry : specificToComboBoxCache.entrySet()) {
 			listing.itemSpecifics.put(entry.getKey(), entry.getValue().getSelectedItem().toString());
 		}
