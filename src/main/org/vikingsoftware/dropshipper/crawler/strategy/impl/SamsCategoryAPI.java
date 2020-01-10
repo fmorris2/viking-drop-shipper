@@ -15,7 +15,7 @@ import main.org.vikingsoftware.dropshipper.core.web.JsonAPIParser;
 public class SamsCategoryAPI extends JsonAPIParser {
 	
 	private static final int PRODUCTS_PER_CALL = 48; //max you can request at once
-	private static final String API_BASE_URL = "https://www.samsclub.com/api/node/vivaldi/v1/products/search/?sourceType=1&sortKey=relevance&sortOrder=1"
+	private static final String API_BASE_URL = "https://www.samsclub.com/api/node/vivaldi/v1/products/search/?sourceType=1&sortKey=p_sales_rank&sortOrder=1"
 			+ "&clubId=6279&limit="+PRODUCTS_PER_CALL+"&br=true&searchCategoryId=";
 	
 	private String categoryId;
