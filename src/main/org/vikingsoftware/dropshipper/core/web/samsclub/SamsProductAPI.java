@@ -191,6 +191,22 @@ public final class SamsProductAPI extends JsonAPIParser {
 		return Optional.empty();
 	}
 	
+	public Optional<String> getSpecifications() {
+		if(payload.isPresent()) {
+			final JSONArray specificationsObj = getJsonArr(payload.get(), "productSpecifications");
+			if(specificationsObj != null) {
+				for(int i = 0; i < specificationsObj.length(); i++) {
+					final JSONObject specification = specificationsObj.getJSONObject(i);
+					if("specifications".equalsIgnoreCase(getString(specification, "specificationHeading"))) {
+						return Optional.ofNullable(getString(specification, "specificationText"));
+					}
+				}
+			}
+		}
+		
+		return Optional.empty();
+	}
+	
 	public Optional<String> getBrandName() {
 		if(payload.isPresent()) {
 			return Optional.ofNullable(getString(payload.get(), "brandName"));
