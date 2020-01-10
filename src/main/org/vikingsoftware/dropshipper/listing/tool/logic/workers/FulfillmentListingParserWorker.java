@@ -25,6 +25,7 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser
 public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 
 	private static final long CYCLE_TIME = 50;
+	private static final int MAX_COMPLETED_LISTINGS_SIZE = 50;
 	private static final double MAX_LISTING_PRICE = 75.00;
 	
 	private static final Set<String> preExistingFulfillmentURLs = new HashSet<>();
@@ -86,9 +87,11 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 	protected Void doInBackground() throws Exception {
 		while(true) {
 			try {
-				if(!urlQueue.isEmpty()) {
-					final String url = urlQueue.poll();
-					threadPool.execute(() -> parse(url));
+				if(ListingQueue.size() < MAX_COMPLETED_LISTINGS_SIZE) {
+					if(!urlQueue.isEmpty()) {
+						final String url = urlQueue.poll();
+						threadPool.execute(() -> parse(url));
+					}
 				}
 				
 				while(!completedListings.isEmpty()) {
@@ -103,6 +106,10 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 	
 	private void parse(final String url) {
 		try {
+			if(ListingQueue.size() >= MAX_COMPLETED_LISTINGS_SIZE) {
+				urlQueue.add(url);
+				return;
+			}
 			System.out.println("Attempting to parse listing for " + url);
 			final Listing listing = FulfillmentParsingManager.parseListing(url);
 			if(listing != null) {

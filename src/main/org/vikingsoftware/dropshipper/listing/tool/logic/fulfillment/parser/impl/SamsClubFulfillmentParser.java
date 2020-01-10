@@ -4,14 +4,11 @@ import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.jsoup.Jsoup;
-
 import com.ebay.soap.eBLBaseComponents.ShippingServiceCodeType;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.utils.ListingUtils;
-import main.org.vikingsoftware.dropshipper.core.utils.SamsClubMetaDataParser;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsProductAPI;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
