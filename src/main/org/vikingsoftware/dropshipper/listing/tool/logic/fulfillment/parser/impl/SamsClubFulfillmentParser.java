@@ -83,7 +83,7 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 			listing.productId = productId;
 			System.out.println("Product ID: " + listing.productId);
 			
-			listing.description = api.getDescription().orElse(null);
+			listing.description = api.getDescription().orElse("");
 			
 			api.getSpecifications().ifPresent(specs -> listing.description += "<br /><br />" + specs);
 			
