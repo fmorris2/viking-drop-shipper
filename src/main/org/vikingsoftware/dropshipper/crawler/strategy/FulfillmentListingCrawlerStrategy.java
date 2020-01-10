@@ -10,6 +10,7 @@ public abstract class FulfillmentListingCrawlerStrategy {
 	private List<FulfillmentListingCrawlerListener> listeners = new ArrayList<>();
 	
 	public abstract void crawl();
+	public abstract boolean isCrawling();
 	
 	public void addCrawlListener(final FulfillmentListingCrawlerListener listener) {
 		listeners.add(listener);

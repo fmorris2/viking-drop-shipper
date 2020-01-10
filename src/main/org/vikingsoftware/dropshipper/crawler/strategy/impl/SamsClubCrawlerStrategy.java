@@ -41,6 +41,8 @@ public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
 		CATEGORY_MAP.put("Toys & Games", "1929");
 	}
 	
+	private boolean isCrawling = true;
+	
 	public void crawl() {
 		final SamsCategoryAPI api = new SamsCategoryAPI();
 		System.out.println("[SamsClubCrawlerStrategy] - crawl");
@@ -53,8 +55,13 @@ public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
 					urlFound(url);
 				}		
 			}
-			
 		}
+		isCrawling = false;
+	}
+
+	@Override
+	public boolean isCrawling() {
+		return isCrawling;
 	}
 
 }
