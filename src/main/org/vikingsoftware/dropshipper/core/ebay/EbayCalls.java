@@ -66,6 +66,7 @@ import com.ebay.soap.eBLBaseComponents.TransactionType;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrderManager;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.UnknownMarketplaceMapping;
@@ -83,7 +84,6 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 public class EbayCalls {
 
 	public static final int FAKE_MAX_QUANTITY = 1;
-	private static final int MIN_AVAILABLE_FULFILLMENT_QTY = 75;
 
 	private EbayCalls() {}
 	
@@ -336,7 +336,7 @@ public class EbayCalls {
 			final ReviseInventoryStatusCall call = new ReviseInventoryStatusCall(api);
 			final InventoryStatusType invStatus = new InventoryStatusType();
 			invStatus.setItemID(listingId);
-			if(inventory < MIN_AVAILABLE_FULFILLMENT_QTY) {
+			if(inventory < FulfillmentManager.SAFE_STOCK_THRESHOLD) {
 				invStatus.setQuantity(0);
 			} else {
 				invStatus.setQuantity(Math.max(0, Math.min(FAKE_MAX_QUANTITY, inventory)));

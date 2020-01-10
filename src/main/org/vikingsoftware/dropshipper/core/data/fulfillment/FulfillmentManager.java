@@ -31,9 +31,10 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.OrderExecutio
 
 public class FulfillmentManager {
 	
+	public static final int SAFE_STOCK_THRESHOLD = 200;
+	
 	private static final long ONE_DAY_MS = (60000 * 60) * 24;
 	private static final double SAMS_ORDER_BATCH_WINDOW = 2.0D; //2.0 days is the longest we'll wait before fulfilling an order
-	private static final int SAMS_SAFE_STOCK_THRESHOLD = 50;
 	private static final int SAMS_SAFE_NUM_ORDERS_THRESHOLD = 19;
 	
 	//pair = month,day
@@ -114,7 +115,7 @@ public class FulfillmentManager {
 		
 		final boolean failsSafeOrderThreshold = numOrders > SAMS_SAFE_NUM_ORDERS_THRESHOLD;
 		final boolean failsTimeWindowThreshold = businessDaysSinceOrder > SAMS_ORDER_BATCH_WINDOW;
-		final boolean failsLowStockThreshold = stock < SAMS_SAFE_STOCK_THRESHOLD;
+		final boolean failsLowStockThreshold = stock < SAFE_STOCK_THRESHOLD;
 		if(failsSafeOrderThreshold || failsTimeWindowThreshold || failsLowStockThreshold) {
 			return true;
 		}
