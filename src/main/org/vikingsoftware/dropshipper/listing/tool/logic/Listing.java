@@ -54,6 +54,7 @@ public class Listing implements Cloneable {
 		clone.canShip = canShip;
 		clone.upc = upc;
 		clone.ean = ean;
+		clone.mpn = mpn;
 		clone.handlingTime = handlingTime;
 		return clone;
 	}
