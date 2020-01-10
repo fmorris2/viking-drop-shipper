@@ -383,7 +383,7 @@ public class ListingToolController {
 			return true;
 		}
 		
-		final Map<String, String> results = ItemSpecificsPanelManager.get().getRequiredItemSpecifics(listing);
+		final Map<String, String> results = ItemSpecificsPanelManager.get().getRequiredItemSpecifics(gui, listing);
 		
 		if(results.isEmpty() || results.size() != listing.requiredItemSpecifics.size()) {
 			System.out.println("Listing has " + listing.requiredItemSpecifics.size() + " and we've provided " + results.size() + ". Failing verification.");
