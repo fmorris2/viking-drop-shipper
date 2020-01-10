@@ -72,6 +72,8 @@ public class FulfillmentListingCrawler {
 				System.out.println("About to crawl using strategy " + strategy);
 				if(strategy.isCrawling()) {
 					strategy.crawl();
+				} else {
+					break;
 				}
 				System.out.println("Done crawling using strategy " + strategy);
 			} catch(final Exception e) {
