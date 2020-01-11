@@ -524,16 +524,6 @@ public class EbayCalls {
 		brand.setName("Brand");
 		brand.setValue(new String[]{listing.brand});
 		
-		final NameValueListType upc = new NameValueListType();
-		upc.setName("UPC");
-		if(listing.upc != null) {
-			upc.setValue(new String[]{listing.upc});
-		} else {
-			upc.setValue(new String[] {"Does Not Apply"});
-		}
-		
-		itemSpecifics.add(upc);
-		
 		if(listing.ean != null) {
 			final NameValueListType ean = new NameValueListType();
 			ean.setName("EAN");

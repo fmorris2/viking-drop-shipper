@@ -6,10 +6,10 @@ import java.util.function.Function;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 
 public enum RequiredItemSpecific {
-	BRAND("Brand", ItemSpecificType.PROVIDED_BY_GUI, listing -> listing.brand),
+	BRAND("Brand", ItemSpecificType.PROVIDED_BY_GUI, listing -> listing.brand != null ? listing.brand : "Unbranded"),
 	PRODUCT("Product", listing -> listing.category.name),
-	MPN("MPN", ItemSpecificType.PROVIDED_BY_LISTING, listing -> listing.mpn),
-	UPC("UPC", ItemSpecificType.PROVIDED_BY_LISTING, listing -> listing.upc);
+	MPN("MPN", ItemSpecificType.PROVIDED_BY_LISTING, listing -> listing.mpn != null ? listing.mpn : "Does Not Apply"),
+	UPC("UPC", ItemSpecificType.PROVIDED_BY_LISTING, listing -> listing.upc != null ? listing.upc : "Does Not Apply");
 	
 	public final String name;
 	public final ItemSpecificType type;
