@@ -518,12 +518,26 @@ public class EbayCalls {
 		item.setConditionID(1000); //brand new
 
 		final NameValueListArrayType specifics = new NameValueListArrayType();
-
+		final List<NameValueListType> itemSpecifics = new ArrayList<>();//Arrays.asList(brand, upcOrEan, mpn));
+		
 		final NameValueListType brand = new NameValueListType();
 		brand.setName("Brand");
 		brand.setValue(new String[]{listing.brand});
 		
-		final List<NameValueListType> itemSpecifics = new ArrayList<>();//Arrays.asList(brand, upcOrEan, mpn));
+		if(listing.upc != null) {
+			final NameValueListType upc = new NameValueListType();
+			upc.setName("UPC");
+			upc.setValue(new String[]{listing.upc});
+			itemSpecifics.add(upc);
+		}
+		
+		if(listing.ean != null) {
+			final NameValueListType ean = new NameValueListType();
+			ean.setName("EAN");
+			ean.setValue(new String[]{listing.ean});
+			itemSpecifics.add(ean);
+		}
+		
 		if(listing.itemSpecifics != null) {
 			for(final Map.Entry<String, String> providedItemSpecific : listing.itemSpecifics.entrySet()) {
 				final NameValueListType specific = new NameValueListType();
