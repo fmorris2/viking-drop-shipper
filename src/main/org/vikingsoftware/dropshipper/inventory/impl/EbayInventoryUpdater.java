@@ -50,7 +50,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 
 			Pair<Integer, Double> stockAndPrice = null;
 			System.out.println("Updating inventory for eBay listing " + listing);
-			if(listing.active){
+			if(listing.active) {
 				final List<FulfillmentListing> fulfillmentListings = FulfillmentManager.get().getListingsForMarketplaceListing(listing.id);
 				for(final FulfillmentListing fulfillmentListing : fulfillmentListings) {
 					Collection<Pair<Integer,Double>> entries = new ArrayList<>();
@@ -76,8 +76,13 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 					
 					stockAndPrice = new Pair<>(totalStock, maxPrice);
 				}
+			} else if(EbayCalls.getListingStock(listing.listingId).orElse(-1) > 0){
+				System.out.println("Setting inactive listing stock to 0...");
+				EbayCalls.updateInventory(listing.listingId, 0);
+				return true;
 			} else {
-				return false;
+				System.out.println("Inactive listing already has stock set to 0. Skipping...");
+				return true;
 			}
 
 			if(stockAndPrice == null) {

@@ -38,6 +38,7 @@ public class InventoryUpdater implements CycleParticipant {
 			}
 			FulfillmentManager.get().load();
 			listings = generateListings();
+			listings.removeIf(listing -> !listing.listingId.equals("372795620786"));
 			updateListings();
 		} else {
 			final double cooldownPeriod = (CYCLE_TIME - (System.currentTimeMillis() - lastCycle)) / 60_000;
