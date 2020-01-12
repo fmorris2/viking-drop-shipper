@@ -51,13 +51,10 @@ public class CustomerOrder {
 		this.marketplace_order_id = builder.marketplace_order_id;
 		this.buyer_username = builder.buyer_username;
 		this.buyer_name = builder.buyer_name
-				.replaceAll(" {2,}", " ")
-				.replaceAll("\\d", "")
-				.replace(".", "")
-				.replace(",", "");
+				.replaceAll("[^a-zA-Z ]", "");
 		this.normalizedBuyerName = Normalizer
 				.normalize(buyer_name, Normalizer.Form.NFD)
-				.replaceAll("[^\\p{ASCII}]", "");
+				.replaceAll("[^a-zA-Z ]", "");
 		this.buyer_country = builder.buyer_country;
 		this.buyer_street_address = builder.buyer_street_address;
 		this.buyer_apt_suite_unit_etc = builder.buyer_apt_suite_unit_etc;
