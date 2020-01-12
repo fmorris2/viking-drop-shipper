@@ -95,12 +95,14 @@ public final class SamsProductAPI extends JsonAPIParser {
 					case "freeeligible":
 					case "free":
 					case "included":
+					case "calculated":
 						return true;
 					case "paid":
+					case "digitaldelivery":
 						//TODO FLAG LISTING FOR PURGE EXAMINATION?
 						return false;
 					default:
-						DBLogging.high(SamsProductAPI.class, "Unknown shipping type encountered for product id " + productId + ": " + shippingType, new RuntimeException());
+						DBLogging.high(SamsProductAPI.class, "Unknown shipping type encountered: " + shippingType, new RuntimeException());
 				}
 			}
 		}

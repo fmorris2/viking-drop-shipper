@@ -2,6 +2,7 @@ package main.org.vikingsoftware.dropshipper.core.ebay;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.net.ConnectException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -155,7 +156,8 @@ public class EbayCalls {
 			logUnknownMarketplaceMappingsInDB(unknownTransactionMappings);
 			System.out.println("Logged unknown marketplace mappings in DB...");
 			return orders.toArray(new CustomerOrder[orders.size()]);
-
+		} catch(final ConnectException e) {
+			System.err.println("Failed to connect to eBay API to get orders...");
 		} catch(final Exception e) {
 			DBLogging.high(EbayCalls.class, "failed to get orders last " + days + " days: ", e);
 		}

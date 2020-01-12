@@ -22,7 +22,7 @@ public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
 //		CATEGORY_MAP.put("Electronics & Computers", "1086");
 //		CATEGORY_MAP.put("Furniture", "1286");
 //		CATEGORY_MAP.put("Gift Cards", "1003");
-		CATEGORY_MAP.put("Grocery", "1444");
+//		CATEGORY_MAP.put("Grocery", "1444");
 //		CATEGORY_MAP.put("Home", "1285");
 //		CATEGORY_MAP.put("Home Improvement", "1390");
 //		CATEGORY_MAP.put("Household Essentials", "450203");
@@ -36,7 +36,7 @@ public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
 //		CATEGORY_MAP.put("Restaurant Supplies", "2209");
 //		CATEGORY_MAP.put("Seasonal & Occasions", "1900101");
 //		CATEGORY_MAP.put("Shop by Business", "100002");
-//		CATEGORY_MAP.put("Shops & Promotions", "7130108");
+		CATEGORY_MAP.put("Shops & Promotions", "7130108");
 //		CATEGORY_MAP.put("Tech Savings", "1240109");
 //		CATEGORY_MAP.put("Toys & Games", "1929");
 	}
