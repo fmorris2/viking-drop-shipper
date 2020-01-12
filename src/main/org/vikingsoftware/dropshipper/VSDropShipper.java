@@ -1,5 +1,7 @@
 package main.org.vikingsoftware.dropshipper;
 
+import java.io.IOException;
+
 import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
 import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
@@ -26,7 +28,8 @@ public class VSDropShipper {
 		new EbayAccountActivityFees()	
 	};
 
-	public static void main(final String[] args) throws InterruptedException {
+	public static void main(final String[] args) throws InterruptedException, IOException {
+		killProcesses();
 		cycle();
 	}
 	
@@ -50,13 +53,15 @@ public class VSDropShipper {
 				FulfillmentAccountManager.get().load();
 				BrowserRepository.get().replaceAll();
 				LoginWebDriver.clearSessionCaches();
-				Runtime.getRuntime().exec("pkill -9 firefox");
-				Runtime.getRuntime().exec("pkill -9 geckodriver");
-				
+				killProcesses();
 			} catch(final Exception e) {
 				e.printStackTrace();
 			}
 		}
 	}
-
+	
+	private static void killProcesses() throws IOException {
+		Runtime.getRuntime().exec("pkill -9 firefox");
+		Runtime.getRuntime().exec("pkill -9 geckodriver");
+	}
 }
