@@ -50,6 +50,9 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			return orderItem(order, fulfillmentListing);
 		} catch(final Exception e) {
 			throw new RuntimeException(e);
+		} finally {
+			driver.clearSession();
+			driver.manage().deleteAllCookies();
 		}
 	}
 
@@ -267,9 +270,6 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 			if(orderNum == null) {
 				throw new FatalOrderExecutionException("Failed to parse order num from Sams Club receipt page!");
 			}
-			
-			driver.clearSession();
-			driver.manage().deleteAllCookies();
 
 			return new ProcessedOrder.Builder()
 					.customer_order_id(order.id)
