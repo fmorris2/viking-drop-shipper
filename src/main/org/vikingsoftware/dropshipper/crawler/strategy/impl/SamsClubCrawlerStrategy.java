@@ -24,21 +24,21 @@ public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
 //		CATEGORY_MAP.put("Gift Cards", "1003");
 //		CATEGORY_MAP.put("Grocery", "1444");
 //		CATEGORY_MAP.put("Home", "1285");
-//		CATEGORY_MAP.put("Home Improvement", "1390");
+		CATEGORY_MAP.put("Home Improvement", "1390");
 //		CATEGORY_MAP.put("Household Essentials", "450203");
 //		CATEGORY_MAP.put("Jewelry, Flowers & Gifts", "7520117");
 //		CATEGORY_MAP.put("Member's Mark", "4710101");																													CATEGORY_MAP.put("New Items", "8131");
-//		CATEGORY_MAP.put("Office", "1706");
+		CATEGORY_MAP.put("Office", "1706");
 //		CATEGORY_MAP.put("Outdoor & Patio", "1852");
-//		CATEGORY_MAP.put("Pet Supplies", "2011");
+		CATEGORY_MAP.put("Pet Supplies", "2011");
 //		CATEGORY_MAP.put("Pharmacy, Health & Beauty", "1585");
 //		CATEGORY_MAP.put("Photo Center", "1020193");
 //		CATEGORY_MAP.put("Restaurant Supplies", "2209");
 //		CATEGORY_MAP.put("Seasonal & Occasions", "1900101");
 //		CATEGORY_MAP.put("Shop by Business", "100002");
-		CATEGORY_MAP.put("Shops & Promotions", "7130108");
+//		CATEGORY_MAP.put("Shops & Promotions", "7130108");
 //		CATEGORY_MAP.put("Tech Savings", "1240109");
-//		CATEGORY_MAP.put("Toys & Games", "1929");
+		CATEGORY_MAP.put("Toys & Games", "1929");
 	}
 	
 	private boolean isCrawling = true;

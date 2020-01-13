@@ -577,7 +577,7 @@ public class EbayCalls {
 		}
 		final BrandMPNType brandMpn = new BrandMPNType();
 		System.out.println("Setting brand: " + listing.brand + " and mpn: " + listing.mpn);
-		brandMpn.setBrand(listing.brand);
+		brandMpn.setBrand(listing.brand == null ? "Unbranded" : listing.brand);
 		brandMpn.setMPN(listing.mpn != null ? listing.mpn : "Does Not Apply");
 		type.setBrandMPN(brandMpn);
 		type.setIncludeeBayProductDetails(true);

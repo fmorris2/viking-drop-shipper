@@ -33,9 +33,11 @@ public class ItemSpecificsPanel extends JFrame {
 	private final Map<String, JComboBox<String>> specificToComboBoxCache = new HashMap<>();
 	private final Listing listing;
 	private final AtomicBoolean finished;
+	private final boolean isAutomated;
 	
-	public ItemSpecificsPanel(final Listing listing, final AtomicBoolean finished) {
+	public ItemSpecificsPanel(final Listing listing, final boolean isAutomated, final AtomicBoolean finished) {
 		this.listing = listing;
+		this.isAutomated = isAutomated;
 		this.finished = finished;
 		this.gridLayout = new GridLayout(listing.requiredItemSpecifics.size(), 2);
 		this.gridLayout.setHgap(10);
@@ -75,7 +77,8 @@ public class ItemSpecificsPanel extends JFrame {
 					listing.itemSpecifics.put(requiredItemSpec.get().name, requiredItemSpec.get().preFilledValueFunction.apply(listing));
 					continue;
 				}
-				addedToPanel = true;
+				
+				addedToPanel = !isAutomated;
 				if(requiredItemSpec.get().preFilledValueFunction != null) {
 					preFilledValue = requiredItemSpec.get().preFilledValueFunction.apply(listing);
 					if(preFilledValue != null) {
@@ -84,13 +87,17 @@ public class ItemSpecificsPanel extends JFrame {
 				}
 			}
 			
-			final JComboBox<String> comboBox = new JComboBox<>(recommendedOptions.toArray(new String[recommendedOptions.size()]));
-			if(preFilledValue != null) {
-				comboBox.setSelectedItem(preFilledValue);
+			if(!isAutomated) {
+				final JComboBox<String> comboBox = new JComboBox<>(recommendedOptions.toArray(new String[recommendedOptions.size()]));
+				if(preFilledValue != null) {
+					comboBox.setSelectedItem(preFilledValue);
+				}
+				specificToComboBoxCache.put(itemSpecificName, comboBox);
+				this.specificsPanel.add(new JLabel(itemSpecificName));
+				this.specificsPanel.add(comboBox);
+			} else if(!recommendedOptions.isEmpty()){
+				listing.itemSpecifics.put(itemSpecificName, recommendedOptions.get(0));
 			}
-			specificToComboBoxCache.put(itemSpecificName, comboBox);
-			this.specificsPanel.add(new JLabel(itemSpecificName));
-			this.specificsPanel.add(comboBox);
 		}
 		
 		return addedToPanel;

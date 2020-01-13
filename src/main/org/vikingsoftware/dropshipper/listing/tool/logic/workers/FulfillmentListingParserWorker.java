@@ -122,6 +122,7 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 			} finally {
 				lock.writeLock().unlock();
 			}
+			System.out.println("FulfillmentListingParserworker - Cycling...");
 			Thread.sleep(CYCLE_TIME);
 		}
 	}
@@ -141,7 +142,7 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 				if(listing.title != null && listing.title.toLowerCase().contains("gift card")) {
 					System.out.println("Gift card detected... Skipping...");
 				} else {
-					System.out.println("Adding completed listing: " + listing);
+					//System.out.println("Adding completed listing: " + listing);
 					lock.writeLock().lock();
 					try {
 						completedListings.add(listing);

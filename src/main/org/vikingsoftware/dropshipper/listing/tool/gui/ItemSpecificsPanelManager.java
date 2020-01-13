@@ -30,7 +30,7 @@ public final class ItemSpecificsPanelManager {
 		final AtomicBoolean finished = new AtomicBoolean(false);
 		
 		SwingUtilities.invokeLater(() -> {
-			final JFrame frame = new ItemSpecificsPanel(listing, finished);
+			final JFrame frame = new ItemSpecificsPanel(listing, gui.isAutomated(), finished);
 			frame.setLocationRelativeTo(gui);
 		});
 		

@@ -133,7 +133,9 @@ public final class SamsProductAPI extends JsonAPIParser {
 	
 	public boolean isGiftCard() {
 		if(payload.isPresent()) {
-			return getBoolean(payload.get(), "giftCardTemplateProduct");
+			final String keywords = getString(payload.get(), "keywords");
+			return getBoolean(payload.get(), "giftCardTemplateProduct")
+					|| (keywords != null && keywords.toLowerCase().contains("gift card"));
 		}
 		
 		return false;

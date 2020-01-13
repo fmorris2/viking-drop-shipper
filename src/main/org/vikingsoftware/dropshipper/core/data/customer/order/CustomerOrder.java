@@ -51,6 +51,7 @@ public class CustomerOrder {
 		this.marketplace_order_id = builder.marketplace_order_id;
 		this.buyer_username = builder.buyer_username;
 		this.buyer_name = builder.buyer_name
+				.replaceAll(" {2,}", " ")
 				.replaceAll("[^a-zA-Z ]", "");
 		this.normalizedBuyerName = Normalizer
 				.normalize(buyer_name, Normalizer.Form.NFD)
