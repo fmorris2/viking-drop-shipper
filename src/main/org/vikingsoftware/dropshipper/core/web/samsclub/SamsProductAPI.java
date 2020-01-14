@@ -79,9 +79,9 @@ public final class SamsProductAPI extends JsonAPIParser {
 			return true;
 		} catch(final JSONException e) {
 			ConnectionManager.get().flag();
-			DBLogging.high(SamsProductAPI.class, "Failed to parse product API response: " + text, e);
+			DBLogging.high(SamsProductAPI.class, "Failed to parse product API response: " + text, null);
 		} catch(final Exception e) {
-			DBLogging.high(SamsProductAPI.class, "Failed to parse Sams Product API", e);
+			e.printStackTrace();
 		}
 		
 		return false;
