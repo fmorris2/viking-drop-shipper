@@ -1,21 +1,20 @@
 package main.org.vikingsoftware.dropshipper.crawler.strategy.impl;
 
-import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.jsoup.nodes.Document;
 
+import main.org.vikingsoftware.dropshipper.core.net.ConnectionManager;
 import main.org.vikingsoftware.dropshipper.core.web.JsonAPIParser;
 
 public class SamsCategoryAPI extends JsonAPIParser {
 	
 	private static final int PRODUCTS_PER_CALL = 48; //max you can request at once
-	private static final String API_BASE_URL = "https://www.samsclub.com/api/node/vivaldi/v1/products/search/?sourceType=1&sortKey=p_sales_rank&sortOrder=1"
+	private static final String API_BASE_URL = "http://www.samsclub.com/api/node/vivaldi/v1/products/search/?sourceType=1&sortKey=p_sales_rank&sortOrder=1"
 			+ "&clubId=6279&limit="+PRODUCTS_PER_CALL+"&br=true&searchCategoryId=";
 	
 	private String categoryId;
@@ -39,9 +38,11 @@ public class SamsCategoryAPI extends JsonAPIParser {
 		try {
 			reset();
 			apiUrl = API_BASE_URL + categoryId + "&offset=" + offset;
-			final URL urlObj = new URL(apiUrl);
-			final String apiResponse = IOUtils.toString(urlObj, Charset.forName("UTF-8"));
-			final JSONObject json = new JSONObject(apiResponse);
+			final Document doc = ConnectionManager.get().getConnection()
+					  .url(apiUrl)
+				      .ignoreContentType(true)
+				      .get();
+			final JSONObject json = new JSONObject(doc.text());
 			payload = Optional.ofNullable(json.getJSONObject("payload"));
 			payload.ifPresent(obj -> {
 				records = Optional.ofNullable(getJsonArr(obj, "records"));

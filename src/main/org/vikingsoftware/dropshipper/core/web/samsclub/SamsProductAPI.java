@@ -2,16 +2,21 @@ package main.org.vikingsoftware.dropshipper.core.web.samsclub;
 
 import java.awt.image.BufferedImage;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.Charset;
+import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+import org.jsoup.Connection;
+import org.jsoup.Connection.Response;
+import org.jsoup.HttpStatusException;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
+import main.org.vikingsoftware.dropshipper.core.net.ConnectionManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.ImageUtils;
 import main.org.vikingsoftware.dropshipper.core.utils.UPCUtils;
@@ -20,10 +25,10 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingImage;
 
 public final class SamsProductAPI extends JsonAPIParser {
 	
-	private static final String API_BASE_URL = "https://www.samsclub.com/api/soa/services/v1/catalog/product/";
+	private static final String API_BASE_URL = "http://www.samsclub.com/api/soa/services/v1/catalog/product/";
 	private static final String API_URL_ARGS = "?response_group=LARGE&clubId=6279";
 	
-	private static final String INVALID_IMAGE_URL = "https://scene7.samsclub.com/is/image/samsclub/fgsdfgsdgfsdgds";
+	private static final String INVALID_IMAGE_URL = "http://scene7.samsclub.com/is/image/samsclub/fgsdfgsdgfsdgds";
 	private static final BufferedImage notFoundImage = ImageUtils.getImageFromUrl(INVALID_IMAGE_URL);
 	
 	private Optional<JSONObject> payload;
@@ -49,13 +54,19 @@ public final class SamsProductAPI extends JsonAPIParser {
 	
 	public boolean parse(final String productId) {
 		String apiUrl = null;
+		String text = "";
 		try {
 			reset();
 			this.productId = productId;
 			apiUrl = API_BASE_URL + productId + API_URL_ARGS;
-			final URL urlObj = new URL(apiUrl);
-			final String apiResponse = IOUtils.toString(urlObj, Charset.forName("UTF-8"));
-			final JSONObject json = new JSONObject(apiResponse);
+			final Response doc = ConnectionManager.get().getConnection()
+				      .url(apiUrl)
+				      .header("Content-Type", "application/json")
+				      .header("Accept-Charset", "utf-8")
+				      .ignoreContentType(true)
+				      .execute();
+			text = doc.body();
+			final JSONObject json = new JSONObject(text);
 			payload = Optional.ofNullable(json.getJSONObject("payload"));
 			payload.ifPresent(obj -> {
 				onlineInventory = Optional.ofNullable(getJsonObj(obj, "onlineInventory"));
@@ -66,10 +77,8 @@ public final class SamsProductAPI extends JsonAPIParser {
 				}
 			});
 			return true;
-		} catch(final MalformedURLException e) {
-			System.out.println("Malformed URL: " + apiUrl);
 		} catch(final Exception e) {
-			e.printStackTrace();
+			DBLogging.high(SamsProductAPI.class, "Failed to parse Sams Product API", e);
 		}
 		
 		return false;
@@ -133,7 +142,9 @@ public final class SamsProductAPI extends JsonAPIParser {
 	
 	public boolean isGiftCard() {
 		if(payload.isPresent()) {
-			return getBoolean(payload.get(), "giftCardTemplateProduct");
+			final String keywords = getString(payload.get(), "keywords");
+			return getBoolean(payload.get(), "giftCardTemplateProduct")
+					|| (keywords != null && keywords.toLowerCase().contains("gift card"));
 		}
 		
 		return false;

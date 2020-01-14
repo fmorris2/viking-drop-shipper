@@ -12,11 +12,12 @@ import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubDriverSupplier;
+import main.org.vikingsoftware.dropshipper.core.net.ConnectionManager;
 import main.org.vikingsoftware.dropshipper.core.web.JsonAPIParser;
 
 public final class SamsOrderDetailsAPI extends JsonAPIParser {
 	
-	private static final String API_BASE_URL = "https://www.samsclub.com/api/node/vivaldi/v1/orders/details?orderId=";
+	private static final String API_BASE_URL = "http://www.samsclub.com/api/node/vivaldi/v1/orders/details?orderId=";
 	private static final String API_URL_ARGS = "&responseGroup=FULL";
 	
 	private Optional<JSONObject> json;
@@ -68,7 +69,8 @@ public final class SamsOrderDetailsAPI extends JsonAPIParser {
 			if(session.isEmpty()) {
 				return false;
 			}
-			final String rawJson = Jsoup.connect(apiUrl)
+			final String rawJson = ConnectionManager.get().getConnection()
+					.url(apiUrl)
 					.userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36")
 					.cookies(session)
 					.ignoreContentType(true)

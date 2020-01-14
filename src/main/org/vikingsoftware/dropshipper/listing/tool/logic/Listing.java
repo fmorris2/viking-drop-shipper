@@ -58,4 +58,23 @@ public class Listing implements Cloneable {
 		clone.handlingTime = handlingTime;
 		return clone;
 	}
+	
+	@Override
+	public String toString() {
+		return "Listing:\n"
+				+ "\tTitle: " + this.title + "\n"
+				//+ "\tDescription: " + this.description + "\n"
+				+ "\tCategory: " + (this.category == null ? "N/A" : this.category.name) + "\n"
+				+ "\tItem Specifics: " + this.itemSpecifics + "\n"
+				+ "\tItem Id: " + this.itemId + "\n"
+				+ "\tProduct Id: " + this.productId + "\n"
+				+ "\tBrand: " + this.brand + "\n"
+				+ "\tUrl: " + this.url + "\n"
+				+ "\tUPC: " + this.upc + "\n"
+				+ "\tEAN: " + this.ean + "\n"
+				+ "\tMPN: " + this.mpn + "\n"
+				+ "\tPrice: " + this.price + "\n"
+				+ "\tShipping: " + this.shipping + "\n"
+				+ "\tNum Pictures: " + this.pictures.size();
+	}
 }

@@ -19,6 +19,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.sql.PreparedStatement;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +58,16 @@ public class ListingToolController {
 	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("###.##");
 	private static final String BASE_EBAY_SEARCH_URL = "https://www.m.ebay.com/sch/i.html?_nkw=";
 	private static final String BASE_EBAY_SEARCH_URL_SOLD_ITEMS = "https://www.m.ebay.com/sch/i.html?LH_Sold=1&LH_Complete=1&_nkw=";
-
+	private static final double DEFAULT_AUTOMATED_MARGIN = 15.0;
+	private static final Set<String> BLACKLISTED_AUTOMATED_CATEGORIES = new HashSet<>(Arrays.asList(
+	   "video game",
+	   "cell phone",
+	   "gift card",
+	   "clothing",
+	   "gaming",
+	   "prepaid"
+	));
+	
 	private final ListingToolGUI gui = ListingToolGUI.get();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	private final FulfillmentListingCrawler crawler = new FulfillmentListingCrawler();
@@ -70,6 +80,7 @@ public class ListingToolController {
 	private Listing currentListingClone;
 	private double originalListingPrice;
 	private boolean isPublishing;
+	private boolean isAutomated;
 	
 	public void setup() {
 		SwingUtilities.invokeLater(() -> {
@@ -84,6 +95,11 @@ public class ListingToolController {
 		FulfillmentListingParserWorker.instance().shuffle();
 		ListingQueue.shuffle();
 		displayNextListing();
+	}
+	
+	public void setAutomated(final boolean automated) {
+		this.gui.setVisible(false);
+		this.isAutomated = automated;
 	}
 	
 	public void startCrawler() {
@@ -261,19 +277,24 @@ public class ListingToolController {
 	}
 
 	public void displayListing(final Listing listing) {
-		imagesModel.removeAllElements();
-		if(listing != null) {
-			setGUI(listing);
+		System.out.println("displayListing: " + listing);
+		if(this.isAutomated && listing != null) {
+			setListingModel(listing);
+			publishListing();
 		} else {
-			clearGUI();
+			imagesModel.removeAllElements();
+			if(listing != null) {
+				setGUI(listing);
+			} else {
+				clearGUI();
+			}
+			gui.listingPriceInput.requestFocus();
 		}
-		gui.listingPriceInput.requestFocus();
 	}
 
 	private void setGUI(final Listing listing) {
 		SwingUtilities.invokeLater(() -> {
-			originalListingPrice = listing.price;
-			currentListingClone = listing.clone();
+			setListingModel(listing);
 			updateRecentSoldItemsBrowser();
 			gui.listingTitleInput.setText(listing.title);
 			gui.descRawInput.setText(listing.description);
@@ -281,8 +302,13 @@ public class ListingToolController {
 			gui.brandInput.setText(listing.brand);
 			updateListingPriceWithMargin();
 			addImages(listing.pictures);
-			updateCategoryModel(listing);
 		});
+	}
+	
+	private void setListingModel(final Listing listing) {
+		originalListingPrice = listing.price;
+		currentListingClone = listing.clone();
+		updateCategoryModel(listing);
 	}
 
 	private void clearGUI() {
@@ -360,27 +386,35 @@ public class ListingToolController {
 		if(!isPublishing) {
 			isPublishing = true;
 			try {
-				executor.execute(() -> {
-					//publish...
-					final Listing toPublish = createListingToPublish();
-					final boolean isAlreadyListed = FulfillmentManager.get().getListingForItemId(toPublish.fulfillmentPlatformId, toPublish.itemId).isPresent();
-					if(toPublish != null && verifyRequiredItemSpecifics(toPublish) && !isAlreadyListed) {
-						final Optional<String> publishedEbayListingItemId = EbayCalls.createListing(toPublish);
-						if(publishedEbayListingItemId.isPresent()) {
-							System.out.println("Successfully published eBay listing: " + toPublish.title);
-							connectListingInDB(toPublish, publishedEbayListingItemId.get());
-							publishedItemIds.add(toPublish.itemId);
-						} else {
-							System.out.println("Failed to publish eBay listing for listing: " + toPublish.title);
-						}
-					}
-					ListingQueue.poll();
-					displayNextListing();
-				});
+				if(isAutomated) {
+					publishListingImpl();
+				} else {
+					executor.execute(() -> {
+						publishListingImpl();
+					});
+				}
 			} finally {
 				isPublishing = false;
 			}
 		}
+	}
+	
+	private void publishListingImpl() {
+		//publish...
+		final Listing toPublish = createListingToPublish();
+		final boolean isAlreadyListed = FulfillmentManager.get().getListingForItemId(toPublish.fulfillmentPlatformId, toPublish.itemId).isPresent();
+		if(toPublish != null && verifyRequiredItemSpecifics(toPublish) && !isAlreadyListed) {
+			final Optional<String> publishedEbayListingItemId = EbayCalls.createListing(toPublish);
+			if(publishedEbayListingItemId.isPresent()) {
+				System.out.println("Successfully published eBay listing: " + toPublish.title);
+				connectListingInDB(toPublish, publishedEbayListingItemId.get());
+				publishedItemIds.add(toPublish.itemId);
+			} else {
+				System.out.println("Failed to publish eBay listing for listing: " + toPublish.title);
+			}
+		}
+		ListingQueue.poll();
+		displayNextListing();
 	}
 	
 	private boolean verifyRequiredItemSpecifics(final Listing listing) {
@@ -486,16 +520,36 @@ public class ListingToolController {
 	private Listing createListingToPublish() {
 		if(!ListingQueue.isEmpty()) {
 			final Listing toPublish = ListingQueue.peek().clone();
-			toPublish.title = gui.listingTitleInput.getText().trim();
-			toPublish.price = Double.parseDouble(gui.listingPriceInput.getText().replace("$", "").trim());
-			if(!gui.shippingPriceInput.getText().isEmpty()) {
-				toPublish.shipping = Double.parseDouble(gui.shippingPriceInput.getText().replace("$", "").trim());
+			if(isAutomated) {
+				System.out.println("Getting suggested categories for title " + toPublish.title);
+				final EbayCategory[] suggestedCategories = EbayCalls.getSuggestedCategories(toPublish.title);
+				System.out.println("Received " + suggestedCategories.length + " suggested categories");
+				if(suggestedCategories == null || suggestedCategories.length == 0) {
+					return null;
+				}
+				
+				for(final String blacklistedCategory : BLACKLISTED_AUTOMATED_CATEGORIES) {
+					if(suggestedCategories[0].name.toLowerCase().contains(blacklistedCategory)) {
+						return null;
+					}
+				}
+				toPublish.category = suggestedCategories[0];
+				toPublish.price = PriceUtils.getPriceFromMargin(originalListingPrice, 0, DEFAULT_AUTOMATED_MARGIN);
+				toPublish.shipping = 0D;
+				toPublish.targetProfitMargin = DEFAULT_AUTOMATED_MARGIN;
+			} else {
+				toPublish.title = gui.listingTitleInput.getText().trim();
+				toPublish.price = Double.parseDouble(gui.listingPriceInput.getText().replace("$", "").trim());
+				if(!gui.shippingPriceInput.getText().isEmpty()) {
+					toPublish.shipping = Double.parseDouble(gui.shippingPriceInput.getText().replace("$", "").trim());
+				}
+				toPublish.targetProfitMargin = Double.parseDouble(gui.profitMarginInput.getText().replace("%", "").trim());
+				toPublish.description = gui.descRawInput.getText();
+				toPublish.category = (EbayCategory)gui.categoryDropdown.getSelectedItem();
+				toPublish.brand = gui.brandInput.getText();
 			}
-			toPublish.targetProfitMargin = Double.parseDouble(gui.profitMarginInput.getText().replace("%", "").trim());
-			toPublish.description = gui.descRawInput.getText();
-			toPublish.category = (EbayCategory)gui.categoryDropdown.getSelectedItem();
+			
 			toPublish.requiredItemSpecifics = EbayCalls.getRequiredItemSpecificFields(toPublish.category.id);
-			toPublish.brand = gui.brandInput.getText();
 			return toPublish;
 		}
 		

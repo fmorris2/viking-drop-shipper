@@ -22,6 +22,8 @@ public class ListingToolGUI extends javax.swing.JFrame {
 
 	private static ListingToolGUI instance;
 	private static ListingToolController controller;
+	
+	private boolean isAutomated;
 
 	/**
      * Creates new form GUI
@@ -54,6 +56,15 @@ public class ListingToolGUI extends javax.swing.JFrame {
     
     public void startCrawler() {
     	controller.startCrawler();
+    }
+    
+    public void setAutomated(final boolean automated) {
+    	this.isAutomated = automated;
+    	controller.setAutomated(automated);
+    }
+    
+    public boolean isAutomated() {
+    	return isAutomated;
     }
 
     /**

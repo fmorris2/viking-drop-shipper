@@ -1,5 +1,6 @@
 package main.org.vikingsoftware.dropshipper.order.tracking.history.strategy;
 
+import java.net.Proxy;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -16,13 +17,14 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
+import main.org.vikingsoftware.dropshipper.core.net.ConnectionManager;
 import main.org.vikingsoftware.dropshipper.core.tracking.TrackingHistoryRecord;
 import main.org.vikingsoftware.dropshipper.core.tracking.TrackingStatus;
 import main.org.vikingsoftware.dropshipper.order.tracking.history.TrackingHistoryParsingStrategy;
 
 public class OntracTrackingHistoryParsingStrategy implements TrackingHistoryParsingStrategy {
 	
-	private static final String INITIAL_URL_TEMPLATE = "https://www.ontrac.com/trackingres.asp?tracking_number=";
+	private static final String INITIAL_URL_TEMPLATE = "http://www.ontrac.com/trackingres.asp?tracking_number=";
 	private static final Pattern DETAILS_LINK_REGEX = Pattern.compile("trackingdetail\\.asp\\?tracking=");
 	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MMM d uuuu h:ma");
 	
@@ -32,11 +34,15 @@ public class OntracTrackingHistoryParsingStrategy implements TrackingHistoryPars
 		System.out.println("OntracTrackingHistoryParsingStrategy#parse("+trackingNumber+")");
 		
 		try {
-			final Document document = Jsoup.connect(INITIAL_URL_TEMPLATE + trackingNumber).get();
+			final Document document = ConnectionManager.get().getConnection()
+					.url(INITIAL_URL_TEMPLATE + trackingNumber)
+					.get();
 			final Elements detailsLinkEl = document.getElementsByAttributeValueMatching("href", DETAILS_LINK_REGEX);
 			if(!detailsLinkEl.isEmpty()) {
 				final String detailsHref = detailsLinkEl.first().attr("href");
-				final Document detailsPage = Jsoup.connect("https://www.ontrac.com/" + detailsHref).get();
+				final Document detailsPage = ConnectionManager.get().getConnection()
+						.url("https://www.ontrac.com/" + detailsHref)
+						.get();
 				final Element detailsElement = detailsPage.getElementById("trkdetail");
 				if(detailsElement != null) {
 					final Elements detailsTable = detailsElement.getElementsByTag("table");
