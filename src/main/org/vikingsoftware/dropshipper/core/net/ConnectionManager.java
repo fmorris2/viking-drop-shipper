@@ -14,6 +14,7 @@ import org.jsoup.Jsoup;
 public final class ConnectionManager {
 	
 	private static final int NUM_CONNECTIONS_BEFORE_CYCLE = 1000;
+	private static final long FLAG_SLEEP_MS = 30_000;
 	
 	// Format: us4112.nordvpn.com
 	private static final String[] US_NORD_PROXY_IDS = {
@@ -62,6 +63,9 @@ public final class ConnectionManager {
 		try {
 			connections.add(connections.poll());
 			numConnections = 0;
+			Thread.sleep(FLAG_SLEEP_MS);
+		} catch(final Exception e) {
+			e.printStackTrace();
 		} finally {
 			lock.writeLock().unlock();
 		}
