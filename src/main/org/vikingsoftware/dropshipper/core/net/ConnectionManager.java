@@ -52,7 +52,7 @@ public final class ConnectionManager {
 				connections.add(connections.poll());
 				numConnections = 0;
 			}
-			return connection;
+			return Jsoup.connect("http://www.google.com/");//connection;
 		} finally {
 			lock.writeLock().unlock();
 		}
