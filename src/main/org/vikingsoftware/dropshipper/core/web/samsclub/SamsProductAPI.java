@@ -60,6 +60,9 @@ public final class SamsProductAPI extends JsonAPIParser {
 				      .header("Accept-Charset", "utf-8")
 				      .ignoreContentType(true)
 				      .execute();
+			if(doc == null) {
+				return false;
+			}
 			text = doc.body();
 			final JSONObject json = new JSONObject(text);
 			payload = Optional.ofNullable(json.getJSONObject("payload"));
@@ -73,9 +76,7 @@ public final class SamsProductAPI extends JsonAPIParser {
 			});
 			return true;
 		} catch(final HttpStatusException e) {
-			if(e.getStatusCode() == 444) {
-				ConnectionManager.get().flag();
-			}
+			ConnectionManager.get().flag();
 			e.printStackTrace();
 		} catch(final JSONException e) {
 			ConnectionManager.get().flag();

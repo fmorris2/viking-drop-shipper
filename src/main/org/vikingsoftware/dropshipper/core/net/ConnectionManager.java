@@ -61,6 +61,7 @@ public final class ConnectionManager {
 	public void flag() {
 		lock.writeLock().lock();
 		try {
+			System.out.println("Rotating proxy: " + connections.peek());
 			connections.add(connections.poll());
 			numConnections = 0;
 			Thread.sleep(FLAG_SLEEP_MS);
