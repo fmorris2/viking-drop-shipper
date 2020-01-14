@@ -1,8 +1,6 @@
 package main.org.vikingsoftware.dropshipper.core.web.samsclub;
 
 import java.awt.image.BufferedImage;
-import java.net.MalformedURLException;
-import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -10,11 +8,8 @@ import java.util.Optional;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.jsoup.Connection;
 import org.jsoup.Connection.Response;
 import org.jsoup.HttpStatusException;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 
 import main.org.vikingsoftware.dropshipper.core.net.ConnectionManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
@@ -77,9 +72,14 @@ public final class SamsProductAPI extends JsonAPIParser {
 				}
 			});
 			return true;
+		} catch(final HttpStatusException e) {
+			if(e.getStatusCode() == 444) {
+				ConnectionManager.get().flag();
+			}
+			e.printStackTrace();
 		} catch(final JSONException e) {
 			ConnectionManager.get().flag();
-			DBLogging.high(SamsProductAPI.class, "Failed to parse product API response: " + text, null);
+			e.printStackTrace();
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
