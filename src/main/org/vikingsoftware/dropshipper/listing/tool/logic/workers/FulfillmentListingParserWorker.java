@@ -27,7 +27,7 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 
 	private static final long CYCLE_TIME = 50;
 	private static final int MAX_COMPLETED_LISTINGS_SIZE = 50;
-	private static final double MAX_LISTING_PRICE = 75.00;
+	private static final double MAX_LISTING_PRICE = 50.00;
 	
 	private static final Set<String> preExistingFulfillmentURLs = new HashSet<>();
 	private static final Map<Integer, Set<String>> platformToFulfillmentIds = new HashMap<>();
