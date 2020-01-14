@@ -72,6 +72,8 @@ public final class SamsOrderDetailsAPI extends JsonAPIParser {
 			final String rawJson = ConnectionManager.get().getConnection()
 					.url(apiUrl)
 					.userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36")
+				    .header("Content-Type", "application/json")
+				    .header("Accept-Charset", "utf-8")
 					.cookies(session)
 					.ignoreContentType(true)
 					.execute()

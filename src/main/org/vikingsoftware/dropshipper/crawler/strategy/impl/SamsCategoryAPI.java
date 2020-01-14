@@ -40,6 +40,8 @@ public class SamsCategoryAPI extends JsonAPIParser {
 			apiUrl = API_BASE_URL + categoryId + "&offset=" + offset;
 			final Response doc = ConnectionManager.get().getConnection()
 					  .url(apiUrl)
+				      .header("Content-Type", "application/json")
+				      .header("Accept-Charset", "utf-8")
 				      .ignoreContentType(true)
 				      .execute();
 			final JSONObject json = new JSONObject(doc.body());
