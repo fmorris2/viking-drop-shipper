@@ -6,7 +6,7 @@ import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.jsoup.nodes.Document;
+import org.jsoup.Connection.Response;
 
 import main.org.vikingsoftware.dropshipper.core.net.ConnectionManager;
 import main.org.vikingsoftware.dropshipper.core.web.JsonAPIParser;
@@ -38,11 +38,11 @@ public class SamsCategoryAPI extends JsonAPIParser {
 		try {
 			reset();
 			apiUrl = API_BASE_URL + categoryId + "&offset=" + offset;
-			final Document doc = ConnectionManager.get().getConnection()
+			final Response doc = ConnectionManager.get().getConnection()
 					  .url(apiUrl)
 				      .ignoreContentType(true)
-				      .get();
-			final JSONObject json = new JSONObject(doc.text());
+				      .execute();
+			final JSONObject json = new JSONObject(doc.body());
 			payload = Optional.ofNullable(json.getJSONObject("payload"));
 			payload.ifPresent(obj -> {
 				records = Optional.ofNullable(getJsonArr(obj, "records"));
