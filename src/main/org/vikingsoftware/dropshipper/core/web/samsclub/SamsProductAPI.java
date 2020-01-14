@@ -6,10 +6,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Connection.Response;
-import org.jsoup.HttpStatusException;
 
 import main.org.vikingsoftware.dropshipper.core.net.ConnectionManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
@@ -75,14 +73,9 @@ public final class SamsProductAPI extends JsonAPIParser {
 				}
 			});
 			return true;
-		} catch(final HttpStatusException e) {
-			ConnectionManager.get().flag();
-			e.printStackTrace();
-		} catch(final JSONException e) {
-			ConnectionManager.get().flag();
-			e.printStackTrace();
 		} catch(final Exception e) {
 			e.printStackTrace();
+			ConnectionManager.get().flag();
 		}
 		
 		return false;
