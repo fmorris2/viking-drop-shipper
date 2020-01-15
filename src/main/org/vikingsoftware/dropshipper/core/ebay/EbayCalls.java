@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.ebay.sdk.ApiContext;
+import com.ebay.sdk.ApiException;
 import com.ebay.sdk.TimeFilter;
 import com.ebay.sdk.call.AddFixedPriceItemCall;
 import com.ebay.sdk.call.CompleteSaleCall;
@@ -174,19 +175,31 @@ public class EbayCalls {
 			call.setIncludeFinalValueFee(true);
 			call.setDetailLevel(new DetailLevelCodeType[]{DetailLevelCodeType.RETURN_ALL});
 			final PaginationType pagination = new PaginationType();
-			pagination.setEntriesPerPage(200);
-			pagination.setPageNumber(1);
-			call.setPagination(pagination);
-			final Calendar from = Calendar.getInstance();
-			from.add(Calendar.DAY_OF_YEAR, daysLeft * -1);
-			final Calendar to = Calendar.getInstance();
-			if(daysLeft > 29) {
-				to.add(Calendar.DAY_OF_YEAR, (daysLeft * -1) + 29);
-			}
-			call.setTimeFilter(new TimeFilter(from, to)); //will use number of days filter
-			final TransactionType[] transactions = call.getSellerTransactions();
-			for(final TransactionType trans : transactions) {
-				totalTransactions.add(trans);
+			int page = 1;
+			boolean hasResultsOnPage = true;
+			while(hasResultsOnPage) {
+				pagination.setEntriesPerPage(200);
+				pagination.setPageNumber(page);
+				call.setPagination(pagination);
+				final Calendar from = Calendar.getInstance();
+				from.add(Calendar.DAY_OF_YEAR, daysLeft * -1);
+				final Calendar to = Calendar.getInstance();
+				if(daysLeft > 29) {
+					to.add(Calendar.DAY_OF_YEAR, (daysLeft * -1) + 29);
+				}
+				call.setTimeFilter(new TimeFilter(from, to)); //will use number of days filter
+				try {
+					final TransactionType[] transactions = call.getSellerTransactions();
+					if(transactions.length == 0) {
+						hasResultsOnPage = false;
+					}
+					for(final TransactionType trans : transactions) {
+						totalTransactions.add(trans);
+					}
+					page++;
+				} catch(final ApiException e) {
+					hasResultsOnPage = false;
+				}
 			}
 			daysLeft -= 29;
 		}
