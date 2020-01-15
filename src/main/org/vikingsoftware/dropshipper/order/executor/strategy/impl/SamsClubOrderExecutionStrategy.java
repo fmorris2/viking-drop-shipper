@@ -470,7 +470,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 	private void verifyCart(final CustomerOrder order, final FulfillmentListing listing, final boolean correctMistakes) {
 		System.out.println("Verifying cart...");
 		//verify expected item quantity in cart
-		final WebElement numCartItemsEl = driver.findElement(By.id("orderCount"));
+		final WebElement numCartItemsEl = driver.findElementNormal(By.id("orderCount"));
 		if(numCartItemsEl == null) {
 			throw new OrderExecutionException("Could not find number of cart items element w/ id 'orderCount'");
 		}
@@ -486,7 +486,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 		//verify cart items
 		System.out.println("Verifying number of cart items...");
-		final WebElement parentCartTable = driver.findElement(By.className("cart-table"));
+		final WebElement parentCartTable = driver.findElementNormal(By.className("cart-table"));
 		final WebElement cartTable = parentCartTable.findElement(By.tagName("tbody"));
 		final List<WebElement> items = cartTable.findElements(By.tagName("tr"));
 		if(items.size() > 1) {
@@ -512,7 +512,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 		System.out.println("Verifying price...");
 		//verify price!
-		final double total = Double.parseDouble(driver.findElement(By.id("nc-v2-est-total")).getText().substring(1));
+		final double total = Double.parseDouble(driver.findElementNormal(By.id("nc-v2-est-total")).getText().substring(1));
 		if(!shouldDisregardProfit(order) && order.getProfit(total) < 0) { //never automatically sell at a loss....
 			throw new OrderExecutionException("WARNING: POTENTIAL FULFILLMENT AT LOSS for fulfillment listing " + listing.id
 					+ "! PROFIT: $" + order.getProfit(total));
