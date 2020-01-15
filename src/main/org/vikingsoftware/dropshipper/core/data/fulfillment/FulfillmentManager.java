@@ -82,6 +82,10 @@ public class FulfillmentManager {
 	public static final boolean canUpdateInventory(final int fulfillmentPlatformId) {
 		return canUpdateInventoryPlatforms.contains(fulfillmentPlatformId);
 	}
+	
+	private static boolean isBatchingOrders() {
+		return false;
+	}
 
 	public static void disableOrderExecution(final int fulfillmentPlatformId) {
 		canExecuteOrdersPlatforms.add(fulfillmentPlatformId);
@@ -116,7 +120,7 @@ public class FulfillmentManager {
 		final boolean failsSafeOrderThreshold = numOrders > SAMS_SAFE_NUM_ORDERS_THRESHOLD;
 		final boolean failsTimeWindowThreshold = businessDaysSinceOrder > SAMS_ORDER_BATCH_WINDOW;
 		final boolean failsLowStockThreshold = stock < SAFE_STOCK_THRESHOLD;
-		if(failsSafeOrderThreshold || failsTimeWindowThreshold || failsLowStockThreshold) {
+		if(!isBatchingOrders() || failsSafeOrderThreshold || failsTimeWindowThreshold || failsLowStockThreshold) {
 			return true;
 		}
 		
