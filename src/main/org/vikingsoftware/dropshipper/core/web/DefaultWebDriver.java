@@ -190,7 +190,7 @@ public class DefaultWebDriver extends FirefoxDriver {
 	@Override
 	public void close() {
 		try {
-			System.out.println("Closed JBrowserDriver!");
+			System.out.println("Closed DefaultWebDriver!");
 			super.close();
 		} catch(final Exception e) {
 			//swallow

@@ -140,7 +140,7 @@ public class FulfillmentAccountManager {
 		accounts.clear();
 		try (
 			final Statement st = VSDSDBManager.get().createStatement();
-			final ResultSet res = st.executeQuery("SELECT * FROM fulfillment_account")) {
+			final ResultSet res = st.executeQuery("SELECT * FROM fulfillment_account ORDER BY id ASC")) {
 			while(res.next()) {
 				final int id = res.getInt("id");
 				final int plat_id = res.getInt("fulfillment_platform_id");

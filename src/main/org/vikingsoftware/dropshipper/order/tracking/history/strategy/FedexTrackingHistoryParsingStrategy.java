@@ -1,7 +1,5 @@
 package main.org.vikingsoftware.dropshipper.order.tracking.history.strategy;
 
-import java.net.URL;
-import java.nio.charset.Charset;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -11,11 +9,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.jsoup.Connection.Response;
 
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
+import main.org.vikingsoftware.dropshipper.core.net.ConnectionManager;
 import main.org.vikingsoftware.dropshipper.core.tracking.TrackingHistoryRecord;
 import main.org.vikingsoftware.dropshipper.core.tracking.TrackingStatus;
 import main.org.vikingsoftware.dropshipper.order.tracking.history.TrackingHistoryParsingStrategy;
@@ -31,9 +30,13 @@ public class FedexTrackingHistoryParsingStrategy implements TrackingHistoryParsi
 		System.out.println("FedexTrackingHistoryParsingStrategy#parse for tracking number: " + order.tracking_number);
 		try {
 			final String apiUrl = BASE_URL_PREFIX + order.tracking_number + BASE_URL_SUFFIX;
-			final URL urlObj = new URL(apiUrl);
-			final String apiResponse = IOUtils.toString(urlObj, Charset.forName("UTF-8"));
-			final JSONObject json = new JSONObject(apiResponse);
+			final Response doc = ConnectionManager.get().getConnection()
+				      .url(apiUrl)
+				      .header("Content-Type", "application/json")
+				      .header("Accept-Charset", "utf-8")
+				      .ignoreContentType(true)
+				      .execute();
+			final JSONObject json = new JSONObject(doc.body());
 			
 			final JSONArray scanEventList = json
 					.getJSONObject("TrackPackagesResponse")
