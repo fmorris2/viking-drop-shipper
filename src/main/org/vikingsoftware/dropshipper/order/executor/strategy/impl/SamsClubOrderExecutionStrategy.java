@@ -336,7 +336,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		System.out.println("Entering street address...");
 		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"addressLineOne\"]")), order.buyer_street_address);
 		
-		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"addressLineTwo\"]")), "");
+		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"addressLineTwo\"]")), "", true);
 		if(order.buyer_apt_suite_unit_etc != null) {
 			System.out.println("Entering apt / suite / bldg...");
 			clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"addressLineTwo\"]")), order.buyer_apt_suite_unit_etc);
@@ -393,7 +393,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 
 	private void clearAndSendKeys(final WebElement el, final String str, final boolean cantCtrlA) {
 		if(cantCtrlA) {
-			for(int i = 0; i < 20; i++) {
+			for(int i = 0; i < 30; i++) {
 				el.sendKeys(Keys.BACK_SPACE);
 			}
 		} else {
