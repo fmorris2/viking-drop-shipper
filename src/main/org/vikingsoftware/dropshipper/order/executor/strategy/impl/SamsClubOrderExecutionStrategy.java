@@ -12,6 +12,8 @@ import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 
+import com.google.api.client.util.Key;
+
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
@@ -354,9 +356,8 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		}
 		driver.js("document.querySelector('div.sc-select-option[aria-label=\""+stateSelector+"\"]').click()");
 
-		System.out.println("Entering zip code...");
 		final String[] zipCodeParts = order.buyer_zip_postal_code.split("-");
-		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"postalCode\"]")), zipCodeParts[0]);
+		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"postalCode\"]")), zipCodeParts[0], true);
 		
 		System.out.println("Entering phone number...");
 		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"phone\"]")), FAKE_PHONE_NUMBER);
@@ -385,9 +386,19 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		
 		return normalizedName;
 	}
-
+	
 	private void clearAndSendKeys(final WebElement el, final String str) {
-		el.sendKeys(Keys.chord(Keys.CONTROL,"a", Keys.DELETE));
+		clearAndSendKeys(el, str, false);
+	}
+
+	private void clearAndSendKeys(final WebElement el, final String str, final boolean cantCtrlA) {
+		if(cantCtrlA) {
+			for(int i = 0; i < 20; i++) {
+				el.sendKeys(Keys.BACK_SPACE);
+			}
+		} else {
+			el.sendKeys(Keys.chord(Keys.CONTROL,"a", Keys.DELETE));
+		}
 		driver.sleep(50);
 		el.sendKeys(str);
 		driver.sleep(50);
@@ -449,7 +460,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 					cartItems = cartItemsSupp.get();
 				} else if(Integer.parseInt(item.findElement(By.cssSelector(".nc-item-count")).getAttribute("value")) != order.fulfillment_purchase_quantity) {
 					System.out.println("Updating item to correct quantity...");
-					clearAndSendKeys(item.findElement(By.cssSelector(".nc-item-count")), Integer.toString(order.fulfillment_purchase_quantity));
+					clearAndSendKeys(item.findElement(By.cssSelector(".nc-item-count")), Integer.toString(order.fulfillment_purchase_quantity), true);
 					driver.sleep(3000); //wait for sluggish sams club to remove the item
 				}
 			} catch(final StaleElementReferenceException e) {
