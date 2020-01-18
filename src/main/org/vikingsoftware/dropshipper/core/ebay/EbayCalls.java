@@ -389,8 +389,8 @@ public class EbayCalls {
 	}
 	
 	public static void main(final String[] args) throws Exception {
-		System.out.println(getListingStock("372748630490").orElse(-5));
-//		checkAPIAccessRules();
+//		System.out.println(getListingStock("372748630490").orElse(-5));
+		checkAPIAccessRules();
 //		MarketplaceLoader.loadMarketplaces();
 //		final Set<MarketplaceListing> listings = Marketplaces.EBAY.getMarketplace().getMarketplaceListings();
 //		for(final MarketplaceListing listing : listings) {

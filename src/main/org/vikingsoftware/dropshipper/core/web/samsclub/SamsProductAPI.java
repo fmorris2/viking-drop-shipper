@@ -1,15 +1,20 @@
 package main.org.vikingsoftware.dropshipper.core.web.samsclub;
 
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
-import org.jsoup.Connection.Response;
 
-import main.org.vikingsoftware.dropshipper.core.net.ConnectionManager;
+import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
+import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.ImageUtils;
 import main.org.vikingsoftware.dropshipper.core.utils.UPCUtils;
@@ -48,20 +53,16 @@ public final class SamsProductAPI extends JsonAPIParser {
 	public boolean parse(final String productId) {
 		String apiUrl = null;
 		String text = "";
+		final WrappedHttpClient client = HttpClientManager.get().getClient();
 		try {
 			reset();
 			this.productId = productId;
 			apiUrl = API_BASE_URL + productId + API_URL_ARGS;
-			final Response doc = ConnectionManager.get().getConnection()
-				      .url(apiUrl)
-				      .header("Content-Type", "application/json")
-				      .header("Accept-Charset", "utf-8")
-				      .ignoreContentType(true)
-				      .execute();
-			if(doc == null) {
-				return false;
-			}
-			text = doc.body();
+			final HttpGet req = new HttpGet(apiUrl);
+			req.addHeader("Content-Type", "application/json");
+			req.addHeader("Accept-Charset", "utf-8");
+			final HttpResponse response = client.execute(req);
+			text = EntityUtils.toString(response.getEntity());
 			final JSONObject json = new JSONObject(text);
 			payload = Optional.ofNullable(json.getJSONObject("payload"));
 			payload.ifPresent(obj -> {
@@ -73,9 +74,14 @@ public final class SamsProductAPI extends JsonAPIParser {
 				}
 			});
 			return true;
+		} catch(final IOException e) {
+			e.printStackTrace();
+			HttpClientManager.get().flag(client);
+		} catch(final JSONException e) {
+			e.printStackTrace();
+			HttpClientManager.get().flag(client);
 		} catch(final Exception e) {
 			e.printStackTrace();
-			ConnectionManager.get().flag();
 		}
 		
 		return false;

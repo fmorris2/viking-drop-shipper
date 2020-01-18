@@ -1,14 +1,18 @@
 package main.org.vikingsoftware.dropshipper.crawler.strategy.impl;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.jsoup.Connection.Response;
 
-import main.org.vikingsoftware.dropshipper.core.net.ConnectionManager;
+import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
+import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.core.web.JsonAPIParser;
 
 public class SamsCategoryAPI extends JsonAPIParser {
@@ -35,21 +39,23 @@ public class SamsCategoryAPI extends JsonAPIParser {
 	private boolean parse(final String categoryId, final int offset) {
 		this.categoryId = categoryId;
 		String apiUrl = null;
+		final WrappedHttpClient client = HttpClientManager.get().getClient();
 		try {
 			reset();
 			apiUrl = API_BASE_URL + categoryId + "&offset=" + offset;
-			final Response doc = ConnectionManager.get().getConnection()
-					  .url(apiUrl)
-				      .header("Content-Type", "application/json")
-				      .header("Accept-Charset", "utf-8")
-				      .ignoreContentType(true)
-				      .execute();
-			final JSONObject json = new JSONObject(doc.body());
+			final HttpGet request = new HttpGet(apiUrl);
+			request.addHeader("Content-Type", "application/json");
+			request.addHeader("Accept-Charset", "utf-8");
+			final HttpResponse response = client.execute(request);
+			final JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()));
 			payload = Optional.ofNullable(json.getJSONObject("payload"));
 			payload.ifPresent(obj -> {
 				records = Optional.ofNullable(getJsonArr(obj, "records"));
 			});
 			return true;
+		} catch(final IOException e) {
+			e.printStackTrace();
+			HttpClientManager.get().flag(client);
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
