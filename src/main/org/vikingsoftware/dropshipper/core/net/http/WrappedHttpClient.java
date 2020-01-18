@@ -4,11 +4,17 @@ import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.cookie.ClientCookie;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.protocol.HttpContext;
 
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
@@ -30,6 +36,19 @@ public class WrappedHttpClient {
 	
 	public HttpResponse execute(final HttpUriRequest request, final HttpContext context) throws ClientProtocolException, IOException {
 		return client.execute(request, context);
+	}
+	
+	public HttpContext getContextFromCookies(final Map<String, String> cookieMap) {
+		final CookieStore cookies = new BasicCookieStore();
+		for(final Map.Entry<String, String> cookieEntry : cookieMap.entrySet()) {
+			final BasicClientCookie cookie = new BasicClientCookie(cookieEntry.getKey(), cookieEntry.getValue());
+			cookie.setDomain("samsclub.com");
+			cookie.setAttribute(ClientCookie.DOMAIN_ATTR, "true");
+			cookies.addCookie(cookie);
+		}
+		final HttpContext localContext = new HttpClientContext();
+		localContext.setAttribute(HttpClientContext.COOKIE_STORE, cookies);
+		return localContext;
 	}
 	
 	public static void main(final String[] args) {

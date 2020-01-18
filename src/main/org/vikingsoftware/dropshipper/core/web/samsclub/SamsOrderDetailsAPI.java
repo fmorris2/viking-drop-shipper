@@ -5,13 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.http.HttpResponse;
-import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.cookie.ClientCookie;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.cookie.BasicClientCookie;
-import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -83,16 +77,7 @@ public final class SamsOrderDetailsAPI extends JsonAPIParser {
 			get.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36");
 			get.addHeader("Content-Type", "application/json");
 			get.addHeader("Accept-Charset", "utf-8");
-			final CookieStore cookies = new BasicCookieStore();
-			for(final Map.Entry<String, String> cookieEntry : session.entrySet()) {
-				final BasicClientCookie cookie = new BasicClientCookie(cookieEntry.getKey(), cookieEntry.getValue());
-				cookie.setDomain("samsclub.com");
-				cookie.setAttribute(ClientCookie.DOMAIN_ATTR, "true");
-				cookies.addCookie(cookie);
-			}
-			final HttpContext localContext = new HttpClientContext();
-			localContext.setAttribute(HttpClientContext.COOKIE_STORE, cookies);
-			final HttpResponse response = client.execute(get, localContext);
+			final HttpResponse response = client.execute(get, client.getContextFromCookies(session));
 			
 			final String rawJson = EntityUtils.toString(response.getEntity());
 			
