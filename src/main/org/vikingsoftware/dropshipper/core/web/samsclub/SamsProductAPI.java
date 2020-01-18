@@ -99,6 +99,14 @@ public final class SamsProductAPI extends JsonAPIParser {
 		return false;
 	}
 	
+	public Optional<String> getSkuId() {
+		if(skuOptions.isPresent()) {
+			return Optional.ofNullable(getString(skuOptions.get(), "skuId"));
+		}
+		
+		return Optional.empty();
+	}
+	
 	public boolean isFreeShipping() {
 		if(skuOptions.isPresent()) {
 			final String shippingType = getString(skuOptions.get(), "shippingCostType");

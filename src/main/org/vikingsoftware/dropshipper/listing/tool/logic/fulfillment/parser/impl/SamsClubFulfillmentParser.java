@@ -82,9 +82,11 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 			
 			listing.ean = api.getEAN().orElse(null);
 			listing.upc = api.getUPC().orElse(null);
+			listing.skuId = api.getSkuId().orElse(null);
 			
 			System.out.println("EAN: " + listing.ean);
 			System.out.println("UPC: " + listing.upc);
+			System.out.println("SKU ID: " + listing.skuId);
 			
 			listing.title = cleanse(api.getProductName().orElse(null)
 					.replace(" and ", "&")

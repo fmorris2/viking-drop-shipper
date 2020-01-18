@@ -12,32 +12,32 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 
-public class SamsClubAddToCartRequest {
+public class SamsClubAddToCartRequest extends SamsRequest {
 	
 	private static final String URL_PREFIX = "http://www.samsclub.com/api/node/cartservice/v1/carts/";
 	private static final String URL_SUFFIX = "/cartitems?response_groups=cart.medium";
 	
-	private final Map<String, String> sessionCookies;
 	private final int quantity;
 	private final String productId;
 	private final String skuId;
 	private final String itemNumber;
 	
 	private SamsClubAddToCartRequest(final Builder builder) {
-		this.sessionCookies = builder.sessionCookies;
+		this.sessionCookies.putAll(builder.sessionCookies);
 		this.quantity = builder.quantity;
 		this.productId = builder.productId;
 		this.skuId = builder.skuId;
 		this.itemNumber = builder.itemNumber;
+		this.client = builder.client;
 	}
 	
 	public boolean execute() {
 		final String url = URL_PREFIX + sessionCookies.get("samsorder") + URL_SUFFIX;
 		System.out.println("[SamsClubAddToCartRequest] Formulating POST request for url: " + url);
-		final WrappedHttpClient client = HttpClientManager.get().getClient();
 		final HttpPost request = new HttpPost(url);
 		addHeaders(request);
 		addPayload(request);
@@ -99,6 +99,17 @@ public class SamsClubAddToCartRequest {
 		private String productId;
 		private String skuId;
 		private String itemNumber;
+		private WrappedHttpClient client;
+		
+		public Builder() {
+			
+		}
+		
+		public Builder(final FulfillmentListing listing) {
+			productId = listing.product_id;
+			skuId = listing.sku_id;
+			itemNumber = listing.item_id;
+		}
 		
 		public Builder session(final Map<String, String> session) {
 			this.sessionCookies = session;
@@ -122,6 +133,11 @@ public class SamsClubAddToCartRequest {
 		
 		public Builder itemNumber(final String num) {
 			this.itemNumber = num;
+			return this;
+		}
+		
+		public Builder client(final WrappedHttpClient client) {
+			this.client = client;
 			return this;
 		}
 		

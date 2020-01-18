@@ -263,6 +263,7 @@ public class FulfillmentManager {
 						.upc(results.getString("upc"))
 						.ean(results.getString("ean"))
 						.product_id(results.getString("product_id"))
+						.sku_id(results.getString("sku_id"))
 						.listing_title(results.getString("listing_title"))
 						.listing_url(results.getString("listing_url"))
 						.build();
@@ -290,6 +291,7 @@ public class FulfillmentManager {
 						.upc(results.getString("upc"))
 						.ean(results.getString("ean"))
 						.product_id(results.getString("product_id"))
+						.sku_id(results.getString("sku_id"))
 						.listing_title(results.getString("listing_title"))
 						.listing_url(results.getString("listing_url"))
 						.build();
@@ -327,6 +329,7 @@ public class FulfillmentManager {
 					.upc(results.getString("upc"))
 					.ean(results.getString("ean"))
 					.product_id(results.getString("product_id"))
+					.sku_id(results.getString("sku_id"))
 					.listing_title(results.getString("listing_title"))
 					.listing_url(results.getString("listing_url"))
 					.build();
