@@ -41,16 +41,7 @@ public class SamsClubAddToCartRequest {
 		final HttpPost request = new HttpPost(url);
 		addHeaders(request);
 		addPayload(request);
-		
-		try {
-			final HttpResponse response = client.execute(request, client.getContextFromCookies("samsclub.com", sessionCookies));
-			System.out.println("[SamsClubAddToCartRequest] Response: " + EntityUtils.toString(response.getEntity()));
-			return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
-		} catch(final IOException e) {
-			e.printStackTrace();
-		}
-		
-		return false;
+		return sendRequest(client, request);
 	}
 	
 	private void addHeaders(final HttpPost request) {
@@ -87,6 +78,19 @@ public class SamsClubAddToCartRequest {
 		jsonObj.put("payload", payloadObj);
 		
 		return jsonObj.toString();
+	}
+	
+	private boolean sendRequest(final WrappedHttpClient client, final HttpPost request) {
+		try {
+			final HttpResponse response = client.execute(request, client.getContextFromCookies("samsclub.com", sessionCookies));
+			System.out.println("[SamsClubAddToCartRequest] Response: " + EntityUtils.toString(response.getEntity()));
+			return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
+		} catch(final IOException e) {
+			e.printStackTrace();
+			HttpClientManager.get().flag(client);
+		}
+		
+		return false;
 	}
 	
 	public static class Builder {
