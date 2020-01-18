@@ -12,7 +12,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -26,9 +29,9 @@ import main.org.vikingsoftware.dropshipper.order.tracking.history.TrackingHistor
 
 public class FedexTrackingHistoryParsingStrategy implements TrackingHistoryParsingStrategy {
 	
-	private static final String BASE_URL = "https://www.fedex.com/trackingCal/track?";
-	private static final String BASE_URL_QUERY_PREFIX = "data={\"TrackPackagesRequest\":{\"appType\":\"WTRK\",\"appDeviceType\":\"DESKTOP\",\"supportHTML\":true,\"supportCurrentLocation\":true,\"uniqueKey\":\"\",\"processingParameters\":{},\"trackingInfoList\":[{\"trackNumberInfo\":{\"trackingNumber\":\"";
-	private static final String BASE_URL_QUERY_SUFFIX = "\",\"trackingQualifier\":\"\",\"trackingCarrier\":\"\"}}]}}&action=trackpackages&locale=en_US&version=1&format=json";
+	private static final String BASE_URL = "https://www.fedex.com/trackingCal/track";
+	private static final String DATA_PREFIX = "{\"TrackPackagesRequest\":{\"appType\":\"WTRK\",\"appDeviceType\":\"DESKTOP\",\"supportHTML\":true,\"supportCurrentLocation\":true,\"uniqueKey\":\"\",\"processingParameters\":{},\"trackingInfoList\":[{\"trackNumberInfo\":{\"trackingNumber\":\"";
+	private static final String DATA_SUFFIX = "\",\"trackingQualifier\":\"\",\"trackingCarrier\":\"\"}}]}}&action=trackpackages&locale=en_US&version=1&format=json";
 	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("uuuu-MM-dd kk:mm:ss");
 	
 	@Override
@@ -36,9 +39,14 @@ public class FedexTrackingHistoryParsingStrategy implements TrackingHistoryParsi
 		System.out.println("FedexTrackingHistoryParsingStrategy#parse for tracking number: " + order.tracking_number);
 		final WrappedHttpClient client = HttpClientManager.get().getClient();
 		try {
-			final String apiUrl = BASE_URL + URLEncoder.encode(BASE_URL + BASE_URL_QUERY_PREFIX + order.tracking_number + BASE_URL_QUERY_SUFFIX, "UTF-8");
-			final HttpPost req = new HttpPost(apiUrl);
-			req.addHeader("Content-Type", "application/x-www-form-urlencoded");
+			final HttpPost req = new HttpPost(BASE_URL);
+			final List<NameValuePair> params = new ArrayList<>();
+			params.add(new BasicNameValuePair("data", DATA_PREFIX + order.tracking_number + DATA_SUFFIX));
+			params.add(new BasicNameValuePair("action", "trackpackages"));
+			params.add(new BasicNameValuePair("locale", "en_US"));
+			params.add(new BasicNameValuePair("version", "1"));
+			params.add(new BasicNameValuePair("format", "json"));
+			req.setEntity(new UrlEncodedFormEntity(params));
 			req.addHeader("Accept-Charset", "utf-8");
 			final HttpResponse response = client.execute(req);
 			final JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()));
