@@ -1,4 +1,4 @@
-package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl;
+package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club;
 
 import java.text.DecimalFormat;
 import java.util.List;
