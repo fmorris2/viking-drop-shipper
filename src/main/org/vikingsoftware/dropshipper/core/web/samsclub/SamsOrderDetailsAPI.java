@@ -1,18 +1,21 @@
 package main.org.vikingsoftware.dropshipper.core.web.samsclub;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.jsoup.HttpStatusException;
-import org.jsoup.Jsoup;
 
 import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubDriverSupplier;
-import main.org.vikingsoftware.dropshipper.core.net.ConnectionManager;
+import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
+import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.core.web.JsonAPIParser;
 
 public final class SamsOrderDetailsAPI extends JsonAPIParser {
@@ -59,6 +62,7 @@ public final class SamsOrderDetailsAPI extends JsonAPIParser {
 		String apiUrl = null;
 		final SamsClubDriverSupplier driver = BrowserRepository.get().request(SamsClubDriverSupplier.class);
 		final FulfillmentAccount acc = FulfillmentAccountManager.get().getAccountByTransactionId(orderId);
+		final WrappedHttpClient client = HttpClientManager.get().getClient();
 		try {
 			reset();
 			apiUrl = API_BASE_URL + orderId + API_URL_ARGS;
@@ -69,15 +73,13 @@ public final class SamsOrderDetailsAPI extends JsonAPIParser {
 			if(session.isEmpty()) {
 				return false;
 			}
-			final String rawJson = ConnectionManager.get().getConnection()
-					.url(apiUrl)
-					.userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36")
-				    .header("Content-Type", "application/json")
-				    .header("Accept-Charset", "utf-8")
-					.cookies(session)
-					.ignoreContentType(true)
-					.execute()
-					.body();
+			final HttpGet get = new HttpGet(apiUrl);
+			get.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36");
+			get.addHeader("Content-Type", "application/json");
+			get.addHeader("Accept-Charset", "utf-8");
+			final HttpResponse response = client.execute(get, client.getContextFromCookies("samsclub.com", session));
+			
+			final String rawJson = EntityUtils.toString(response.getEntity());
 			
 			json = Optional.of(new JSONObject(rawJson));
 			json.ifPresent(obj -> {
@@ -88,13 +90,10 @@ public final class SamsOrderDetailsAPI extends JsonAPIParser {
 			});
 			System.out.println(json);
 			return true;
-		} catch(final HttpStatusException e) {
-			if(e.getStatusCode() == 400) { //unauthorized
-				System.err.println("Unauthorized Http Status to Order Details API - Clearing session...");
-				driver.clearSession(acc);
-			} else {
-				e.printStackTrace();
-			}
+		} catch(final IOException e) {
+			HttpClientManager.get().flag(client);
+			driver.clearSession(acc);
+			e.printStackTrace();
 		} catch(final Exception e) {
 			e.printStackTrace();
 		} finally {

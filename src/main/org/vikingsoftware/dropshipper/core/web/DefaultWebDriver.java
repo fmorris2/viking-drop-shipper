@@ -17,10 +17,12 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxDriverLogLevel;
 import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.firefox.FirefoxProfile;
 
 public class DefaultWebDriver extends FirefoxDriver {
 	
 	public static final int DEFAULT_VISIBILITY_WAIT_SECONDS = 20;
+	//private static final String RAKUTEN_EXTENSION_PATH = "/home/freddy/.mozilla/firefox/xzvqk4xs.default-release/extensions/{35d6291e-1d4b-f9b4-c52f-77e6410d1326}.xpi";
 	
 	public DefaultWebDriver() {
 		super(getOptions());
@@ -31,8 +33,11 @@ public class DefaultWebDriver extends FirefoxDriver {
 	}
 	
 	public static FirefoxOptions getOptions() {
+		final FirefoxProfile profile = new FirefoxProfile();
+		//profile.addExtension(new File(RAKUTEN_EXTENSION_PATH));
 		return new FirefoxOptions()
 				.setHeadless(false)
+				.setProfile(profile)
 				.setLogLevel(FirefoxDriverLogLevel.ERROR);
 	}
 	
@@ -190,7 +195,7 @@ public class DefaultWebDriver extends FirefoxDriver {
 	@Override
 	public void close() {
 		try {
-			System.out.println("Closed JBrowserDriver!");
+			System.out.println("Closed DefaultWebDriver!");
 			super.close();
 		} catch(final Exception e) {
 			//swallow

@@ -102,6 +102,8 @@ public class FillTransactionTable {
 					 		       && entry.getTitle().contains("Store") && entry.getTitle().contains("Subscription Fee")))
 					.collect(Collectors.toList());
 			
+			System.out.println("Found " + accountEntries.size() + " eBay account transaction entries.");
+			
 			for(final AccountEntryType entry : accountEntries) {
 				System.out.println("Attempting to insert Account Transaction: " + entry.getItemID() + ", " + entry.getTitle() + ", "
 						+ entry.getDate().getTime() + ", " + entry.getNetDetailAmount().getValue() + ", "

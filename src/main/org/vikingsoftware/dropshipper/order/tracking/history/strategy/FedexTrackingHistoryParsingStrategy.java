@@ -1,7 +1,7 @@
 package main.org.vikingsoftware.dropshipper.order.tracking.history.strategy;
 
-import java.net.URL;
-import java.nio.charset.Charset;
+import java.io.IOException;
+import java.net.URLEncoder;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -11,29 +11,46 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
+import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
+import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.core.tracking.TrackingHistoryRecord;
 import main.org.vikingsoftware.dropshipper.core.tracking.TrackingStatus;
 import main.org.vikingsoftware.dropshipper.order.tracking.history.TrackingHistoryParsingStrategy;
 
 public class FedexTrackingHistoryParsingStrategy implements TrackingHistoryParsingStrategy {
 	
-	private static final String BASE_URL_PREFIX = "https://www.fedex.com/trackingCal/track?data={%22TrackPackagesRequest%22:{%22appType%22:%22WTRK%22,%22appDeviceType%22:%22DESKTOP%22,%22supportHTML%22:true,%22supportCurrentLocation%22:true,%22uniqueKey%22:%22%22,%22processingParameters%22:{},%22trackingInfoList%22:[{%22trackNumberInfo%22:{%22trackingNumber%22:%22";
-	private static final String BASE_URL_SUFFIX = "%22,%22trackingQualifier%22:%22%22,%22trackingCarrier%22:%22%22}}]}}&action=trackpackages&locale=en_US&version=1&format=json";
+	private static final String BASE_URL = "https://www.fedex.com/trackingCal/track";
+	private static final String DATA_PREFIX = "{\"TrackPackagesRequest\":{\"appType\":\"WTRK\",\"appDeviceType\":\"DESKTOP\",\"supportHTML\":true,\"supportCurrentLocation\":true,\"uniqueKey\":\"\",\"processingParameters\":{},\"trackingInfoList\":[{\"trackNumberInfo\":{\"trackingNumber\":\"";
+	private static final String DATA_SUFFIX = "\",\"trackingQualifier\":\"\",\"trackingCarrier\":\"\"}}]}}&action=trackpackages&locale=en_US&version=1&format=json";
 	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("uuuu-MM-dd kk:mm:ss");
 	
 	@Override
 	public List<TrackingHistoryRecord> parse(final ProcessedOrder order) {
 		System.out.println("FedexTrackingHistoryParsingStrategy#parse for tracking number: " + order.tracking_number);
+		final WrappedHttpClient client = HttpClientManager.get().getClient();
 		try {
-			final String apiUrl = BASE_URL_PREFIX + order.tracking_number + BASE_URL_SUFFIX;
-			final URL urlObj = new URL(apiUrl);
-			final String apiResponse = IOUtils.toString(urlObj, Charset.forName("UTF-8"));
-			final JSONObject json = new JSONObject(apiResponse);
+			final HttpPost req = new HttpPost(BASE_URL);
+			final List<NameValuePair> params = new ArrayList<>();
+			params.add(new BasicNameValuePair("data", DATA_PREFIX + order.tracking_number + DATA_SUFFIX));
+			params.add(new BasicNameValuePair("action", "trackpackages"));
+			params.add(new BasicNameValuePair("locale", "en_US"));
+			params.add(new BasicNameValuePair("version", "1"));
+			params.add(new BasicNameValuePair("format", "json"));
+			req.setEntity(new UrlEncodedFormEntity(params));
+			req.addHeader("Accept-Charset", "utf-8");
+			final HttpResponse response = client.execute(req);
+			final JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()));
+			System.out.println("JSON: " + json);
 			
 			final JSONArray scanEventList = json
 					.getJSONObject("TrackPackagesResponse")
@@ -42,7 +59,9 @@ public class FedexTrackingHistoryParsingStrategy implements TrackingHistoryParsi
 					.getJSONArray("scanEventList");
 			
 			return getTrackingHistoryRecords(order, scanEventList);
-			
+		} catch(final IOException e) {
+			e.printStackTrace();
+			HttpClientManager.get().flag(client);
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}

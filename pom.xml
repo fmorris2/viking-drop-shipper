@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>viking-drop-shipper</groupId>
@@ -31,109 +32,97 @@
 			<artifactId>selenium-java</artifactId>
 			<version>3.141.59</version>
 		</dependency>
-			
-		<!-- https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple -->
-		<dependency>
-			<groupId>com.googlecode.json-simple</groupId>
-			<artifactId>json-simple</artifactId>
-			<version>1.1.1</version>
-		</dependency>	
-		
+
 		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-collections4 -->
 		<dependency>
-		    <groupId>org.apache.commons</groupId>
-		    <artifactId>commons-collections4</artifactId>
-		    <version>4.3</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+			<version>4.3</version>
 		</dependency>
-		
+
 		<!-- https://mvnrepository.com/artifact/com.miglayout/miglayout -->
 		<dependency>
-		    <groupId>com.miglayout</groupId>
-		    <artifactId>miglayout</artifactId>
-		    <version>3.7.4</version>
+			<groupId>com.miglayout</groupId>
+			<artifactId>miglayout</artifactId>
+			<version>3.7.4</version>
 		</dependency>
-		
+
 		<!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
 		<dependency>
-		    <groupId>com.google.code.gson</groupId>
-		    <artifactId>gson</artifactId>
-		    <version>2.8.5</version>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.8.5</version>
 		</dependency>
-		
+
 		<!-- https://mvnrepository.com/artifact/com.github.tony19/named-regexp -->
 		<dependency>
-		    <groupId>com.github.tony19</groupId>
-		    <artifactId>named-regexp</artifactId>
-		    <version>0.2.5</version>
+			<groupId>com.github.tony19</groupId>
+			<artifactId>named-regexp</artifactId>
+			<version>0.2.5</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/net.sf.jtidy/jtidy -->
 		<dependency>
-		    <groupId>net.sf.jtidy</groupId>
-		    <artifactId>jtidy</artifactId>
-		    <version>r938</version>
+			<groupId>net.sf.jtidy</groupId>
+			<artifactId>jtidy</artifactId>
+			<version>r938</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/com.konghq/unirest-java -->
-		<dependency>
-		    <groupId>com.konghq</groupId>
-		    <artifactId>unirest-java</artifactId>
-		    <version>2.3.00</version>
-		</dependency>
-		
 		<!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
 		<dependency>
-		    <groupId>org.apache.httpcomponents</groupId>
-		    <artifactId>httpclient</artifactId>
-		    <version>4.5.8</version>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.10</version>
 		</dependency>
-		
+
+		<!-- https://mvnrepository.com/artifact/commons-codec/commons-codec -->
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.13</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/commons-logging/commons-logging -->
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<version>1.2</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpcore -->
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpcore</artifactId>
+			<version>4.4.13</version>
+		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpmime -->
 		<dependency>
-		    <groupId>org.apache.httpcomponents</groupId>
-		    <artifactId>httpmime</artifactId>
-		    <version>4.5.8</version>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpmime</artifactId>
+			<version>4.5.8</version>
 		</dependency>
-		
-		<!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpasyncclient -->
-		<dependency>
-		    <groupId>org.apache.httpcomponents</groupId>
-		    <artifactId>httpasyncclient</artifactId>
-		    <version>4.1.4</version>
-		</dependency>		
-		
+
 		<!-- https://mvnrepository.com/artifact/org.json/json -->
 		<dependency>
-		    <groupId>org.json</groupId>
-		    <artifactId>json</artifactId>
-		    <version>20180813</version>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20180813</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.jsoup/jsoup -->
 		<dependency>
-		    <groupId>org.jsoup</groupId>
-		    <artifactId>jsoup</artifactId>
-		    <version>1.12.1</version>
-		</dependency>
-		
-		<dependency>
-		  <groupId>com.machinepublishers</groupId>
-		  <artifactId>jbrowserdriver</artifactId>
-		  <version>1.1.0-RC1</version>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.12.1</version>
 		</dependency>
 
-		<dependency>
-			<groupId>net.sf.cssbox</groupId>
-			<artifactId>swingbox</artifactId>
-			<version>1.1</version>
-		</dependency>
-		
 		<!-- https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail -->
 		<dependency>
-		    <groupId>com.google.apis</groupId>
-		    <artifactId>google-api-services-gmail</artifactId>
-		    <version>v1-rev105-1.25.0</version>
+			<groupId>com.google.apis</groupId>
+			<artifactId>google-api-services-gmail</artifactId>
+			<version>v1-rev105-1.25.0</version>
 		</dependency>
-		
+
 	</dependencies>
 </project>

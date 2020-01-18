@@ -4,10 +4,9 @@ import java.util.Stack;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.machinepublishers.jbrowserdriver.JBrowserDriver;
-import com.machinepublishers.jbrowserdriver.Settings;
+import main.org.vikingsoftware.dropshipper.core.web.DefaultWebDriver;
 
-public class RecentSalesRenderer extends JBrowserDriver {
+public class RecentSalesRenderer extends DefaultWebDriver {
 	
 	private static final long CYCLE_TIME = 1000;
 	
@@ -15,11 +14,6 @@ public class RecentSalesRenderer extends JBrowserDriver {
 	private final Stack<String> queuedUrls = new Stack<>();
 	
 	public RecentSalesRenderer() {
-		super(new Settings.Builder()
-				.headless(false)
-				.build()
-		);
-		
 		executor.execute(this::updateBrowser);
 	}
 	
