@@ -38,11 +38,11 @@ public class WrappedHttpClient {
 		return client.execute(request, context);
 	}
 	
-	public HttpContext getContextFromCookies(final Map<String, String> cookieMap) {
+	public HttpContext getContextFromCookies(final String domain, final Map<String, String> cookieMap) {
 		final CookieStore cookies = new BasicCookieStore();
 		for(final Map.Entry<String, String> cookieEntry : cookieMap.entrySet()) {
 			final BasicClientCookie cookie = new BasicClientCookie(cookieEntry.getKey(), cookieEntry.getValue());
-			cookie.setDomain("samsclub.com");
+			cookie.setDomain(domain);
 			cookie.setAttribute(ClientCookie.DOMAIN_ATTR, "true");
 			cookies.addCookie(cookie);
 		}
