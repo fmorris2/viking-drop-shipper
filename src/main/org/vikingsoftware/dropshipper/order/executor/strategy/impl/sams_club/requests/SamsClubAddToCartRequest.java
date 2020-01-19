@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -27,16 +28,15 @@ public class SamsClubAddToCartRequest extends SamsRequest {
 	private final String itemNumber;
 	
 	private SamsClubAddToCartRequest(final Builder builder) {
-		this.sessionCookies.putAll(builder.sessionCookies);
+		super(builder.client, builder.cookies);
 		this.quantity = builder.quantity;
 		this.productId = builder.productId;
 		this.skuId = builder.skuId;
 		this.itemNumber = builder.itemNumber;
-		this.client = builder.client;
 	}
 	
 	public boolean execute() {
-		final String url = URL_PREFIX + sessionCookies.get("samsorder") + URL_SUFFIX;
+		final String url = URL_PREFIX + getCookie("samsorder") + URL_SUFFIX;
 		System.out.println("[SamsClubAddToCartRequest] Formulating POST request for url: " + url);
 		final HttpPost request = new HttpPost(url);
 		addHeaders(request);
@@ -82,7 +82,7 @@ public class SamsClubAddToCartRequest extends SamsRequest {
 	
 	private boolean sendRequest(final WrappedHttpClient client, final HttpPost request) {
 		try {
-			final HttpResponse response = client.execute(request, client.getContextFromCookies("samsclub.com", sessionCookies));
+			final HttpResponse response = client.execute(request, client.createContextFromCookies(cookies));
 			System.out.println("[SamsClubAddToCartRequest] Response: " + EntityUtils.toString(response.getEntity()));
 			return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
 		} catch(final IOException e) {
@@ -94,7 +94,7 @@ public class SamsClubAddToCartRequest extends SamsRequest {
 	}
 	
 	public static class Builder {
-		private Map<String, String> sessionCookies;
+		private CookieStore cookies;
 		private int quantity;
 		private String productId;
 		private String skuId;
@@ -111,8 +111,8 @@ public class SamsClubAddToCartRequest extends SamsRequest {
 			itemNumber = listing.item_id;
 		}
 		
-		public Builder session(final Map<String, String> session) {
-			this.sessionCookies = session;
+		public Builder cookies(final CookieStore cookies) {
+			this.cookies = cookies;
 			return this;
 		}
 		

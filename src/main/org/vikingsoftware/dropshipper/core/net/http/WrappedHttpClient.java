@@ -38,17 +38,30 @@ public class WrappedHttpClient {
 		return client.execute(request, context);
 	}
 	
-	public HttpContext getContextFromCookies(final String domain, final Map<String, String> cookieMap) {
-		final CookieStore cookies = new BasicCookieStore();
+	public HttpContext createContextFromCookies(final CookieStore cookies) {
+		final HttpContext localContext = new HttpClientContext();
+		localContext.setAttribute(HttpClientContext.COOKIE_STORE, cookies);
+		return localContext;
+	}
+	
+	public HttpContext createContextFromCookies(final CookieStore cookieStore, final String domain, final Map<String, String> cookieMap) {
 		for(final Map.Entry<String, String> cookieEntry : cookieMap.entrySet()) {
 			final BasicClientCookie cookie = new BasicClientCookie(cookieEntry.getKey(), cookieEntry.getValue());
 			cookie.setDomain(domain);
 			cookie.setAttribute(ClientCookie.DOMAIN_ATTR, "true");
-			cookies.addCookie(cookie);
+			cookieStore.addCookie(cookie);
 		}
-		final HttpContext localContext = new HttpClientContext();
-		localContext.setAttribute(HttpClientContext.COOKIE_STORE, cookies);
-		return localContext;
+
+		return createContextFromCookies(cookieStore);
+	}
+	
+	public static CookieStore createCookieStoreFromMap(final Map<String, String> cookies) {
+		final CookieStore cookieStore = new BasicCookieStore();
+		for(final Map.Entry<String, String> cookie : cookies.entrySet()) {
+			cookieStore.addCookie(new BasicClientCookie(cookie.getKey(), cookie.getValue()));
+		}
+		
+		return cookieStore;
 	}
 	
 	public static void main(final String[] args) {

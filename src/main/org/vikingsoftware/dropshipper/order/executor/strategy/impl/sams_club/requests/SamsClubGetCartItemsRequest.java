@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
@@ -23,13 +23,13 @@ public class SamsClubGetCartItemsRequest extends SamsRequest {
 	private static final String URL_PREFIX = "http://www.samsclub.com/cartservice/v1/carts/";
 	private static final String URL_SUFFIX = "?response_groups=cart.medium";
 	
-	public SamsClubGetCartItemsRequest(final WrappedHttpClient client, final Map<String, String> sessionCookies) {
+	public SamsClubGetCartItemsRequest(final WrappedHttpClient client, final CookieStore cookieStore) {
+		super(client, cookieStore);
 		this.client = client;
-		this.sessionCookies.putAll(sessionCookies);
 	}
 	
 	public List<SamsClubCartItem> execute() {
-		final String url = URL_PREFIX + sessionCookies.get("samsorder") + URL_SUFFIX;
+		final String url = URL_PREFIX + getCookie("samsorder") + URL_SUFFIX;
 		System.out.println("[SamsGetCartItemsRequest] About to dispatch GET request to URL: " + url);
 		final HttpGet request = new HttpGet(url);
 		addHeaders(request);
@@ -50,7 +50,7 @@ public class SamsClubGetCartItemsRequest extends SamsRequest {
 	
 	private List<SamsClubCartItem> sendRequest(final WrappedHttpClient client, final HttpGet request) {
 		try {
-			final HttpResponse response = client.execute(request, client.getContextFromCookies("samsclub.com", sessionCookies));
+			final HttpResponse response = client.execute(request, client.createContextFromCookies(cookies));
 			final String responseStr = EntityUtils.toString(response.getEntity());
 			System.out.println("[SamsClubGetCartItemsRequest] Response: " + responseStr);
 			if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {

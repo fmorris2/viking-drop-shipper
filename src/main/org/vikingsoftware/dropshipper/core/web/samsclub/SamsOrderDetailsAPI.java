@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -77,7 +78,8 @@ public final class SamsOrderDetailsAPI extends JsonAPIParser {
 			get.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36");
 			get.addHeader("Content-Type", "application/json");
 			get.addHeader("Accept-Charset", "utf-8");
-			final HttpResponse response = client.execute(get, client.getContextFromCookies("samsclub.com", session));
+			final HttpResponse response = client.execute(get, client.createContextFromCookies(new BasicCookieStore(), 
+					"samsclub.com", session));
 			
 			final String rawJson = EntityUtils.toString(response.getEntity());
 			
