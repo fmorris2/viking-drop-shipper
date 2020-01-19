@@ -12,23 +12,33 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.jsoup.Jsoup;
 
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubCartItem;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubItem;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsPurchaseContractDependencies;
 
 public class SamsClubGetCartItemsRequest extends SamsRequest {
 	
+	private static final String PURCHASE_CONTRACT_DEPENDENCIES_URL = "https://www.samsclub.com/sams/cart/cart.jsp";
 	private static final String URL_PREFIX = "http://www.samsclub.com/cartservice/v1/carts/";
 	private static final String URL_SUFFIX = "?response_groups=cart.medium";
+	
+	private SamsPurchaseContractDependencies purchaseContractDependencies;
 	
 	public SamsClubGetCartItemsRequest(final WrappedHttpClient client, final CookieStore cookieStore) {
 		super(client, cookieStore);
 		this.client = client;
 	}
 	
+	public SamsPurchaseContractDependencies getPurchaseContractDependencies() {
+		return purchaseContractDependencies;
+	}
+	
 	public List<SamsClubCartItem> execute() {
+		createPurchaseContractDependencies();
 		final String url = URL_PREFIX + getCookie("samsorder") + URL_SUFFIX;
 		System.out.println("[SamsGetCartItemsRequest] About to dispatch GET request to URL: " + url);
 		final HttpGet request = new HttpGet(url);
@@ -38,7 +48,7 @@ public class SamsClubGetCartItemsRequest extends SamsRequest {
 	}
 	
 	private void addHeaders(final HttpGet request) {
-		request.addHeader("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36");
+		request.addHeader("user-agent", DEFAULT_USER_AGENT);
 		request.addHeader("content-type", "application/json");
 		request.addHeader("accept", "application/json");
 		request.addHeader("accept-encoding", "gzip, deflate, br");
@@ -62,6 +72,23 @@ public class SamsClubGetCartItemsRequest extends SamsRequest {
 		}
 		
 		return Collections.emptyList();
+	}
+	
+	private boolean createPurchaseContractDependencies() {
+		try {
+			final String html = Jsoup.connect(PURCHASE_CONTRACT_DEPENDENCIES_URL)
+					.cookies(getCookieMap())
+					.userAgent(DEFAULT_USER_AGENT)
+					.ignoreContentType(true)
+					.get()
+					.data();
+			
+			purchaseContractDependencies = new SamsPurchaseContractDependencies(html);
+		} catch(final IOException e) {
+			e.printStackTrace();
+		}
+		
+		return false;
 	}
 	
 	private List<SamsClubCartItem> convertResponseToCartItemList(final String response) {
