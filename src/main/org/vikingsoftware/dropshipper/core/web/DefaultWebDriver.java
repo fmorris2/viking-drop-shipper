@@ -24,6 +24,10 @@ public class DefaultWebDriver extends FirefoxDriver {
 	public static final int DEFAULT_VISIBILITY_WAIT_SECONDS = 20;
 	//private static final String RAKUTEN_EXTENSION_PATH = "/home/freddy/.mozilla/firefox/xzvqk4xs.default-release/extensions/{35d6291e-1d4b-f9b4-c52f-77e6410d1326}.xpi";
 	
+	static {
+		System.setProperty("webdriver.gecko.driver", "lib/geckodriver");
+	}
+	
 	public DefaultWebDriver() {
 		super(getOptions());
 	}

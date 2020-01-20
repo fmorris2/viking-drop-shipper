@@ -4,12 +4,15 @@ import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.cookie.ClientCookie;
@@ -62,6 +65,16 @@ public class WrappedHttpClient {
 		}
 		
 		return cookieStore;
+	}
+	
+	public static Map<String, String> generateHeaderMapFromRequest(final HttpRequestBase post) {
+		final Map<String, String> headers = new HashMap<>();
+		
+		for(final Header header : post.getAllHeaders()) {
+			headers.put(header.getName(), header.getValue());
+		}
+		
+		return headers;
 	}
 	
 	public static void main(final String[] args) {

@@ -22,23 +22,19 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_clu
 
 public class SamsClubGetCartItemsRequest extends SamsRequest {
 	
-	private static final String PURCHASE_CONTRACT_DEPENDENCIES_URL = "https://www.samsclub.com/sams/cart/cart.jsp";
 	private static final String URL_PREFIX = "http://www.samsclub.com/cartservice/v1/carts/";
 	private static final String URL_SUFFIX = "?response_groups=cart.medium";
 	
 	private SamsPurchaseContractDependencies purchaseContractDependencies;
 	
-	public SamsClubGetCartItemsRequest(final WrappedHttpClient client, final CookieStore cookieStore) {
+	public SamsClubGetCartItemsRequest(final WrappedHttpClient client, final CookieStore cookieStore, 
+			final SamsPurchaseContractDependencies purchaseContractDependencies) {
 		super(client, cookieStore);
 		this.client = client;
-	}
-	
-	public SamsPurchaseContractDependencies getPurchaseContractDependencies() {
-		return purchaseContractDependencies;
+		this.purchaseContractDependencies = purchaseContractDependencies;
 	}
 	
 	public List<SamsClubCartItem> execute() {
-		createPurchaseContractDependencies();
 		final String url = URL_PREFIX + getCookie("samsorder") + URL_SUFFIX;
 		System.out.println("[SamsGetCartItemsRequest] About to dispatch GET request to URL: " + url);
 		final HttpGet request = new HttpGet(url);
@@ -53,9 +49,9 @@ public class SamsClubGetCartItemsRequest extends SamsRequest {
 		request.addHeader("accept", "application/json");
 		request.addHeader("accept-encoding", "gzip, deflate, br");
 		request.addHeader("dnt", "1");
-		request.addHeader("wm_consumer.source_id", "2");
-		request.addHeader("wm_tenant_id", "1");
-		request.addHeader("wm_vertical_id", "3");
+		request.addHeader("wm_consumer.source_id", purchaseContractDependencies.getMapping("wm_consumer.source_id"));
+		request.addHeader("wm_tenant_id", purchaseContractDependencies.getMapping("wm_tenant_id"));
+		request.addHeader("wm_vertical_id", purchaseContractDependencies.getMapping("wm_vertical_id"));
 	}
 	
 	private List<SamsClubCartItem> sendRequest(final WrappedHttpClient client, final HttpGet request) {
@@ -72,23 +68,6 @@ public class SamsClubGetCartItemsRequest extends SamsRequest {
 		}
 		
 		return Collections.emptyList();
-	}
-	
-	private boolean createPurchaseContractDependencies() {
-		try {
-			final String html = Jsoup.connect(PURCHASE_CONTRACT_DEPENDENCIES_URL)
-					.cookies(getCookieMap())
-					.userAgent(DEFAULT_USER_AGENT)
-					.ignoreContentType(true)
-					.get()
-					.data();
-			
-			purchaseContractDependencies = new SamsPurchaseContractDependencies(html);
-		} catch(final IOException e) {
-			e.printStackTrace();
-		}
-		
-		return false;
 	}
 	
 	private List<SamsClubCartItem> convertResponseToCartItemList(final String response) {
