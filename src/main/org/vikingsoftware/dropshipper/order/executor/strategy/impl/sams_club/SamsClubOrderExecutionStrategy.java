@@ -298,7 +298,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		driver.setImplicitWait(5);
 		System.out.println("current url: " + driver.getCurrentUrl());
 		try {
-		driver.findElementNormal(By.cssSelector(".sc-shipping-address-change > span:nth-child(1)"));
+			driver.findElementNormal(By.cssSelector(".sc-shipping-address-change > span:nth-child(1)"));
 		} catch(final NoSuchElementException e) {
 			try {
 				driver.js("document.querySelector(\".sc-btn-secondary > span:nth-child(1)\").click();");
@@ -321,7 +321,17 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		}
 		System.out.println("\tdone.");
 		System.out.println("Clicking edit on preferred address...");
-		driver.findElementNormal(By.cssSelector("button.sc-address-card-edit-action:nth-child(1) > span:nth-child(1)"));
+		try {
+			driver.findElementNormal(By.cssSelector("button.sc-address-card-edit-action:nth-child(1) > span:nth-child(1)"));
+		} catch(final NoSuchElementException e) {
+			//"add address"
+			final WebElement el = driver.findElementNormal(By.cssSelector(".sc-address-form > h4"));
+			if("Add an address".equals(el.getText())) {
+				driver.js("document.querySelector(\".sc-btn-secondary > span:nth-child(1)\").click();");
+				enterAddress(order);
+				return;
+			}
+		}
 		driver.js("document.querySelector(\"button.sc-address-card-edit-action:nth-child(1) > span:nth-child(1)\").click();");
 		System.out.println("\tdone.");
 		
@@ -330,7 +340,7 @@ public class SamsClubOrderExecutionStrategy extends AbstractOrderExecutionStrate
 		System.out.println("Entering name...");
 		
 		final String normalizedName = getNormalizedName(order.normalizedBuyerName);
-		
+
 		clearAndSendKeys(driver.findElement(By.cssSelector(".sc-address-form .sc-input-box-container input[name=\"name\"]")), normalizedName);
 	
 		System.out.println("Entering street address...");

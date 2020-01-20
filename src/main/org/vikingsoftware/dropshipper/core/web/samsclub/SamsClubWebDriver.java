@@ -9,7 +9,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebElement;
 
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
@@ -17,6 +17,7 @@ import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 public class SamsClubWebDriver extends LoginWebDriver {
 	
 	private static final int MAX_LOGIN_ATTEMPTS = 2;
+	private static final long VERIFY_LOGGED_IN_WAIT = 2000;
 	
 	private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	
@@ -63,8 +64,12 @@ public class SamsClubWebDriver extends LoginWebDriver {
 				usernameEl.sendKeys(account.username);
 				passwordEl.sendKeys(account.password);
 				buttonEl.click();
-				sleep(2000);
-				return verifyLoggedIn();
+				final long start = System.currentTimeMillis();
+				boolean loggedIn = false;
+				while(!(loggedIn = verifyLoggedIn()) && System.currentTimeMillis() - start < VERIFY_LOGGED_IN_WAIT) {
+					sleep(10);
+				}
+				return loggedIn;
 			}
 			
 			return false;
@@ -103,45 +108,8 @@ public class SamsClubWebDriver extends LoginWebDriver {
 
 	@Override
 	protected boolean verifyLoggedIn() {
-		try {
-			setImplicitWait(1);
-			
-			try {
-				final WebElement accountWrapper = findElementNormal(By.className("account-wrapper"));
-				try {
-					accountWrapper.findElement(By.className("sign-in"));
-				} catch(final NoSuchElementException e) {
-					System.out.println("Account Wrapper found w/ no sign-in link. Success!");
-					return true;
-				}
-			} catch(final NoSuchElementException e) {
-				//swallow
-			}
-			
-			try {
-				findElementNormal(By.className("sc-account-member-membership-title"));
-				System.out.println("SamsClubWebDriver#verifyLoggedIn returning true");
-				return true;
-			} catch(final Exception e) {
-				//swallow
-			}
-			
-			get("https://www.samsclub.com/account");
-			setImplicitWait(4);
-			
-			//verify we logged in successfully
-			findElementNormal(By.className("sc-account-member-membership-title"));
-			System.out.println("SamsClubWebDriver#verifyLoggedIn returning true");
-			return true;
-		} catch(final NoSuchElementException e) {
-			System.err.println("SamsClubWebDriver#verifyLoggedIn failed - Could not find membership title element.");
-		} catch(final Exception e) {
-			e.printStackTrace();
-		} finally {
-			resetImplicitWait();
-		}
-
-		return false;
+		final Cookie cookie = this.manage().getCookieNamed("signedIn");
+		return cookie != null && cookie.getValue().equalsIgnoreCase("Y");
 	}
 	
 	private static class LoginFormElementFindingStrategy implements Function<LoginWebDriver, WebElement>, Comparable<LoginFormElementFindingStrategy> {
