@@ -1,11 +1,9 @@
 package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -19,7 +17,7 @@ import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 
 public class SamsClubAddToCartRequest extends SamsRequest {
 	
-	private static final String URL_PREFIX = "http://www.samsclub.com/api/node/cartservice/v1/carts/";
+	private static final String URL_PREFIX = "https://www.samsclub.com/api/node/cartservice/v1/carts/";
 	private static final String URL_SUFFIX = "/cartitems?response_groups=cart.medium";
 	
 	private final int quantity;
@@ -28,7 +26,7 @@ public class SamsClubAddToCartRequest extends SamsRequest {
 	private final String itemNumber;
 	
 	private SamsClubAddToCartRequest(final Builder builder) {
-		super(builder.client, builder.cookies);
+		super(builder.client);
 		this.quantity = builder.quantity;
 		this.productId = builder.productId;
 		this.skuId = builder.skuId;
@@ -82,7 +80,7 @@ public class SamsClubAddToCartRequest extends SamsRequest {
 	
 	private boolean sendRequest(final WrappedHttpClient client, final HttpPost request) {
 		try {
-			final HttpResponse response = client.execute(request, client.createContextFromCookies(cookies));
+			final HttpResponse response = client.execute(request);
 			System.out.println("[SamsClubAddToCartRequest] Response: " + EntityUtils.toString(response.getEntity()));
 			return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
 		} catch(final IOException e) {
@@ -94,7 +92,6 @@ public class SamsClubAddToCartRequest extends SamsRequest {
 	}
 	
 	public static class Builder {
-		private CookieStore cookies;
 		private int quantity;
 		private String productId;
 		private String skuId;
@@ -109,11 +106,6 @@ public class SamsClubAddToCartRequest extends SamsRequest {
 			productId = listing.product_id;
 			skuId = listing.sku_id;
 			itemNumber = listing.item_id;
-		}
-		
-		public Builder cookies(final CookieStore cookies) {
-			this.cookies = cookies;
-			return this;
 		}
 		
 		public Builder quantity(final int qty) {

@@ -19,8 +19,7 @@ public class TestSamsClubGetCartRequest extends SamsRequestTest {
 		System.out.println("Testing get cart...");
 		final SamsPurchaseContractDependencies dependencies = new SamsPurchaseContractDependencies(addToCartReq.getClient(), 
 				addToCartReq.getCookieMap());
-		final SamsClubGetCartItemsRequest request = new SamsClubGetCartItemsRequest(addToCartReq.getClient(), 
-				addToCartReq.getCookieStore(), dependencies);
+		final SamsClubGetCartItemsRequest request = new SamsClubGetCartItemsRequest(addToCartReq.getClient(), dependencies);
 		Assert.assertTrue(!request.execute().isEmpty());
 	}
 }

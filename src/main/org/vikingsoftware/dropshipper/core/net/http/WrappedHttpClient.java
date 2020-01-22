@@ -18,7 +18,6 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.cookie.ClientCookie;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.cookie.BasicClientCookie;
-import org.apache.http.protocol.HttpContext;
 
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.net.VSDSProxy;
@@ -27,44 +26,32 @@ public class WrappedHttpClient {
 	
 	public final HttpClient client;
 	public final VSDSProxy proxy;
+	public final HttpClientContext context;
 	
 	public WrappedHttpClient(final HttpClient client, final VSDSProxy proxy) {
 		this.client = client;
 		this.proxy = proxy;
+		this.context = HttpClientContext.create();
+		this.context.setCookieStore(new BasicCookieStore());
 	}
 	
 	public HttpResponse execute(final HttpUriRequest request) throws ClientProtocolException, IOException {
-		return client.execute(request);
-	}
-	
-	public HttpResponse execute(final HttpUriRequest request, final HttpContext context) throws ClientProtocolException, IOException {
 		return client.execute(request, context);
 	}
 	
-	public HttpContext createContextFromCookies(final CookieStore cookies) {
-		final HttpContext localContext = new HttpClientContext();
-		localContext.setAttribute(HttpClientContext.COOKIE_STORE, cookies);
-		return localContext;
+	public CookieStore getCookieStore() {
+		return context.getCookieStore();
 	}
 	
-	public HttpContext createContextFromCookies(final CookieStore cookieStore, final String domain, final Map<String, String> cookieMap) {
+	public void setCookies(final String domain, final String path, final Map<String, String> cookieMap) {
 		for(final Map.Entry<String, String> cookieEntry : cookieMap.entrySet()) {
 			final BasicClientCookie cookie = new BasicClientCookie(cookieEntry.getKey(), cookieEntry.getValue());
 			cookie.setDomain(domain);
-			cookie.setAttribute(ClientCookie.DOMAIN_ATTR, "true");
-			cookieStore.addCookie(cookie);
+			cookie.setPath(path);
+			cookie.setAttribute(ClientCookie.PATH_ATTR, path);
+			cookie.setAttribute(ClientCookie.DOMAIN_ATTR, domain);
+			context.getCookieStore().addCookie(cookie);
 		}
-
-		return createContextFromCookies(cookieStore);
-	}
-	
-	public static CookieStore createCookieStoreFromMap(final Map<String, String> cookies) {
-		final CookieStore cookieStore = new BasicCookieStore();
-		for(final Map.Entry<String, String> cookie : cookies.entrySet()) {
-			cookieStore.addCookie(new BasicClientCookie(cookie.getKey(), cookie.getValue()));
-		}
-		
-		return cookieStore;
 	}
 	
 	public static Map<String, String> generateHeaderMapFromRequest(final HttpRequestBase post) {

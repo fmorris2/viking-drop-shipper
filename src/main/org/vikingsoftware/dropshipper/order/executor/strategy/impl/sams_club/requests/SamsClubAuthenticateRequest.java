@@ -19,9 +19,8 @@ public class SamsClubAuthenticateRequest extends SamsRequest {
 	
 	private final SamsPurchaseContractDependencies dependencies;
 	
-	public SamsClubAuthenticateRequest(final WrappedHttpClient client, final CookieStore cookies,
-			final SamsPurchaseContractDependencies dependencies) {
-		super(client, cookies);
+	public SamsClubAuthenticateRequest(final WrappedHttpClient client, final SamsPurchaseContractDependencies dependencies) {
+		super(client);
 		this.dependencies = dependencies;
 	}
 	
@@ -54,7 +53,7 @@ public class SamsClubAuthenticateRequest extends SamsRequest {
 		try {
 			System.out.println("Cookies: " + this.getCookieMap());
 			System.out.println("Headers: " + Arrays.toString(request.getAllHeaders()));
-			final HttpResponse response = client.execute(request, client.createContextFromCookies(cookies));
+			final HttpResponse response = client.execute(request);
 			final String responseStr = EntityUtils.toString(response.getEntity());
 			System.out.println("[SamsClubGetCartItemsRequest] Response: " + responseStr);
 			if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {

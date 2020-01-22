@@ -61,8 +61,8 @@ public class SamsPurchaseContractDependencies {
 			 */
 			final HttpGet request = new HttpGet(PURCHASE_CONTRACT_DEPENDENCIES_URL);
 			addHeaders(request);
-			cookies = WrappedHttpClient.createCookieStoreFromMap(session);
-			client.execute(request, client.createContextFromCookies(cookies));
+			client.setCookies("samsclub.com", "/", session);
+			client.execute(request);
 			
 			final Document doc = Jsoup.connect(PURCHASE_CONTRACT_DEPENDENCIES_URL)
 					.headers(WrappedHttpClient.generateHeaderMapFromRequest(request))

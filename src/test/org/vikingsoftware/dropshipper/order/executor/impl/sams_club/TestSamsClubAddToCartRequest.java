@@ -17,16 +17,17 @@ public class TestSamsClubAddToCartRequest {
 	@Test
 	public void testAddSingleItem() {
 		final SamsClubDriverSupplier driver = BrowserRepository.get().request(SamsClubDriverSupplier.class);
-		final Map<String, String> session = driver.getSession(FulfillmentAccountManager.get().getAccountById(3));
+		final WrappedHttpClient client = HttpClientManager.get().getClient();
+		final Map<String, String> session = driver.getSession(FulfillmentAccountManager.get().getAccountById(3), client.proxy);
 		final SamsClubAddToCartRequest request = new SamsClubAddToCartRequest.Builder()
-				.cookies(WrappedHttpClient.createCookieStoreFromMap(session))
 				.productId("prod17750489")
 				.skuId("sku18264565")
 				.itemNumber("645081")
-				.client(HttpClientManager.get().getClient())
+				.client(client)
 				.quantity(1)
 				.build();
 		
+		request.setCookies("samsclub.com", "/", session);
 		Assert.assertTrue(request.execute());
 	}
 }

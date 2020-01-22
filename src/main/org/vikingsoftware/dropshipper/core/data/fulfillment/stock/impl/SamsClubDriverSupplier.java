@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.openqa.selenium.Cookie;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
+import main.org.vikingsoftware.dropshipper.core.net.VSDSProxy;
 import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.SessionSupplier;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
@@ -19,23 +20,23 @@ public class SamsClubDriverSupplier extends DriverSupplier<SamsClubWebDriver> im
 	private SamsClubWebDriver driver = null;
 
 	@Override
-	public SamsClubWebDriver internalGet() {
+	public SamsClubWebDriver internalGet(final VSDSProxy proxy) {
 		if(driver == null) {
-			driver = new SamsClubWebDriver();
+			driver = new SamsClubWebDriver(proxy);
 		}
 
 		return driver;
 	}
 
 	@Override
-	public Map<String, String> getSession(final FulfillmentAccount account) {
+	public Map<String, String> getSession(final FulfillmentAccount account, final VSDSProxy proxy) {
 		
 		synchronized(locks.computeIfAbsent(account, acc -> new Object())) {
 			final Map<String, String> currentActiveSession = currentActiveSessions.computeIfAbsent(account, acc -> new HashMap<>());
 			
 			if(currentActiveSession.isEmpty()) {
 				if(driver == null) {
-					internalGet();
+					internalGet(proxy);
 				}
 				
 				if(driver.getReady(account)) {

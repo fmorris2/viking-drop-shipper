@@ -12,12 +12,15 @@ import java.util.function.Supplier;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.Proxy;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxDriverLogLevel;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.firefox.FirefoxProfile;
+
+import main.org.vikingsoftware.dropshipper.core.net.VSDSProxy;
 
 public class DefaultWebDriver extends FirefoxDriver {
 	
@@ -29,20 +32,30 @@ public class DefaultWebDriver extends FirefoxDriver {
 	}
 	
 	public DefaultWebDriver() {
-		super(getOptions());
+		this(null);
 	}
 	
-	public DefaultWebDriver(final FirefoxOptions options) {
-		super(options);
+	public DefaultWebDriver(final VSDSProxy proxy) {
+		super(getOptions(proxy));
 	}
 	
-	public static FirefoxOptions getOptions() {
+	public static FirefoxOptions getOptions(final VSDSProxy proxy) {
 		final FirefoxProfile profile = new FirefoxProfile();
+		
+		if(proxy != null && proxy.supportsSocks()) {
+			//TODO FIGURE OUT A WAY TO ENABLE AUTHENTICATED PROXIES ON FIREFOX DRIVER
+//			profile.setPreference("network.proxy.type", 1);
+//			profile.setPreference("network.proxy.socks", proxy.host);
+//			profile.setPreference("network.proxy.socks_port", 1080);
+		}
+		
 		//profile.addExtension(new File(RAKUTEN_EXTENSION_PATH));
-		return new FirefoxOptions()
+		FirefoxOptions options = new FirefoxOptions()
 				.setHeadless(false)
 				.setProfile(profile)
 				.setLogLevel(FirefoxDriverLogLevel.ERROR);
+		
+		return options;
 	}
 	
 	@Override

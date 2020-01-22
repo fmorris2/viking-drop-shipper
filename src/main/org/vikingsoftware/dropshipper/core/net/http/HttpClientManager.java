@@ -1,19 +1,24 @@
 package main.org.vikingsoftware.dropshipper.core.net.http;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import javax.net.ssl.SSLContext;
 
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClients;
 
 import main.org.vikingsoftware.dropshipper.core.net.VSDSProxy;
+import main.org.vikingsoftware.dropshipper.core.net.nord.NordProxy;
 import main.org.vikingsoftware.dropshipper.core.net.nord.NordVPNCredentialManager;
 
 
@@ -84,28 +89,28 @@ public final class HttpClientManager {
 	}
 	
 	private WrappedHttpClient generateHttpClientWithoutProxy() {
-		final HttpClient client = HttpClients.custom()
-				.setConnectionTimeToLive(CONNECTION_TTL_DAYS, TimeUnit.DAYS)
+		final HttpClient client = HttpClients.custom().setConnectionTimeToLive(CONNECTION_TTL_DAYS, TimeUnit.DAYS)
 				.build();
-		
+
 		return new WrappedHttpClient(client, null);
+
 	}
 	
 	private void addNordClients() {
 		for(final String id : US_NORD_PROXY_IDS) {
 			final String url = "us" + id + ".nordvpn.com";
-			final VSDSProxy proxy = new VSDSProxy(url, 80, NordVPNCredentialManager.getUsername(),
+			final VSDSProxy proxy = new NordProxy(url, 1080, NordVPNCredentialManager.getUsername(),
 					NordVPNCredentialManager.getPassword());
 			System.out.println("Adding NordVPN proxy: " + proxy.host + ":" + proxy.port);
 			
 			final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 			credentialsProvider.setCredentials(new AuthScope(proxy.host, proxy.port),
 					new UsernamePasswordCredentials(proxy.user, proxy.pass));
-			
+		    
 			final HttpClient client = HttpClients.custom()
 					.setConnectionTimeToLive(CONNECTION_TTL_DAYS, TimeUnit.DAYS)
 					.setDefaultCredentialsProvider(credentialsProvider)
-					.setProxy(new HttpHost(proxy.host, proxy.port, HttpHost.DEFAULT_SCHEME_NAME))
+					.setProxy(new HttpHost(proxy.host, proxy.port, "socks5"))
 					.build();
 			
 			clients.add(new WrappedHttpClient(client, proxy));

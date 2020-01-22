@@ -12,7 +12,7 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_clu
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubItem;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsPurchaseContractDependencies;
 
-public class TestSamsRemoveFromCartRequest extends SamsRequestTest {
+public class TestSamsClubRemoveFromCartRequest extends SamsRequestTest {
 	
 	@Test
 	public void testRemoveSingleItem() {
@@ -24,13 +24,14 @@ public class TestSamsRemoveFromCartRequest extends SamsRequestTest {
 		System.out.println("Testing get cart...");
 		final SamsPurchaseContractDependencies dependencies = new SamsPurchaseContractDependencies(addToCartReq.getClient(),
 				addToCartReq.getCookieMap());
-		final SamsClubGetCartItemsRequest getCartReq = new SamsClubGetCartItemsRequest(addToCartReq.getClient(), 
-				addToCartReq.getCookieStore(), dependencies);
+		
+		final SamsClubGetCartItemsRequest getCartReq = new SamsClubGetCartItemsRequest(addToCartReq.getClient(),dependencies);
 		final List<SamsClubCartItem> currentCartItems = getCartReq.execute();
+		
 		Assert.assertTrue(!currentCartItems.isEmpty());
 		
 		System.out.println("Testing removal of item from cart...");
-		final SamsClubRemoveFromCartRequest removeFromCartReq = new SamsClubRemoveFromCartRequest(getCartReq.getClient(), getCartReq.getCookieStore());
+		final SamsClubRemoveFromCartRequest removeFromCartReq = new SamsClubRemoveFromCartRequest(addToCartReq.getClient());
 		Assert.assertTrue(removeFromCartReq.execute(currentCartItems.get(0)));
 	}
 }

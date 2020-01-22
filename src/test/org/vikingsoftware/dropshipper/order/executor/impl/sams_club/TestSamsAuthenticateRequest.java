@@ -18,12 +18,10 @@ public class TestSamsAuthenticateRequest {
 	@Test
 	public void test() {
 		final SamsClubDriverSupplier driver = BrowserRepository.get().request(SamsClubDriverSupplier.class);
-		final Map<String, String> session = driver.getSession(FulfillmentAccountManager.get().getAccountById(15));
 		final WrappedHttpClient client = HttpClientManager.get().getClient();
+		final Map<String, String> session = driver.getSession(FulfillmentAccountManager.get().getAccountById(15), client.proxy);
 		final SamsPurchaseContractDependencies dependencies = new SamsPurchaseContractDependencies(client, session);
-		final SamsClubAuthenticateRequest request = new SamsClubAuthenticateRequest(
-				client, WrappedHttpClient.createCookieStoreFromMap(session),
-				dependencies);
+		final SamsClubAuthenticateRequest request = new SamsClubAuthenticateRequest(client,dependencies);
 		Assert.assertTrue(request.execute());
 	}
 }

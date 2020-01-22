@@ -1,22 +1,28 @@
 package main.org.vikingsoftware.dropshipper.core.web;
 
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
-public abstract class DriverSupplier<T> implements Supplier<T> {
+import main.org.vikingsoftware.dropshipper.core.net.VSDSProxy;
+
+public abstract class DriverSupplier<T> implements Function<VSDSProxy, T> {
 	
 	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
 	
-	@Override
 	public T get() {
+		return apply(null);
+	}
+	
+	@Override
+	public T apply(final VSDSProxy proxy) {
 		lock.writeLock().lock();
 		try {
-			return internalGet();
+			return internalGet(proxy);
 		} finally {
 			lock.writeLock().unlock();
 		}
 	}
 	
-	protected abstract T internalGet();
+	protected abstract T internalGet(final VSDSProxy proxy);
 
 }

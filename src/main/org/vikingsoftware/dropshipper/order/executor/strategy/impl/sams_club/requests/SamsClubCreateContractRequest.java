@@ -23,9 +23,9 @@ public class SamsClubCreateContractRequest extends SamsRequest {
 	private final SamsPurchaseContractDependencies dependencies;
 	private final SamsClubAddress address;
 	
-	public SamsClubCreateContractRequest(WrappedHttpClient client, CookieStore cookies,
+	public SamsClubCreateContractRequest(WrappedHttpClient client,
 			final SamsPurchaseContractDependencies dependencies, final SamsClubAddress address) {
-		super(client, cookies);
+		super(client);
 		this.address = address;
 		this.dependencies = dependencies;
 	}
@@ -41,7 +41,7 @@ public class SamsClubCreateContractRequest extends SamsRequest {
 	
 	private boolean sendRequest(final WrappedHttpClient client, final HttpPost request) {
 		try {
-			final HttpResponse response = client.execute(request, client.createContextFromCookies(cookies));
+			final HttpResponse response = client.execute(request);
 			System.out.println("[SamsClubCreateContractRequest] Response: " + EntityUtils.toString(response.getEntity()));
 			return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
 		} catch(final IOException e) {

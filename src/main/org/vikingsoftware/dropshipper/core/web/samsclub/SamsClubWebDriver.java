@@ -12,12 +12,13 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebElement;
 
+import main.org.vikingsoftware.dropshipper.core.net.VSDSProxy;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 
 public class SamsClubWebDriver extends LoginWebDriver {
 	
 	private static final int MAX_LOGIN_ATTEMPTS = 2;
-	private static final long VERIFY_LOGGED_IN_WAIT = 2000;
+	private static final long VERIFY_LOGGED_IN_WAIT = 4000;
 	
 	private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	
@@ -39,6 +40,14 @@ public class SamsClubWebDriver extends LoginWebDriver {
 	private int loginAttempts = 0;
 	
 	private WebElement usernameEl, passwordEl, buttonEl;
+	
+	public SamsClubWebDriver() {
+		this(null);
+	}
+	
+	public SamsClubWebDriver(final VSDSProxy proxy) {
+		super(proxy);
+	}
 	
 	@Override
 	protected boolean prepareForExecutionViaLoginImpl() {

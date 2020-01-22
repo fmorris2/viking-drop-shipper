@@ -22,14 +22,14 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_clu
 
 public class SamsClubGetCartItemsRequest extends SamsRequest {
 	
-	private static final String URL_PREFIX = "http://www.samsclub.com/cartservice/v1/carts/";
+	private static final String URL_PREFIX = "https://www.samsclub.com/cartservice/v1/carts/";
 	private static final String URL_SUFFIX = "?response_groups=cart.medium";
 	
 	private SamsPurchaseContractDependencies purchaseContractDependencies;
 	
-	public SamsClubGetCartItemsRequest(final WrappedHttpClient client, final CookieStore cookieStore, 
+	public SamsClubGetCartItemsRequest(final WrappedHttpClient client,
 			final SamsPurchaseContractDependencies purchaseContractDependencies) {
-		super(client, cookieStore);
+		super(client);
 		this.client = client;
 		this.purchaseContractDependencies = purchaseContractDependencies;
 	}
@@ -56,7 +56,7 @@ public class SamsClubGetCartItemsRequest extends SamsRequest {
 	
 	private List<SamsClubCartItem> sendRequest(final WrappedHttpClient client, final HttpGet request) {
 		try {
-			final HttpResponse response = client.execute(request, client.createContextFromCookies(cookies));
+			final HttpResponse response = client.execute(request);
 			final String responseStr = EntityUtils.toString(response.getEntity());
 			System.out.println("[SamsClubGetCartItemsRequest] Response: " + responseStr);
 			if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {

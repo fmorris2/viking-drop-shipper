@@ -19,8 +19,8 @@ public class TestSamsClubCreateContractRequest {
 	@Test
 	public void test() {
 		final SamsClubDriverSupplier driver = BrowserRepository.get().request(SamsClubDriverSupplier.class);
-		final Map<String, String> session = driver.getSession(FulfillmentAccountManager.get().getAccountById(15));
 		final WrappedHttpClient client = HttpClientManager.get().getClient();
+		final Map<String, String> session = driver.getSession(FulfillmentAccountManager.get().getAccountById(15), client.proxy);
 		final SamsPurchaseContractDependencies dependencies = new SamsPurchaseContractDependencies(client, session);
 		final SamsClubAddress address = new SamsClubAddress.Builder()
 				.addressId(dependencies.address.addressId)
@@ -34,8 +34,7 @@ public class TestSamsClubCreateContractRequest {
 				.countryCode("US")
 				.phone("916-245-0125")
 				.build();
-		final SamsClubCreateContractRequest request = new SamsClubCreateContractRequest(client, 
-				dependencies.getCookieStore(), dependencies, address);
+		final SamsClubCreateContractRequest request = new SamsClubCreateContractRequest(client,dependencies, address);
 		Assert.assertTrue(request.execute());
 	}
 }
