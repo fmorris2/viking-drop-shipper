@@ -15,7 +15,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.Fulfill
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 
-public class SamsClubAddToCartRequest extends SamsRequest {
+public class SamsClubAddToCartRequest extends SamsClubRequest {
 	
 	private static final String URL_PREFIX = "https://www.samsclub.com/api/node/cartservice/v1/carts/";
 	private static final String URL_SUFFIX = "/cartitems?response_groups=cart.medium";

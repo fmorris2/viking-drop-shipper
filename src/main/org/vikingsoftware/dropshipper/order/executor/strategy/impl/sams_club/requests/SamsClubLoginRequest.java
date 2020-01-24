@@ -16,7 +16,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAcco
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 
-public class SamsClubLoginRequest extends SamsRequest {
+public class SamsClubLoginRequest extends SamsClubRequest {
 	
 	private static final String URL = "https://www.samsclub.com/api/node/vivaldi/v1/auth/login";
 

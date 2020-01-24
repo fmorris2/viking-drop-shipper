@@ -11,7 +11,7 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_clu
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubCartItem;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubItem;
 
-public class TestSamsClubUpdateCartItemQuantityRequest extends SamsRequestTest {
+public class TestSamsClubUpdateCartItemQuantityRequest extends SamsClubRequestTest {
 	
 	private static final int UPDATE_AMT = 5;
 	

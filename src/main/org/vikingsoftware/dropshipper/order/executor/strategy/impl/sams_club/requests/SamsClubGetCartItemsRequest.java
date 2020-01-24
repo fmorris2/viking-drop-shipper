@@ -17,7 +17,7 @@ import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubCartItem;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubItem;
 
-public class SamsClubGetCartItemsRequest extends SamsRequest {
+public class SamsClubGetCartItemsRequest extends SamsClubRequest {
 	
 	private static final String URL_PREFIX = "https://www.samsclub.com/cartservice/v1/carts/";
 	private static final String URL_SUFFIX = "?response_groups=cart.medium";

@@ -12,7 +12,7 @@ import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubSessionProv
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubAddToCartRequest;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubItem;
 
-public class SamsRequestTest {
+public class SamsClubRequestTest {
 	
 	protected List<SamsClubAddToCartRequest> createAddToCartRequests(final SamsClubItem... items) {
 		final List<SamsClubAddToCartRequest> requests = new ArrayList<>();

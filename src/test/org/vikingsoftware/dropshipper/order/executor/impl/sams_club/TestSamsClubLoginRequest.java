@@ -9,7 +9,7 @@ import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubLoginRequest;
 
-public class TestSamsClubLoginRequest extends SamsRequestTest {
+public class TestSamsClubLoginRequest extends SamsClubRequestTest {
 	
 	@Test
 	public void testSingleLogin() {

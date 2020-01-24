@@ -7,7 +7,7 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_clu
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubGetCartItemsRequest;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubItem;
 
-public class TestSamsClubGetCartRequest extends SamsRequestTest {
+public class TestSamsClubGetCartRequest extends SamsClubRequestTest {
 	
 	@Test
 	public void test() {

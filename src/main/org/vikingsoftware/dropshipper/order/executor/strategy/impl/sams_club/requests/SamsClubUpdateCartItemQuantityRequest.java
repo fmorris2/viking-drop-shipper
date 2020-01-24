@@ -11,7 +11,7 @@ import org.json.JSONObject;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubCartItem;
 
-public class SamsClubUpdateCartItemQuantityRequest extends SamsRequest {
+public class SamsClubUpdateCartItemQuantityRequest extends SamsClubRequest {
 
 	private static final String URL = "https://www.samsclub.com/sams/cart/cartService.jsp?cartOperation=UPDATECARTITEM&ecomOrderToken=";
 	

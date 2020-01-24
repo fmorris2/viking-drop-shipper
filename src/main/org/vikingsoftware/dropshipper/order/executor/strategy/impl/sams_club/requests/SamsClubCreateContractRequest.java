@@ -11,7 +11,7 @@ import org.json.JSONObject;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubAddress;
 
-public class SamsClubCreateContractRequest extends SamsRequest {
+public class SamsClubCreateContractRequest extends SamsClubRequest {
 	
 	private static final String URL_PREFIX = "https://www.samsclub.com/vapi/v1/create-contract/";
 	
@@ -22,15 +22,19 @@ public class SamsClubCreateContractRequest extends SamsRequest {
 		this.address = address;
 	}
 	
-	public boolean execute() {
+	public Optional<JSONObject> execute() {
 		final String url = URL_PREFIX + getCookie("samsorder");
 		System.out.println("[SamsClubCreateContractRequest] Dispatching POST to " + url);
 		final HttpPost request = new HttpPost(url);
 		addHeaders(request);
 		addPayload(request);
 		final Optional<String> response = sendRequest(client, request, HttpStatus.SC_OK);
-		response.ifPresent(responseStr -> System.out.println("[SamsClubCreateContractRequest] Response: " + responseStr));
-		return response.isPresent();
+		if(response.isPresent()) {
+			System.out.println("[SamsClubCreateContractRequest] Response: " + response.get());
+			return Optional.of(new JSONObject(response.get()));
+		}
+		
+		return Optional.empty();
 	}
 	
 	private void addPayload(final HttpPost request) {

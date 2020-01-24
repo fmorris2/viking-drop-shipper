@@ -11,7 +11,7 @@ import org.apache.http.util.EntityUtils;
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 
-public class SamsClubAuthenticateRequest extends SamsRequest {
+public class SamsClubAuthenticateRequest extends SamsClubRequest {
 
 	private static final String BASE_URL = "http://www.samsclub.com/soa/services/v1/user/authenticate?_=";
 	

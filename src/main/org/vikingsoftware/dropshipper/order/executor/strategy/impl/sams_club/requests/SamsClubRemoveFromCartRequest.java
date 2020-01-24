@@ -7,7 +7,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubCartItem;
 
-public class SamsClubRemoveFromCartRequest extends SamsRequest {
+public class SamsClubRemoveFromCartRequest extends SamsClubRequest {
 
 	private static final String URL_PREFIX = "https://www.samsclub.com/sams/cart/cartService.jsp?cartOperation=REMOVECARTITEM&cartItemIds=";
 	private static final String URL_SUFFIX = "&ecomOrderToken=";

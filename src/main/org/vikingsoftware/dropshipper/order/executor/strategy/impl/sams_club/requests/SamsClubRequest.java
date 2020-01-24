@@ -13,13 +13,13 @@ import org.apache.http.util.EntityUtils;
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 
-public abstract class SamsRequest {
+public abstract class SamsClubRequest {
 	
 	public static final String DEFAULT_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36";
 	
 	protected WrappedHttpClient client;
 	
-	public SamsRequest(final WrappedHttpClient client) {
+	public SamsClubRequest(final WrappedHttpClient client) {
 		this.client = client;
 	}
 	
