@@ -1,6 +1,12 @@
 package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.json.JSONObject;
+
+import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubListAddressesRequest;
 
 public class SamsClubAddress {
 	
@@ -50,6 +56,18 @@ public class SamsClubAddress {
 		this.dockDoorPresent = builder.dockDoorPresent;
 		this.businessName = builder.businessName;
 		this.isDefault = builder.isDefault;
+	}
+	
+	public static Optional<SamsClubAddress> findDefaultAddress(final WrappedHttpClient client) {
+		
+		final SamsClubListAddressesRequest req = new SamsClubListAddressesRequest(client);
+		final List<SamsClubAddress> addresses = req.execute();
+		
+		return Optional.ofNullable(addresses.stream()
+				.filter(addr -> addr.isDefault)
+				.findFirst()
+				.orElse(null)
+		);
 	}
 	
 	public void updateJSONObject(final JSONObject json) {
