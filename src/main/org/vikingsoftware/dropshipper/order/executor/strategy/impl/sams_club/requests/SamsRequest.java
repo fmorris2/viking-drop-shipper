@@ -1,10 +1,16 @@
 package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.cookie.Cookie;
+import org.apache.http.util.EntityUtils;
 
+import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 
 public abstract class SamsRequest {
@@ -19,6 +25,23 @@ public abstract class SamsRequest {
 	
 	public WrappedHttpClient getClient() {
 		return client;
+	}
+	
+	public Optional<String> sendRequest(final WrappedHttpClient client, final HttpRequestBase request, final int expectedResponseCode) {
+		try {
+			System.out.println("Cookie String: " + getCookieString());
+			final HttpResponse response = client.execute(request);
+			System.out.println("Response status: " + response.getStatusLine());
+			if(response.getStatusLine().getStatusCode() == expectedResponseCode) {
+				final String responseStr = EntityUtils.toString(response.getEntity());
+				return responseStr == null || responseStr.isEmpty() ? Optional.of("success") : Optional.of(responseStr);
+			}
+		} catch(final IOException e) {
+			e.printStackTrace();
+			HttpClientManager.get().flag(client);
+		}
+		
+		return Optional.empty();
 	}
 	
 	public String getCookie(final String key) {

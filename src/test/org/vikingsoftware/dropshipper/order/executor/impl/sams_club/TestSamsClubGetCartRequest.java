@@ -6,7 +6,6 @@ import org.junit.Test;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubAddToCartRequest;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubGetCartItemsRequest;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubItem;
-import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsPurchaseContractDependencies;
 
 public class TestSamsClubGetCartRequest extends SamsRequestTest {
 	
@@ -17,9 +16,8 @@ public class TestSamsClubGetCartRequest extends SamsRequestTest {
 		final SamsClubAddToCartRequest addToCartReq = createAddToCartRequests(item).get(0);
 		Assert.assertTrue(addToCartReq.execute());
 		System.out.println("Testing get cart...");
-		final SamsPurchaseContractDependencies dependencies = new SamsPurchaseContractDependencies(addToCartReq.getClient(), 
-				addToCartReq.getCookieMap());
-		final SamsClubGetCartItemsRequest request = new SamsClubGetCartItemsRequest(addToCartReq.getClient(), dependencies);
+		
+		final SamsClubGetCartItemsRequest request = new SamsClubGetCartItemsRequest(addToCartReq.getClient());
 		Assert.assertTrue(!request.execute().isEmpty());
 	}
 }

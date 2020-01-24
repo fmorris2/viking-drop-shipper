@@ -16,19 +16,14 @@ import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubCartItem;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubItem;
-import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsPurchaseContractDependencies;
 
 public class SamsClubGetCartItemsRequest extends SamsRequest {
 	
 	private static final String URL_PREFIX = "https://www.samsclub.com/cartservice/v1/carts/";
 	private static final String URL_SUFFIX = "?response_groups=cart.medium";
 	
-	private SamsPurchaseContractDependencies purchaseContractDependencies;
-	
-	public SamsClubGetCartItemsRequest(final WrappedHttpClient client,
-			final SamsPurchaseContractDependencies purchaseContractDependencies) {
+	public SamsClubGetCartItemsRequest(final WrappedHttpClient client) {
 		super(client);
-		this.purchaseContractDependencies = purchaseContractDependencies;
 	}
 	
 	public List<SamsClubCartItem> execute() {
@@ -46,9 +41,9 @@ public class SamsClubGetCartItemsRequest extends SamsRequest {
 		request.addHeader("accept", "application/json");
 		request.addHeader("accept-encoding", "gzip, deflate, br");
 		request.addHeader("dnt", "1");
-		request.addHeader("wm_consumer.source_id", purchaseContractDependencies.getMapping("wm_consumer.source_id"));
-		request.addHeader("wm_tenant_id", purchaseContractDependencies.getMapping("wm_tenant_id"));
-		request.addHeader("wm_vertical_id", purchaseContractDependencies.getMapping("wm_vertical_id"));
+		request.addHeader("wm_consumer.source_id", "2");
+		request.addHeader("wm_tenant_id", "1");
+		request.addHeader("wm_vertical_id", "3");
 	}
 	
 	private List<SamsClubCartItem> sendRequest(final WrappedHttpClient client, final HttpGet request) {

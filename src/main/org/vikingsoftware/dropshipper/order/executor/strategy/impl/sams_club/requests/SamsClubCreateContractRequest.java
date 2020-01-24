@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -14,20 +13,16 @@ import org.json.JSONObject;
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubAddress;
-import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsPurchaseContractDependencies;
 
 public class SamsClubCreateContractRequest extends SamsRequest {
 	
 	private static final String URL_PREFIX = "https://www.samsclub.com/checkoutservice/v1/a9ca9cf9d17a03a89e5b2152ef532dd8/contract?fromAC=true";
 	
-	private final SamsPurchaseContractDependencies dependencies;
 	private final SamsClubAddress address;
 	
-	public SamsClubCreateContractRequest(WrappedHttpClient client,
-			final SamsPurchaseContractDependencies dependencies, final SamsClubAddress address) {
+	public SamsClubCreateContractRequest(WrappedHttpClient client,final SamsClubAddress address) {
 		super(client);
 		this.address = address;
-		this.dependencies = dependencies;
 	}
 	
 	public boolean execute() {

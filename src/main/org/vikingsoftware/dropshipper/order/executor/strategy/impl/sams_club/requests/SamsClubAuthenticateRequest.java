@@ -5,23 +5,18 @@ import java.util.Arrays;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.util.EntityUtils;
 
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
-import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsPurchaseContractDependencies;
 
 public class SamsClubAuthenticateRequest extends SamsRequest {
 
 	private static final String BASE_URL = "http://www.samsclub.com/soa/services/v1/user/authenticate?_=";
 	
-	private final SamsPurchaseContractDependencies dependencies;
-	
-	public SamsClubAuthenticateRequest(final WrappedHttpClient client, final SamsPurchaseContractDependencies dependencies) {
+	public SamsClubAuthenticateRequest(final WrappedHttpClient client) {
 		super(client);
-		this.dependencies = dependencies;
 	}
 	
 	public boolean execute() {
@@ -41,11 +36,11 @@ public class SamsClubAuthenticateRequest extends SamsRequest {
 		request.addHeader("dnt", "1");
 		request.addHeader("content-type", "application/json");
 		request.addHeader("accept-encoding", "gzip, deflate, br");
-		request.addHeader("wm_consumer.id", dependencies.getMapping("wm_consumer.id"));
-		request.addHeader("wm_qos.correlation_id", dependencies.getMapping("wm_qos.correlation_id"));
-		request.addHeader("wm_svc.env", dependencies.getMapping("wm_svc.env"));
-		request.addHeader("wm_svc.name", dependencies.getMapping("wm_svc.name"));
-		request.addHeader("wm_svc.version", dependencies.getMapping("wm_svc.version"));
+		request.addHeader("wm_consumer.id", getCookie("CID"));
+		request.addHeader("wm_qos.correlation_id", "4333");
+		request.addHeader("wm_svc.env", "prod");
+		request.addHeader("wm_svc.name", "sams-api");
+		request.addHeader("wm_svc.version", "1.0.0");
 		request.addHeader("x-requested-with", "XMLHttpRequest");
 	}
 	

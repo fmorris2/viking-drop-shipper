@@ -7,27 +7,40 @@ import org.junit.Test;
 
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubAddToCartRequest;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubGetCartItemsRequest;
-import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubRemoveFromCartRequest;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubUpdateCartItemQuantityRequest;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubCartItem;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubItem;
 
-public class TestSamsClubRemoveFromCartRequest extends SamsRequestTest {
+public class TestSamsClubUpdateCartItemQuantityRequest extends SamsRequestTest {
+	
+	private static final int UPDATE_AMT = 5;
 	
 	@Test
-	public void testRemoveSingleItem() {
+	public void testUpdateSingleItem() {
 		System.out.println("Adding single item to cart...");
 		final SamsClubItem item = new SamsClubItem("645081", "prod17750489", "sku18264565");
 		final SamsClubAddToCartRequest addToCartReq = createAddToCartRequests(item).get(0);
 		Assert.assertTrue(addToCartReq.execute());
 		
-		System.out.println("Testing get cart...");
 		final SamsClubGetCartItemsRequest getCartReq = new SamsClubGetCartItemsRequest(addToCartReq.getClient());
 		final List<SamsClubCartItem> currentCartItems = getCartReq.execute();
 		
 		Assert.assertTrue(!currentCartItems.isEmpty());
 		
-		System.out.println("Testing removal of item from cart...");
-		final SamsClubRemoveFromCartRequest removeFromCartReq = new SamsClubRemoveFromCartRequest(addToCartReq.getClient());
-		Assert.assertTrue(removeFromCartReq.execute(currentCartItems.get(0)));
+		System.out.println("Testing update of item quantity in cart...");
+		final SamsClubUpdateCartItemQuantityRequest updateReq = new SamsClubUpdateCartItemQuantityRequest(addToCartReq.getClient());
+		Assert.assertTrue(updateReq.execute(currentCartItems.stream()
+				.map(itm -> new SamsClubCartItem.Builder()
+						.cartItemId(itm.cartItemId)
+						.quantity(UPDATE_AMT)
+						.build()
+					)
+				.toArray(SamsClubCartItem[]::new)));
+		
+		final SamsClubGetCartItemsRequest getCartReq2 = new SamsClubGetCartItemsRequest(addToCartReq.getClient());
+		final List<SamsClubCartItem> updatedCartItems = getCartReq2.execute();
+		
+		Assert.assertTrue(!updatedCartItems.isEmpty() &&
+				updatedCartItems.stream().allMatch(itm -> itm.quantity == UPDATE_AMT));
 	}
 }
