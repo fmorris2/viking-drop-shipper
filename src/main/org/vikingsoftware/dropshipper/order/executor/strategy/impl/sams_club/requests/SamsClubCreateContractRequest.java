@@ -1,22 +1,19 @@
 package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests;
 
-import java.io.IOException;
+import java.util.Optional;
 
-import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
-import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubAddress;
 
 public class SamsClubCreateContractRequest extends SamsRequest {
 	
-	private static final String URL_PREFIX = "https://www.samsclub.com/checkoutservice/v1/a9ca9cf9d17a03a89e5b2152ef532dd8/contract?fromAC=true";
+	private static final String URL_PREFIX = "https://www.samsclub.com/vapi/v1/create-contract/";
 	
 	private final SamsClubAddress address;
 	
@@ -31,20 +28,9 @@ public class SamsClubCreateContractRequest extends SamsRequest {
 		final HttpPost request = new HttpPost(url);
 		addHeaders(request);
 		addPayload(request);
-		return sendRequest(client, request);
-	}
-	
-	private boolean sendRequest(final WrappedHttpClient client, final HttpPost request) {
-		try {
-			final HttpResponse response = client.execute(request);
-			System.out.println("[SamsClubCreateContractRequest] Response: " + EntityUtils.toString(response.getEntity()));
-			return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
-		} catch(final IOException e) {
-			e.printStackTrace();
-			HttpClientManager.get().flag(client);
-		}
-		
-		return false;
+		final Optional<String> response = sendRequest(client, request, HttpStatus.SC_OK);
+		response.ifPresent(responseStr -> System.out.println("[SamsClubCreateContractRequest] Response: " + responseStr));
+		return response.isPresent();
 	}
 	
 	private void addPayload(final HttpPost request) {
@@ -62,6 +48,8 @@ public class SamsClubCreateContractRequest extends SamsRequest {
 		address.updateJSONObject(location);
 		
 		json.put("payload", payload);	
+		payload.put("autocorrect", true);
+		payload.put("prftcf", "undefined");
 		payload.put("location", location);
 		
 		return json.toString();

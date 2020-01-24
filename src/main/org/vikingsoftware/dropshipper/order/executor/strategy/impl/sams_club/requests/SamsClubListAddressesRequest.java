@@ -65,7 +65,6 @@ public class SamsClubListAddressesRequest extends SamsRequest {
 	}
 	
 	private SamsClubAddress convertAddressJsonObjToPojo(final JSONObject json) {
-		System.out.println("[SamsClubListAddressesRequest] Converting Address JSON object to POJO: " + json);
 		final JSONObject addr = json.getJSONObject("address");
 		return new SamsClubAddress.Builder()
 				.addressId(JsonAPIParser.getString(json, "addressId"))
