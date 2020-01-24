@@ -20,7 +20,7 @@ public class SamsClubCreateContractRequest extends SamsRequest {
 	
 	private final SamsClubAddress address;
 	
-	public SamsClubCreateContractRequest(WrappedHttpClient client,final SamsClubAddress address) {
+	public SamsClubCreateContractRequest(WrappedHttpClient client, final SamsClubAddress address) {
 		super(client);
 		this.address = address;
 	}

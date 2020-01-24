@@ -23,9 +23,9 @@ public class SamsClubAddress {
 	public final String nickName;
 	public final String addressLineTwo;
 	public final String addressLineThree;
-	public final String dockDoorPresent;
 	public final String businessName;
 	public final boolean isDefault;
+	public final boolean dockDoorPresent;
 	
 	private SamsClubAddress(final Builder builder) {
 		this.addressId = builder.addressId;
@@ -88,9 +88,9 @@ public class SamsClubAddress {
 		private String nickName;
 		private String addressLineTwo;
 		private String addressLineThree;
-		private String dockDoorPresent;
 		private String businessName;
 		private boolean isDefault;
+		private boolean dockDoorPresent;
 		
 		public Builder addressId(final String addressId) {
 			this.addressId = addressId;
@@ -187,7 +187,7 @@ public class SamsClubAddress {
 			return this;
 		}
 		
-		public Builder dockDoorPresent(final String val) {
+		public Builder dockDoorPresent(final boolean val) {
 			this.dockDoorPresent = val;
 			return this;
 		}

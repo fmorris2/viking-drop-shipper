@@ -7,7 +7,6 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAcco
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
-import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubLoginResponse;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubSessionProvider;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubAuthenticateRequest;
 
@@ -17,7 +16,7 @@ public class TestSamsAuthenticateRequest {
 	public void test() {
 		final WrappedHttpClient client = HttpClientManager.get().getClient();
 		final FulfillmentAccount acc = FulfillmentAccountManager.get().getAccountById(15);
-		final SamsClubLoginResponse session = SamsClubSessionProvider.get().getSession(acc, client);
+		SamsClubSessionProvider.get().getSession(acc, client);
 		final SamsClubAuthenticateRequest request = new SamsClubAuthenticateRequest(client);
 		Assert.assertTrue(request.execute());
 	}

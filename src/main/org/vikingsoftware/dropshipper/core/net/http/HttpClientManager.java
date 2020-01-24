@@ -82,6 +82,7 @@ public final class HttpClientManager {
 		try {
 			if(client == clients.peek()) {
 				System.out.println("Rotating Http Client: " + clients.peek());
+				client.clearCookies();
 				clients.add(clients.poll());
 				numConnections = 0;
 			}

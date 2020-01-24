@@ -46,6 +46,10 @@ public class WrappedHttpClient {
 		return context.getCookieStore();
 	}
 	
+	public void clearCookies() {
+		context.getCookieStore().clear();
+	}
+	
 	public void setCookies(final String domain, final String path, final Map<String, String> cookieMap) {
 		for(final Map.Entry<String, String> cookieEntry : cookieMap.entrySet()) {
 			final BasicClientCookie cookie = new BasicClientCookie(cookieEntry.getKey(), cookieEntry.getValue());

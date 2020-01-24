@@ -1,7 +1,5 @@
 package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests;
 
-import java.util.Arrays;
-
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
