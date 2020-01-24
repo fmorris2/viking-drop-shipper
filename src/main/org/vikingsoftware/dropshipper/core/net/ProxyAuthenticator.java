@@ -14,7 +14,6 @@ public class ProxyAuthenticator extends Authenticator {
 		PasswordAuthentication passwordAuth = super.getPasswordAuthentication();
 		if(proxy.contains("nordvpn")) {
 			System.out.println("Providing Authentication for NordVPN proxy: " + proxy + " to URL " + this.getRequestingURL());
-			//Thread.dumpStack();
 			final String user = NordVPNCredentialManager.getUsername();
 			final String pass = NordVPNCredentialManager.getPassword();
 			passwordAuth = new PasswordAuthentication(user, pass.toCharArray());

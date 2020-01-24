@@ -1,5 +1,8 @@
 package main.org.vikingsoftware.dropshipper.core.net;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+
 import org.openqa.selenium.Proxy;
 
 public class VSDSProxy {
@@ -8,6 +11,7 @@ public class VSDSProxy {
 	public final int port;
 	public final String user;
 	public final String pass;
+	public final SocketAddress address;
 	
 	public VSDSProxy(final String host, final int port) {
 		this(host, port, null, null);
@@ -18,6 +22,7 @@ public class VSDSProxy {
 		this.port = port;
 		this.user = user;
 		this.pass = pass;
+		this.address = new InetSocketAddress(host, port);
 	}
 	
 	public boolean supportsSocks() {

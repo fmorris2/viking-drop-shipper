@@ -7,12 +7,10 @@ import java.util.List;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.jsoup.Jsoup;
 
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
@@ -30,7 +28,6 @@ public class SamsClubGetCartItemsRequest extends SamsRequest {
 	public SamsClubGetCartItemsRequest(final WrappedHttpClient client,
 			final SamsPurchaseContractDependencies purchaseContractDependencies) {
 		super(client);
-		this.client = client;
 		this.purchaseContractDependencies = purchaseContractDependencies;
 	}
 	

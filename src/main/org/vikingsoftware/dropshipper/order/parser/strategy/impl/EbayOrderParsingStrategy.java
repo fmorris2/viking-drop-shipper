@@ -12,6 +12,7 @@ public class EbayOrderParsingStrategy implements OrderParsingStrategy {
 
 	@Override
 	public Collection<CustomerOrder> parseNewOrders() {
+		System.out.println("[EbayOrderParsingStrategy] About to call EbayCalls#getOrdersLastXDays");
 		final CustomerOrder[] allOrders = EbayCalls.getOrdersLastXDays(2);
 		final Collection<CustomerOrder> newOrders = new ArrayList<>();
 		for(final CustomerOrder order : allOrders) {

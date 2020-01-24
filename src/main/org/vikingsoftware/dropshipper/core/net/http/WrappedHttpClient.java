@@ -32,6 +32,9 @@ public class WrappedHttpClient {
 		this.client = client;
 		this.proxy = proxy;
 		this.context = HttpClientContext.create();
+		if(proxy != null) {
+			this.context.setAttribute("socks.address", proxy.address);
+		}
 		this.context.setCookieStore(new BasicCookieStore());
 	}
 	

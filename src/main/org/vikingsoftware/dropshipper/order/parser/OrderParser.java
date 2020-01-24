@@ -29,6 +29,7 @@ public class OrderParser implements CycleParticipant {
 		for(final Marketplaces marketEntry : Marketplaces.values()) {
 			System.out.println("Generating and executing parsing strategy for marketplace " + marketEntry);
 			final OrderParsingStrategy parsingStrategy = marketEntry.generateParsingStrategy();
+			System.out.println("Order parsing strategy for " + marketEntry + " has been generated.");
 			final Collection<CustomerOrder> orders = parsingStrategy.parseNewOrders();
 			System.out.println("Parsed " + orders.size() + " new orders for " + marketEntry);
 			newOrders.addAll(orders);

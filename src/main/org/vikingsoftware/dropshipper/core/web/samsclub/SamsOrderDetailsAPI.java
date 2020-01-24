@@ -1,7 +1,6 @@
 package main.org.vikingsoftware.dropshipper.core.web.samsclub;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Optional;
 
 import org.apache.http.HttpResponse;
@@ -69,15 +68,15 @@ public final class SamsOrderDetailsAPI extends JsonAPIParser {
 			if(acc == null) {
 				return false;
 			}
-			final Map<String, String> session = driver.getSession(acc, client.proxy);
-			if(session.isEmpty()) {
+			final SamsClubLoginResponse session = SamsClubSessionProvider.get().getSession(acc, client);
+			if(session == null || session.cookies.isEmpty()) {
 				return false;
 			}
 			final HttpGet get = new HttpGet(apiUrl);
 			get.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36");
 			get.addHeader("Content-Type", "application/json");
 			get.addHeader("Accept-Charset", "utf-8");
-			client.setCookies("samsclub.com", "/", session);
+			client.setCookies("samsclub.com", "/", session.cookies);
 			final HttpResponse response = client.execute(get);
 			
 			final String rawJson = EntityUtils.toString(response.getEntity());
@@ -93,7 +92,7 @@ public final class SamsOrderDetailsAPI extends JsonAPIParser {
 			return true;
 		} catch(final IOException e) {
 			HttpClientManager.get().flag(client);
-			driver.clearSession(acc);
+			SamsClubSessionProvider.get().clearSession(acc);
 			e.printStackTrace();
 		} catch(final Exception e) {
 			e.printStackTrace();

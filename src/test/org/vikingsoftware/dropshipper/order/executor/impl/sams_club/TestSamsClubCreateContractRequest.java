@@ -1,15 +1,14 @@
 package test.org.vikingsoftware.dropshipper.order.executor.impl.sams_club;
 
-import java.util.Map;
-
 import org.junit.Assert;
 import org.junit.Test;
 
-import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
+import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubLoginResponse;
+import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubSessionProvider;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubCreateContractRequest;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubAddress;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsPurchaseContractDependencies;
@@ -18,10 +17,10 @@ public class TestSamsClubCreateContractRequest {
 
 	@Test
 	public void test() {
-		final SamsClubDriverSupplier driver = BrowserRepository.get().request(SamsClubDriverSupplier.class);
 		final WrappedHttpClient client = HttpClientManager.get().getClient();
-		final Map<String, String> session = driver.getSession(FulfillmentAccountManager.get().getAccountById(15), client.proxy);
-		final SamsPurchaseContractDependencies dependencies = new SamsPurchaseContractDependencies(client, session);
+		final FulfillmentAccount account = FulfillmentAccountManager.get().getAccountById(15);
+		final SamsClubLoginResponse session = SamsClubSessionProvider.get().getSession(account, client);
+		final SamsPurchaseContractDependencies dependencies = new SamsPurchaseContractDependencies(client, session.cookies);
 		final SamsClubAddress address = new SamsClubAddress.Builder()
 				.addressId(dependencies.address.addressId)
 				.addressType("Residential")
