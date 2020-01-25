@@ -93,8 +93,8 @@ public final class SamsProductAPI extends JsonAPIParser {
 	public boolean passesAllListingConditions() {
 		try {
 			return isFreeShipping() && isAvailableOnline()
-					&& !hasMinPurchaseQty() && !hasVariations()
-					&& !isGiftCard() && !isFlowersTemplateProduct();
+					&& !hasVariations() && !isGiftCard() 
+					&& !isFlowersTemplateProduct();
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}
@@ -144,6 +144,15 @@ public final class SamsProductAPI extends JsonAPIParser {
 		}
 		
 		return false;
+	}
+	
+	public int getMinPurchaseQty() {
+		if(onlineInventory.isPresent()) {
+			final int minPurchaseQty = getInt(onlineInventory.get(), "minPurchaseQuantity");
+			return minPurchaseQty > 1 ? minPurchaseQty : 1;
+		}
+		
+		return 1;
 	}
 	
 	public boolean hasVariations() {

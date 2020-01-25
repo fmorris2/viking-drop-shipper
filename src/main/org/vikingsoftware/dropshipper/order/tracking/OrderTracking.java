@@ -55,7 +55,7 @@ public class OrderTracking implements CycleParticipant {
 		try(final Statement st = VSDSDBManager.get().createStatement()) {
 			for(int i = 0; i < futures.size(); i++) {
 				try {
-					System.out.println("Checking status of inventory update task #" + i + "...");
+					System.out.println("Checking status of order tracking update task #" + i + "...");
 					final TrackingEntry entry = futures.get(i).get();
 					if(entry != null && EbayCalls.setShipmentTrackingInfo(untrackedOrders.get(i), entry)) {
 						System.out.println("Successfully executed tracking update task for processed order " + untrackedOrders.get(i).id);

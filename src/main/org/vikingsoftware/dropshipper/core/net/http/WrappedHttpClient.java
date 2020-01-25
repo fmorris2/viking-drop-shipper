@@ -34,14 +34,14 @@ public class WrappedHttpClient {
 		this.client = client;
 		this.proxy = proxy;
 		this.context = HttpClientContext.create();
-		if(proxy != null && proxy.supportsSocks()) {
-			this.context.setAttribute("socks.address", proxy.generateSocksAddress());
-		}
 		this.context.setCookieStore(new BasicCookieStore());
 	}
 	
 	public HttpResponse execute(final HttpUriRequest request) throws ClientProtocolException, IOException {
 		try {
+			if(proxy != null && proxy.supportsSocks() && context.getAttribute("socks.address") == null) {
+				this.context.setAttribute("socks.address", proxy.generateSocksAddress());
+			}
 			return client.execute(request, context);
 		} catch(final IndexOutOfBoundsException e) { //happens on too many redirects?
 			HttpClientManager.get().flag(this);

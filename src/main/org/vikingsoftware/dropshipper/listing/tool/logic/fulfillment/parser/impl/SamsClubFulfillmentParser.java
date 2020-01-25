@@ -72,11 +72,7 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 				return listing;
 			}
 			
-			if(api.hasMinPurchaseQty()) {
-				System.out.println("\tListing has a min purchase quantity of > 1. Skipping...");
-				listing.canShip = false;
-				return listing;
-			}
+			listing.minPurchaseQty = api.getMinPurchaseQty();
 			
 			listing.canShip = true;
 			
@@ -92,8 +88,6 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 					.replace(" and ", "&")
 					.replace("with", "w/"));
 			
-			System.out.println("Product Name: " + listing.title);
-			
 			listing.itemId = api.getItemNumber().orElse(null);
 			System.out.println("Item ID: " + listing.itemId);
 			
@@ -104,10 +98,20 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 			
 			api.getSpecifications().ifPresent(specs -> listing.description += "<br /><br />" + cleanse(specs));
 			
+			
+			if(listing.minPurchaseQty > 1) {
+				listing.title = "[" + listing.minPurchaseQty + "x]" + listing.title;
+				listing.description = "<h3>ATTENTION: THIS IS A " + listing.minPurchaseQty + " PACK. "
+						+ "THE PACKAGE CONTAINS " + listing.minPurchaseQty + " OF THIS ITEM.</h3><br /><hr />"
+						+ listing.description;
+			}
+			
+			System.out.println("Listing Title: " + listing.title);
+			
 			ListingUtils.makeDescriptionPretty(listing);
 			System.out.println("Description: " + listing.description);
 			
-			listing.price = api.getListPrice().orElse(-1D);
+			listing.price = api.getListPrice().orElse(-1D) * listing.minPurchaseQty;
 			if(listing.price <= 0) {
 				System.out.println("\tCould not parse listing price. Skipping...");
 				listing.canShip = false;

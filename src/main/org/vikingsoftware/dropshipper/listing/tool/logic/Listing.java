@@ -24,6 +24,7 @@ public class Listing implements Cloneable {
 	public String mpn;
 	public int fulfillmentPlatformId;
 	public int handlingTime = 5;
+	public int minPurchaseQty = 1;
 	public double price;
 	public ShippingServiceCodeType shippingService;
 	public double shipping;
@@ -58,6 +59,7 @@ public class Listing implements Cloneable {
 		clone.ean = ean;
 		clone.mpn = mpn;
 		clone.handlingTime = handlingTime;
+		clone.minPurchaseQty = minPurchaseQty;
 		return clone;
 	}
 	
@@ -78,6 +80,7 @@ public class Listing implements Cloneable {
 				+ "\tSKU Id: " + this.skuId + "\n"
 				+ "\tPrice: " + this.price + "\n"
 				+ "\tShipping: " + this.shipping + "\n"
-				+ "\tNum Pictures: " + this.pictures.size();
+				+ "\tNum Pictures: " + this.pictures.size()
+				+ "\tMin Purchase Qty: " + this.minPurchaseQty;
 	}
 }

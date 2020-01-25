@@ -466,7 +466,7 @@ public class ListingToolController {
 			statement.setInt(1, Marketplaces.EBAY.getMarketplaceId());
 			statement.setString(2, listingId);
 			statement.setString(3, listing.title);
-			statement.setInt(4, 1);
+			statement.setInt(4, listing.minPurchaseQty);
 			statement.setInt(5, 1);
 			statement.setDouble(6, listing.targetProfitMargin);
 			statement.setDouble(7, listing.shipping);

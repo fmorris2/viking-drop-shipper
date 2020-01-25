@@ -26,6 +26,7 @@ public class TestSamsClubPlaceOrderRequest extends SamsClubRequestTest {
 		final SamsClubItem itemToPurchase = new SamsClubItem("980094558", "183038", "185741");
 		final SamsClubAddToCartRequest addToCartReq = createAddToCartRequests(itemToPurchase).get(0);
 		final WrappedHttpClient client = addToCartReq.getClient();
+		Assert.assertTrue(addToCartReq.execute());
 		
 		System.out.println("Testing get cart...");
 		final SamsClubGetCartItemsRequest getCartReq = new SamsClubGetCartItemsRequest(client);
