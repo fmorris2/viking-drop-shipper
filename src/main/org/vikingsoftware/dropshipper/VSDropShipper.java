@@ -19,7 +19,7 @@ public class VSDropShipper {
 	public static final String VS_PHONE_NUM = "9162450125";
 	
 	private static final CycleParticipant[] MAIN_THREAD_MODULES = {
-		//new OrderParser(),
+		new OrderParser(),
 		new OrderExecutor(),
 		new InventoryUpdater(),
 		new MarginAdjuster(),

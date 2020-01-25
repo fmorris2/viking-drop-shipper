@@ -16,7 +16,7 @@ public class TestSamsClubGetPaymentIdRequest extends SamsClubRequestTest {
 	public void test() {
 		
 		final WrappedHttpClient client = HttpClientManager.get().getClient();
-		final FulfillmentAccount account = FulfillmentAccountManager.get().getAccountById(15);
+		final FulfillmentAccount account = FulfillmentAccountManager.get().getAccountById(30);
 		SamsClubSessionProvider.get().getSession(account, client);
 		
 		final SamsClubGetPaymentIdRequest request = new SamsClubGetPaymentIdRequest(client);

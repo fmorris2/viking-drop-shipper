@@ -87,28 +87,28 @@ public class SamsClubAddress {
 	}
 	
 	public static final class Builder {
-		private String addressId;
-		private String addressType;
-		private String firstName;
-		private String lastName;
-		private String middleName;
-		private String addressLineOne;
-		private String city;
-		private String prefix;
-		private String suffix;
-		private String stateOrProvinceCode;
-		private String postalCode;
-		private String countryCode;
-		private String phone;
-		private String phoneNumberType;
-		private String phoneTwoType;
-		private String phoneTwo;
-		private String nickName;
-		private String addressLineTwo;
-		private String addressLineThree;
-		private String businessName;
-		private boolean isDefault;
-		private boolean dockDoorPresent;
+		private String addressId = "";
+		private String addressType = "Residential";
+		private String firstName = "";
+		private String lastName = "";
+		private String middleName = "";
+		private String addressLineOne = "";
+		private String city = "";
+		private String prefix = "";
+		private String suffix = "";
+		private String stateOrProvinceCode = "";
+		private String postalCode = "";
+		private String countryCode = "";
+		private String phone = "";
+		private String phoneNumberType = "";
+		private String phoneTwoType = "";
+		private String phoneTwo = "";
+		private String nickName = "";
+		private String addressLineTwo = "";
+		private String addressLineThree = "";
+		private String businessName = "";
+		private boolean isDefault = false;
+		private boolean dockDoorPresent = false;
 		
 		public Builder addressId(final String addressId) {
 			this.addressId = addressId;

@@ -8,21 +8,18 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAcco
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubSessionProvider;
-import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubAuthenticateRequest;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubPurchaseContractDependenciesRequest;
 
-public class TestSamsClubAuthenticateRequest {
+public class TestSamsClubPurchaseContractDependenciesRequest extends SamsClubRequestTest {
 	
 	@Test
 	public void test() {
+		
+		final FulfillmentAccount account = FulfillmentAccountManager.get().getAccountById(15);
 		final WrappedHttpClient client = HttpClientManager.get().getClient();
-		final FulfillmentAccount acc = FulfillmentAccountManager.get().getAccountById(15);
-		SamsClubSessionProvider.get().getSession(acc, client);
+		SamsClubSessionProvider.get().getSession(account, client);
 		
-		final SamsClubPurchaseContractDependenciesRequest dependenciesReq = new SamsClubPurchaseContractDependenciesRequest(client);
-		Assert.assertTrue(dependenciesReq.execute());
-		
-		final SamsClubAuthenticateRequest request = new SamsClubAuthenticateRequest(client, dependenciesReq);
+		final SamsClubPurchaseContractDependenciesRequest request = new SamsClubPurchaseContractDependenciesRequest(client);
 		Assert.assertTrue(request.execute());
 	}
 }

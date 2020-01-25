@@ -84,7 +84,7 @@ public class FulfillmentManager {
 	}
 	
 	private static boolean isBatchingOrders() {
-		return false;//true;
+		return true;
 	}
 
 	public static void disableOrderExecution(final int fulfillmentPlatformId) {
