@@ -47,7 +47,7 @@ public class TestSamsClubPlaceOrderRequest extends SamsClubRequestTest {
 
 		Assert.assertTrue(verifyPurchaseContract(currentContract, addr));
 		
-		final SamsClubPlaceOrderRequest placeOrderReq = new SamsClubPlaceOrderRequest(client);
+		//final SamsClubPlaceOrderRequest placeOrderReq = new SamsClubPlaceOrderRequest(client);
 	}
 	
 	private boolean adjustCartAsNecessary(final List<SamsClubCartItem> currentCartItems, final SamsClubItem itemToPurchase,

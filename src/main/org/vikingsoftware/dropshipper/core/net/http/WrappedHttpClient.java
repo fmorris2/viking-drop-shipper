@@ -1,6 +1,7 @@
 package main.org.vikingsoftware.dropshipper.core.net.http;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,7 +21,8 @@ import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.cookie.BasicClientCookie;
 
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
-import main.org.vikingsoftware.dropshipper.core.net.VSDSProxy;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.ProxyAuthenticationCooldownException;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.VSDSProxy;
 
 public class WrappedHttpClient {
 	
@@ -32,14 +34,29 @@ public class WrappedHttpClient {
 		this.client = client;
 		this.proxy = proxy;
 		this.context = HttpClientContext.create();
-		if(proxy != null) {
-			this.context.setAttribute("socks.address", proxy.address);
+		if(proxy != null && proxy.supportsSocks()) {
+			this.context.setAttribute("socks.address", proxy.generateSocksAddress());
 		}
 		this.context.setCookieStore(new BasicCookieStore());
 	}
 	
 	public HttpResponse execute(final HttpUriRequest request) throws ClientProtocolException, IOException {
-		return client.execute(request, context);
+		try {
+			return client.execute(request, context);
+		} catch(final IndexOutOfBoundsException e) { //happens on too many redirects?
+			HttpClientManager.get().flag(this);
+		} catch(final SocketException e) {
+			if(proxy != null && e.getMessage().contains("authentication failed")) {
+				System.out.println("Failed to authenticate proxy: " + this);
+				HttpClientManager.get().flag(this);
+				HttpClientManager.get().reportFailedProxyConnectionAttempt(proxy.source);
+				throw new ProxyAuthenticationCooldownException(e);
+			} else {
+				e.printStackTrace();
+			}
+		}
+		
+		return null;
 	}
 	
 	public CookieStore getCookieStore() {

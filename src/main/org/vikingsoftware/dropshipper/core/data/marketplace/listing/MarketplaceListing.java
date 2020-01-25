@@ -1,5 +1,6 @@
 package main.org.vikingsoftware.dropshipper.core.data.marketplace.listing;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -42,9 +43,19 @@ public class MarketplaceListing {
 	}
 	
 	public static boolean setIsActive(final String listingId, final boolean isActive) {
-		try (final Statement st = VSDSDBManager.get().createStatement()) {
-			st.execute("UPDATE marketplace_listing SET active=" + (isActive ? 1 : 0)
-					+ " WHERE listing_id="  + listingId);
+		return flipBoolean(listingId, "active", isActive);
+	}
+	
+	public static boolean setIsPurged(final String listingId, final boolean isPurged) {
+		return flipBoolean(listingId, "is_purged", isPurged);
+	}
+	
+	public static boolean flipBoolean(final String listingId, final String columnName, final boolean isActive) {
+		final String sql = "UPDATE marketplace_listing SET " + columnName + " = ? WHERE listing_id = ?";
+		try (final PreparedStatement st = VSDSDBManager.get().createPreparedStatement(sql)) {
+			st.setInt(1, (isActive ? 1 : 0));
+			st.setString(2, listingId);
+			st.execute();
 			return true;
 		} catch(final Exception e) {
 			e.printStackTrace();

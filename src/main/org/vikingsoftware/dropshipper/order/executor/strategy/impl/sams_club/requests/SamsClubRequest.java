@@ -12,6 +12,7 @@ import org.apache.http.util.EntityUtils;
 
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.ProxyAuthenticationCooldownException;
 
 public abstract class SamsClubRequest {
 	
@@ -36,7 +37,9 @@ public abstract class SamsClubRequest {
 				final String responseStr = EntityUtils.toString(response.getEntity());
 				return responseStr == null || responseStr.isEmpty() ? Optional.of("success") : Optional.of(responseStr);
 			}
-		} catch(final IOException e) {
+		} catch (final ProxyAuthenticationCooldownException e) {
+			System.out.println("SamsClubRequest failed due to proxy on cooldown.");
+		} catch (final IOException e) {
 			e.printStackTrace();
 			HttpClientManager.get().flag(client);
 		}

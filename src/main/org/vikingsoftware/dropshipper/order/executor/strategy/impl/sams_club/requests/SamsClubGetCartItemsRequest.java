@@ -1,18 +1,15 @@
 package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
-import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubCartItem;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubItem;
@@ -32,7 +29,12 @@ public class SamsClubGetCartItemsRequest extends SamsClubRequest {
 		final HttpGet request = new HttpGet(url);
 		addHeaders(request);
 		
-		return sendRequest(client, request);
+		final Optional<String> responseStr = super.sendRequest(client, request, HttpStatus.SC_OK);
+		if(responseStr.isPresent()) {
+			return convertResponseToCartItemList(responseStr.get());
+		}
+		
+		return Collections.emptyList();
 	}
 	
 	private void addHeaders(final HttpGet request) {
@@ -44,22 +46,6 @@ public class SamsClubGetCartItemsRequest extends SamsClubRequest {
 		request.addHeader("wm_consumer.source_id", "2");
 		request.addHeader("wm_tenant_id", "1");
 		request.addHeader("wm_vertical_id", "3");
-	}
-	
-	private List<SamsClubCartItem> sendRequest(final WrappedHttpClient client, final HttpGet request) {
-		try {
-			final HttpResponse response = client.execute(request);
-			final String responseStr = EntityUtils.toString(response.getEntity());
-			System.out.println("[SamsClubGetCartItemsRequest] Response: " + responseStr);
-			if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-				return convertResponseToCartItemList(responseStr);
-			}
-		} catch(final IOException e) {
-			e.printStackTrace();
-			HttpClientManager.get().flag(client);
-		}
-		
-		return Collections.emptyList();
 	}
 	
 	private List<SamsClubCartItem> convertResponseToCartItemList(final String response) {

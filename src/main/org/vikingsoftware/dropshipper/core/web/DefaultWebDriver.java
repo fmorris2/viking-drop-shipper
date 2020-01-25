@@ -20,7 +20,7 @@ import org.openqa.selenium.firefox.FirefoxDriverLogLevel;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.firefox.FirefoxProfile;
 
-import main.org.vikingsoftware.dropshipper.core.net.VSDSProxy;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.VSDSProxy;
 
 public class DefaultWebDriver extends FirefoxDriver {
 	

@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 
-import main.org.vikingsoftware.dropshipper.core.net.VSDSProxy;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.VSDSProxy;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 

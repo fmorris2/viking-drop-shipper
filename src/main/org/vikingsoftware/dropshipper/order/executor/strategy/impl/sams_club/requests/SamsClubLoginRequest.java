@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.ProxyAuthenticationCooldownException;
 
 public class SamsClubLoginRequest extends SamsClubRequest {
 	
@@ -33,9 +34,9 @@ public class SamsClubLoginRequest extends SamsClubRequest {
 			final HttpPost request = new HttpPost(URL);
 			addHeaders(request);
 			addPayload(request);
-			final String responseStr = sendRequest(client, request);
-			if(responseStr != null) {
-				return Optional.of(new JSONObject(responseStr));
+			final Optional<String> responseStr = sendRequest(client, request, HttpStatus.SC_OK);
+			if(responseStr.isPresent()) {
+				return Optional.of(new JSONObject(responseStr.get()));
 			}
 		} catch(final Exception e) {
 			e.printStackTrace();
@@ -75,25 +76,6 @@ public class SamsClubLoginRequest extends SamsClubRequest {
 		jsonObj.put("response_group", "member");
 		jsonObj.put("prftcf", "undefined");
 		return jsonObj.toString();
-	}
-	
-	private String sendRequest(final WrappedHttpClient client, final HttpPost request) {
-		String responseStr = null;
-		try {
-			final HttpResponse response = client.execute(request);
-			if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-				responseStr = EntityUtils.toString(response.getEntity());
-				System.out.println("[SamsClubLoginRequest] Response: " + responseStr);
-			} else {
-				System.out.println("[SamsClubLoginRequest] Request failed. Response: " + response.getStatusLine());
-				HttpClientManager.get().flag(client);
-			}
-		} catch(final IOException e) {
-			e.printStackTrace();
-			HttpClientManager.get().flag(client);
-		}
-		
-		return responseStr;
 	}
 
 }

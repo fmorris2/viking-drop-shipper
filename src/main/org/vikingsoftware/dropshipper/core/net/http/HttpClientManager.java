@@ -1,7 +1,10 @@
 package main.org.vikingsoftware.dropshipper.core.net.http;
 
 import java.net.Authenticator;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -20,10 +23,11 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContexts;
 
-import main.org.vikingsoftware.dropshipper.core.net.ProxyAuthenticator;
-import main.org.vikingsoftware.dropshipper.core.net.VSDSProxy;
-import main.org.vikingsoftware.dropshipper.core.net.nord.NordProxy;
-import main.org.vikingsoftware.dropshipper.core.net.nord.NordVPNCredentialManager;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.ProxyAuthenticator;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.ProxyManager;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.ProxySourceCooldownManager;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.VSDSProxy;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.VSDSProxySource;
 
 
 public final class HttpClientManager {
@@ -32,17 +36,12 @@ public final class HttpClientManager {
 	private static final int NUM_CONNECTIONS_BEFORE_CYCLE = 1000;
 	private static final int MAX_POOLED_CONNECTIONS_PER_CLIENT = 5;
 	
-	// Format: us4112.nordvpn.com
-	private static final String[] US_NORD_PROXY_IDS = {
-		"4110", "4112", "4113", "4122", "4123", "4125",
-		"4126"
-	};
-	
 	private static final SocksConnectionSocketFactory SOCKS_CONNECTION_MANAGER 
 		= new SocksConnectionSocketFactory(SSLContexts.createSystemDefault());
 	
 	private static HttpClientManager instance;
 	
+	private final ProxySourceCooldownManager proxyCooldownManager = new ProxySourceCooldownManager();
 	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	private final Queue<WrappedHttpClient> clients = new LinkedList<>();
 	
@@ -64,6 +63,8 @@ public final class HttpClientManager {
 	public WrappedHttpClient getClient() {
 		lock.writeLock().lock();
 		try {
+			
+			cycleClientsUntilNonCooldownProxyIsFound();		
 			final WrappedHttpClient client = clients.peek();
 			
 			if(++numConnections >= NUM_CONNECTIONS_BEFORE_CYCLE) {
@@ -72,6 +73,19 @@ public final class HttpClientManager {
 				numConnections = 0;
 			}
 			return client;
+		} finally {
+			lock.writeLock().unlock();
+		}
+	}
+	
+	private void cycleClientsUntilNonCooldownProxyIsFound() {
+		lock.writeLock().lock();
+		try {
+			WrappedHttpClient client = clients.peek();
+			while(client.proxy != null && proxyCooldownManager.isOnCooldown(client.proxy.source)) {
+				clients.add(clients.poll());
+				client = clients.peek();
+			}
 		} finally {
 			lock.writeLock().unlock();
 		}
@@ -91,19 +105,25 @@ public final class HttpClientManager {
 		}
 	}
 	
+	public void reportFailedProxyConnectionAttempt(final VSDSProxySource source) {
+		proxyCooldownManager.reportFailedConnectionAttempt(source);
+	}
+	
 	private void populateClients() {
 		Authenticator.setDefault(new ProxyAuthenticator());
-		addNordClients();
+		addProxiedClients();
 		
 		clients.add(generateHttpClientWithoutProxy());
 	}
 	
 	private WrappedHttpClient generateHttpClientWithoutProxy() {
+		final PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+		cm.setMaxTotal(MAX_POOLED_CONNECTIONS_PER_CLIENT);
 		final HttpClient client = HttpClients.custom().setConnectionTimeToLive(CONNECTION_TTL_DAYS, TimeUnit.DAYS)
+				.setConnectionManager(cm)
 				.build();
 
 		return new WrappedHttpClient(client, null);
-
 	}
 	
 	private HttpClientConnectionManager generateSocksConnectionManager() {
@@ -116,24 +136,22 @@ public final class HttpClientManager {
 		return cm;
 	}
 	
-	private void addNordClients() {
-		for(final String id : US_NORD_PROXY_IDS) {
-			final String url = "us" + id + ".nordvpn.com";
-			final VSDSProxy proxy = new NordProxy(url, 1080, NordVPNCredentialManager.getUsername(),
-					NordVPNCredentialManager.getPassword());
-			System.out.println("Adding NordVPN proxy: " + proxy.host + ":" + proxy.port);
-			
+	private void addProxiedClients() {
+		final List<VSDSProxy> proxies = new ArrayList<>(ProxyManager.get().getAllProxies());
+		Collections.shuffle(proxies);
+		for (final VSDSProxy proxy : proxies) {
 			final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-			credentialsProvider.setCredentials(new AuthScope(proxy.host, proxy.port),
-					new UsernamePasswordCredentials(proxy.user, proxy.pass));
-		    
-			final HttpClient client = HttpClients.custom()
-					.setConnectionTimeToLive(CONNECTION_TTL_DAYS, TimeUnit.DAYS)
-					.setDefaultCredentialsProvider(credentialsProvider)
-					.setConnectionManager(generateSocksConnectionManager())
-					.build();
-			
-			clients.add(new WrappedHttpClient(client, proxy));
+			//only socks proxies currently
+			if(proxy.supportsSocks()) {
+				credentialsProvider.setCredentials(new AuthScope(proxy.host, proxy.socksPort),
+						new UsernamePasswordCredentials(proxy.authenticationAccount.username, proxy.authenticationAccount.password));
+	
+				final HttpClient client = HttpClients.custom().setConnectionTimeToLive(CONNECTION_TTL_DAYS, TimeUnit.DAYS)
+						.setDefaultCredentialsProvider(credentialsProvider)
+						.setConnectionManager(generateSocksConnectionManager()).build();
+	
+				clients.add(new WrappedHttpClient(client, proxy));
+			}
 		}
 	}
 }

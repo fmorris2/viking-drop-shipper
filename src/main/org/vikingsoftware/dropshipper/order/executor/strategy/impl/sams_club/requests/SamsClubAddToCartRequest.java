@@ -14,6 +14,7 @@ import org.json.JSONObject;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.ProxyAuthenticationCooldownException;
 
 public class SamsClubAddToCartRequest extends SamsClubRequest {
 	
@@ -39,7 +40,7 @@ public class SamsClubAddToCartRequest extends SamsClubRequest {
 		final HttpPost request = new HttpPost(url);
 		addHeaders(request);
 		addPayload(request);
-		return sendRequest(client, request);
+		return sendRequest(client, request, HttpStatus.SC_OK).isPresent();
 	}
 	
 	private void addHeaders(final HttpPost request) {
@@ -76,19 +77,6 @@ public class SamsClubAddToCartRequest extends SamsClubRequest {
 		jsonObj.put("payload", payloadObj);
 		
 		return jsonObj.toString();
-	}
-	
-	private boolean sendRequest(final WrappedHttpClient client, final HttpPost request) {
-		try {
-			final HttpResponse response = client.execute(request);
-			System.out.println("[SamsClubAddToCartRequest] Response: " + EntityUtils.toString(response.getEntity()));
-			return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
-		} catch(final IOException e) {
-			e.printStackTrace();
-			HttpClientManager.get().flag(client);
-		}
-		
-		return false;
 	}
 	
 	public static class Builder {

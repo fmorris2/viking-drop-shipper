@@ -3,7 +3,7 @@ package main.org.vikingsoftware.dropshipper.core.web.costco;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 
-import main.org.vikingsoftware.dropshipper.core.net.VSDSProxy;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.VSDSProxy;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 
 public class CostcoWebDriver extends LoginWebDriver {

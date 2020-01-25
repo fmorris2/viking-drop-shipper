@@ -3,7 +3,7 @@ package main.org.vikingsoftware.dropshipper.core.web;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
-import main.org.vikingsoftware.dropshipper.core.net.VSDSProxy;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.VSDSProxy;
 
 public abstract class DriverSupplier<T> implements Function<VSDSProxy, T> {
 	

@@ -6,8 +6,8 @@ import org.junit.Test;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
-import main.org.vikingsoftware.dropshipper.core.net.VSDSProxy;
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.VSDSProxy;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
 
 public class TestSamsClubWebDriverLogin {

@@ -1,7 +1,6 @@
 package main.org.vikingsoftware.dropshipper.core.web.samsclub;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +14,7 @@ import org.json.JSONObject;
 
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.ProxyAuthenticationCooldownException;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.ImageUtils;
 import main.org.vikingsoftware.dropshipper.core.utils.UPCUtils;
@@ -62,6 +62,9 @@ public final class SamsProductAPI extends JsonAPIParser {
 			req.addHeader("Content-Type", "application/json");
 			req.addHeader("Accept-Charset", "utf-8");
 			final HttpResponse response = client.execute(req);
+			if(response == null) {
+				return false;
+			}
 			text = EntityUtils.toString(response.getEntity());
 			final JSONObject json = new JSONObject(text);
 			payload = Optional.ofNullable(json.getJSONObject("payload"));
@@ -74,9 +77,9 @@ public final class SamsProductAPI extends JsonAPIParser {
 				}
 			});
 			return true;
-		} catch(final IOException e) {
-			e.printStackTrace();
-			HttpClientManager.get().flag(client);
+			
+		} catch(final ProxyAuthenticationCooldownException e) {
+			System.out.println("Parsing Sams Product API failed due to proxy on cooldown.");
 		} catch(final JSONException e) {
 			e.printStackTrace();
 			HttpClientManager.get().flag(client);

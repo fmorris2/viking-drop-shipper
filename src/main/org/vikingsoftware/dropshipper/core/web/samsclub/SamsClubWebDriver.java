@@ -12,7 +12,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebElement;
 
-import main.org.vikingsoftware.dropshipper.core.net.VSDSProxy;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.VSDSProxy;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 
 public class SamsClubWebDriver extends LoginWebDriver {

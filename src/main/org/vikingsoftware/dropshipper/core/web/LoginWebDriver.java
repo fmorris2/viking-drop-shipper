@@ -11,7 +11,7 @@ import org.openqa.selenium.Cookie;
 import org.openqa.selenium.UnableToSetCookieException;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
-import main.org.vikingsoftware.dropshipper.core.net.VSDSProxy;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.VSDSProxy;
 
 public abstract class LoginWebDriver extends DefaultWebDriver {
 

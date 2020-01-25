@@ -1,6 +1,5 @@
 package main.org.vikingsoftware.dropshipper.crawler.strategy.impl;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -13,6 +12,7 @@ import org.json.JSONObject;
 
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
+import main.org.vikingsoftware.dropshipper.core.net.proxy.ProxyAuthenticationCooldownException;
 import main.org.vikingsoftware.dropshipper.core.web.JsonAPIParser;
 
 public class SamsCategoryAPI extends JsonAPIParser {
@@ -53,10 +53,9 @@ public class SamsCategoryAPI extends JsonAPIParser {
 				records = Optional.ofNullable(getJsonArr(obj, "records"));
 			});
 			return true;
-		} catch(final IOException e) {
-			e.printStackTrace();
-			HttpClientManager.get().flag(client);
-		} catch(final Exception e) {
+		} catch (final ProxyAuthenticationCooldownException e) {
+			System.out.println("Parsing Sams Category API failed due to proxy on cooldown.");
+		} catch (final Exception e) {
 			e.printStackTrace();
 		}
 		
