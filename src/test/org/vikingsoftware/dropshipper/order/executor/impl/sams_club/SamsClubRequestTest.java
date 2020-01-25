@@ -16,7 +16,7 @@ public class SamsClubRequestTest {
 	protected List<SamsClubAddToCartRequest> createAddToCartRequests(final SamsClubItem... items) {
 		final List<SamsClubAddToCartRequest> requests = new ArrayList<>();
 		final WrappedHttpClient client = HttpClientManager.get().getClient();
-		final FulfillmentAccount acc = FulfillmentAccountManager.get().getAccountById(15);
+		final FulfillmentAccount acc = FulfillmentAccountManager.get().getAccountById(36);
 		SamsClubSessionProvider.get().getSession(acc, client);
 		for(final SamsClubItem item : items) {
 			final SamsClubAddToCartRequest request = new SamsClubAddToCartRequest.Builder()

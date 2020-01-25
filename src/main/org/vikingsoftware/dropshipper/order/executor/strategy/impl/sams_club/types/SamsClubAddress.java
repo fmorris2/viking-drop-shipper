@@ -12,7 +12,7 @@ public class SamsClubAddress {
 	
 	public final String addressId;
 	public final String addressType;
-	public final String firstName;
+	public String firstName;
 	public final String lastName;
 	public final String middleName;
 	public final String addressLineOne;

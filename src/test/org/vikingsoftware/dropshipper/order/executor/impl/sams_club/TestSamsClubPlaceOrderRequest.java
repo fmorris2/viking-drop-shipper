@@ -46,6 +46,8 @@ public class TestSamsClubPlaceOrderRequest extends SamsClubRequestTest {
 		Assert.assertNotNull(currentContract);
 
 		Assert.assertTrue(verifyPurchaseContract(currentContract, addr));
+		
+		final SamsClubPlaceOrderRequest placeOrderReq = new SamsClubPlaceOrderRequest(client);
 	}
 	
 	private boolean adjustCartAsNecessary(final List<SamsClubCartItem> currentCartItems, final SamsClubItem itemToPurchase,
@@ -100,8 +102,12 @@ public class TestSamsClubPlaceOrderRequest extends SamsClubRequestTest {
 		
 		System.out.println("Default Address ID: " + defaultAddr.get().addressId);
 		
+		//TODO ENSURE YOU'RE PASSING ALL THE NECESSARY FIELDS HERE.
 		final SamsClubAddress address = new SamsClubAddress.Builder()
 				.addressId(defaultAddr.get().addressId)
+				.firstName("Fred")
+				.middleName("C")
+				.lastName("Morrison Jr")
 				.addressLineOne("310 Boston Rd")
 				.city("Mattydale")
 				.stateOrProvinceCode("NY")
@@ -109,7 +115,6 @@ public class TestSamsClubPlaceOrderRequest extends SamsClubRequestTest {
 				.countryCode("US")
 				.build();
 		
-		//TODO WE NEED TO EDIT THE CONTRACT WITH THIS ADDRESS
 		return address;
 	}
 	
