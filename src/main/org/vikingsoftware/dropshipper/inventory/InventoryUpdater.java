@@ -14,6 +14,8 @@ import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
 public class InventoryUpdater implements CycleParticipant {
 
+	private static final long CYCLE_TIME = 60_000 * 30;
+	
 	//marketplace id ==> inventory updater
 	private final Map<Integer, AutomaticInventoryUpdater> inventoryUpdaters = new HashMap<>();
 
@@ -24,6 +26,7 @@ public class InventoryUpdater implements CycleParticipant {
 		while(true) {
 			try {
 				inventoryUpdater.cycle();
+				Thread.sleep(CYCLE_TIME);
 			} catch(final Exception e) {
 				e.printStackTrace();
 			}
