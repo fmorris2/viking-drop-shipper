@@ -16,12 +16,12 @@ public class VSDropShipper {
 	public static final String VS_PHONE_NUM = "9162450125";
 	
 	private static final CycleParticipant[] MAIN_THREAD_MODULES = {
-//		new OrderParser(),
+		new OrderParser(),
 //		new OrderExecutor(),
-//		new MarginAdjuster(),
+		new MarginAdjuster(),
 		new OrderTracking(),
-//		new TrackingHistoryUpdater(),
-//		new EbayAccountActivityFees()	
+		new TrackingHistoryUpdater(),
+		new EbayAccountActivityFees()	
 	};
 
 	public static void main(final String[] args) throws InterruptedException, IOException {

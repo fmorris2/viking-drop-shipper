@@ -8,7 +8,6 @@ public class VSDSProxy {
 	public final String host;
 	public final int httpPort, httpsPort, socksPort;
 	public final ProxyAuthenticationAccount authenticationAccount;
-	public final VSDSProxySource source;
 	
 	private VSDSProxy(final Builder builder) {
 		this.host = builder.host;
@@ -16,7 +15,6 @@ public class VSDSProxy {
 		this.httpsPort = builder.httpsPort;
 		this.socksPort = builder.socksPort;
 		this.authenticationAccount = builder.authenticationAccount;
-		this.source = builder.source;
 	}
 	
 	public boolean supportsSocks() {
@@ -48,10 +46,9 @@ public class VSDSProxy {
 		private String host;
 		private int httpPort, httpsPort, socksPort;
 		private ProxyAuthenticationAccount authenticationAccount;
-		private VSDSProxySource source;
 		
 		public Builder host(final String host) {
-			this.host = host;
+			this.host = host.trim();
 			return this;
 		}
 		
@@ -72,11 +69,6 @@ public class VSDSProxy {
 		
 		public Builder authenticationAccount(final ProxyAuthenticationAccount account) {
 			this.authenticationAccount = account;
-			return this;
-		}
-		
-		public Builder source(final VSDSProxySource source) {
-			this.source = source;
 			return this;
 		}
 		

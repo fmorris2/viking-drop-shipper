@@ -22,7 +22,6 @@ import org.json.JSONObject;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
-import main.org.vikingsoftware.dropshipper.core.net.proxy.ProxyAuthenticationCooldownException;
 import main.org.vikingsoftware.dropshipper.core.tracking.TrackingHistoryRecord;
 import main.org.vikingsoftware.dropshipper.core.tracking.TrackingStatus;
 import main.org.vikingsoftware.dropshipper.order.tracking.history.TrackingHistoryParsingStrategy;
@@ -60,8 +59,6 @@ public class FedexTrackingHistoryParsingStrategy implements TrackingHistoryParsi
 					.getJSONArray("scanEventList");
 			
 			return getTrackingHistoryRecords(order, scanEventList);
-		} catch (final ProxyAuthenticationCooldownException e) {
-			System.out.println("FedexTrackingHistoryParsingStrategy failed due to proxy on cooldown.");
 		} catch (final IOException e) {
 			e.printStackTrace();
 			HttpClientManager.get().flag(client);

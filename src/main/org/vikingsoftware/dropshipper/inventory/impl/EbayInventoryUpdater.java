@@ -6,6 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
@@ -23,11 +26,36 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 	//1000 seconds minimum between updates for a specific listing. eBay caps revisions at 150 per day for a listing
 	private static final int MIN_UPDATE_TIME_THRESH = 576_000;
 	private static final double MARGIN_TOLERANCE = 0.2;
-
+	private static final int NUM_EXECUTION_THREADS = 5;
+	private static final int MAX_INVENTORY_CYCLE_RUN_TIME_MINUTES = 60;
+	
 	private static final Map<String, Long> updateCache = new HashMap<>();
+	
+	private final ExecutorService threadPool = Executors.newFixedThreadPool(NUM_EXECUTION_THREADS);
 
 	@Override
-	public boolean updateInventory(final MarketplaceListing listing) {
+	public boolean updateInventory(final List<MarketplaceListing> listings) {
+		for(final MarketplaceListing listing : listings) {
+			threadPool.execute(() -> {
+				if(updateInventoryForListing(listing)) {
+					System.out.println("Successfully updated inventory for marketplace listing id " + listing.id);
+				} else {
+					System.out.println("Failed to update inventory for marketplace listing id " + listing.id);
+				}
+			});
+		}
+		
+		boolean success = false;
+		try {
+			success = threadPool.awaitTermination(MAX_INVENTORY_CYCLE_RUN_TIME_MINUTES, TimeUnit.MINUTES);
+		} catch(final InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		return success;
+	}
+	
+	private boolean updateInventoryForListing(final MarketplaceListing listing) {
 		try {
 			if(isOnCooldown(listing)) {
 				System.out.println("eBay listing " + listing.id + " is on cooldown.");
@@ -37,33 +65,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			Optional<FulfillmentListingStockEntry> combinedStockEntry = Optional.empty();
 			System.out.println("Updating inventory for eBay listing " + listing);
 			if(listing.active) {
-				final List<FulfillmentListing> fulfillmentListings = FulfillmentManager.get().getListingsForMarketplaceListing(listing.id);
-				Collection<FulfillmentListingStockEntry> entries = new ArrayList<>();
-				for(final FulfillmentListing fulfillmentListing : fulfillmentListings) {
-					if(FulfillmentManager.canUpdateInventory(fulfillmentListing.fulfillment_platform_id)) {
-						System.out.println("Compiling inventory counts for fulfillment listing " + fulfillmentListing.id);
-						final Optional<FulfillmentListingStockEntry> stockEntry = FulfillmentStockManager.getStock(listing, fulfillmentListing);
-						if(stockEntry.isPresent()) {
-							entries.add(stockEntry.get());
-						}
-					} else {
-						System.out.println("Fulfillment platform inventory is frozen for fulfillment listing " + fulfillmentListing.id
-								+ ". Setting stock to 0.");
-						entries.add(new FulfillmentListingStockEntry(0, 0D));
-					}
-					System.out.println("SkuInventoryEntries: " + entries.size());
-					int totalStock = 0;
-					double maxPrice = -1;
-					for(final FulfillmentListingStockEntry entry : entries) {
-						if(entry.stock <= 0 || entry.price <= 0) {
-							continue;
-						}
-						totalStock += entry.stock;
-						maxPrice = Math.max(maxPrice, entry.price);
-					}
-					
-					combinedStockEntry = Optional.of(new FulfillmentListingStockEntry(totalStock, maxPrice));
-				}
+				combinedStockEntry = generateFulfillmentListingStockEntryForListing(listing);
 			} else if(EbayCalls.getListingStock(listing.listingId).orElse(-1) > 0){
 				System.out.println("Setting inactive listing stock to 0...");
 				EbayCalls.updateInventory(listing.listingId, 0);
@@ -84,6 +86,38 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 		}
 
 		return false;
+	}
+	
+	private Optional<FulfillmentListingStockEntry> generateFulfillmentListingStockEntryForListing(final MarketplaceListing listing) {
+		final List<FulfillmentListing> fulfillmentListings = FulfillmentManager.get().getListingsForMarketplaceListing(listing.id);
+		Collection<FulfillmentListingStockEntry> entries = new ArrayList<>();
+		for(final FulfillmentListing fulfillmentListing : fulfillmentListings) {
+			if(FulfillmentManager.canUpdateInventory(fulfillmentListing.fulfillment_platform_id)) {
+				System.out.println("Compiling inventory counts for fulfillment listing " + fulfillmentListing.id);
+				final Optional<FulfillmentListingStockEntry> stockEntry = FulfillmentStockManager.getStock(listing, fulfillmentListing);
+				if(stockEntry.isPresent()) {
+					entries.add(stockEntry.get());
+				}
+			} else {
+				System.out.println("Fulfillment platform inventory is frozen for fulfillment listing " + fulfillmentListing.id
+						+ ". Setting stock to 0.");
+				entries.add(new FulfillmentListingStockEntry(0, 0D));
+			}
+			System.out.println("SkuInventoryEntries: " + entries.size());
+			int totalStock = 0;
+			double maxPrice = -1;
+			for(final FulfillmentListingStockEntry entry : entries) {
+				if(entry.stock <= 0 || entry.price <= 0) {
+					continue;
+				}
+				totalStock += entry.stock;
+				maxPrice = Math.max(maxPrice, entry.price);
+			}
+			
+			return Optional.of(new FulfillmentListingStockEntry(totalStock, maxPrice));
+		}
+		
+		return Optional.empty();
 	}
 
 	private boolean sendInventoryUpdateToEbay(final MarketplaceListing listing, final FulfillmentListingStockEntry combinedStockEntry) {

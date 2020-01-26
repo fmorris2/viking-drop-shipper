@@ -50,14 +50,12 @@ public final class ProxyManager {
 				final ProxyAuthenticationAccount account 
 					= ProxyAuthenticationAccount.getProxy(res.getString("username"), res.getString("password"));
 				
-				final VSDSProxySource source = generateProxySourceFromHostName(res.getString("hostname"));
 				final VSDSProxy proxy = new VSDSProxy.Builder()
 						.host(res.getString("hostname"))
 						.httpPort(res.getInt("http_port"))
 						.httpsPort(res.getInt("https_port"))
 						.socksPort(res.getInt("socks_port"))
 						.authenticationAccount(account)
-						.source(source)
 						.build();
 				
 				proxies.put(proxy.host, proxy);
@@ -68,14 +66,5 @@ public final class ProxyManager {
 		} catch(final SQLException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	private VSDSProxySource generateProxySourceFromHostName(final String hostname) {
-		final String host = hostname.toLowerCase();
-		if(host.contains("nordvpn")) {
-			return VSDSProxySource.NORD;
-		}
-		
-		return VSDSProxySource.UNKNOWN;
 	}
 }

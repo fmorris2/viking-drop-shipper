@@ -47,12 +47,15 @@ public class InventoryUpdater implements CycleParticipant {
 
 	private void updateListings() {
 		System.out.println("Starting inventory update process for " + listings.size() + " listings...");
+		final Map<Integer, List<MarketplaceListing>> listingsPerMarketplace = new HashMap<>(); //map marketplace id --> listings to update
 		for(final MarketplaceListing listing : listings) {
-			final AutomaticInventoryUpdater updater = inventoryUpdaters.get(listing.marketplaceId);
+			listingsPerMarketplace.computeIfAbsent(listing.marketplaceId, id -> new ArrayList<>()).add(listing);
+		}
+		
+		for(final Map.Entry<Integer, List<MarketplaceListing>> entry : listingsPerMarketplace.entrySet()) {
+			final AutomaticInventoryUpdater updater = inventoryUpdaters.get(entry.getKey());
 			try {
-				if(!updater.updateInventory(listing)) {
-					System.out.println("Failed to update inventory for marketplace listing w/ id " + listing.id);
-				}
+				updater.updateInventory(entry.getValue());
 			} catch(final Exception e) {
 				DBLogging.high(getClass(), "failed to update inventory for marketplace listing: ", e);
 			}

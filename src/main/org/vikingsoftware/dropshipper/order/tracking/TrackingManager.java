@@ -10,19 +10,19 @@ import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOr
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
 import main.org.vikingsoftware.dropshipper.order.tracking.handler.impl.AliExpressOrderTrackingHandler;
 import main.org.vikingsoftware.dropshipper.order.tracking.handler.impl.CostcoOrderTrackingHandler;
-import main.org.vikingsoftware.dropshipper.order.tracking.handler.impl.sams.SamsClubOrderTrackingHandler;
+import main.org.vikingsoftware.dropshipper.order.tracking.handler.impl.sams.SamsClubOrderTrackingStrategy;
 
 public class TrackingManager {
 
 	private static TrackingManager instance;
 
 	private final AliExpressOrderTrackingHandler aliExpressHandler;
-	private final SamsClubOrderTrackingHandler samsClubHandler;
+	private final SamsClubOrderTrackingStrategy samsClubHandler;
 	private final CostcoOrderTrackingHandler costcoHandler;
 
 	private TrackingManager () {
 		aliExpressHandler = new AliExpressOrderTrackingHandler();
-		samsClubHandler = new SamsClubOrderTrackingHandler();
+		samsClubHandler = new SamsClubOrderTrackingStrategy();
 		costcoHandler = new CostcoOrderTrackingHandler();
 	}
 

@@ -13,7 +13,6 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAcco
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
-import main.org.vikingsoftware.dropshipper.core.net.proxy.ProxyAuthenticationCooldownException;
 import main.org.vikingsoftware.dropshipper.core.web.JsonAPIParser;
 
 public final class SamsOrderDetailsAPI extends JsonAPIParser {
@@ -61,7 +60,6 @@ public final class SamsOrderDetailsAPI extends JsonAPIParser {
 		HttpClientManager.get().rotateClient();
 		final FulfillmentAccount acc = FulfillmentAccountManager.get().getAccountByTransactionId(orderId);
 		final WrappedHttpClient client = HttpClientManager.get().getClient();
-		System.out.println("Current Account Proxy: " + client.proxy);
 		HttpResponse response = null;
 		try {
 			reset();
@@ -91,9 +89,8 @@ public final class SamsOrderDetailsAPI extends JsonAPIParser {
 			});
 			System.out.println(json);
 			return true;
-		} catch(final ProxyAuthenticationCooldownException e) {
-			System.out.println("Parsing Sams Order Details API failed due to proxy on cooldown.");
 		} catch(final IOException e) {
+			System.out.println("Clearing Sams Club Session for account: " + acc);
 			SamsClubSessionProvider.get().clearSession(acc);
 			e.printStackTrace();
 		} catch(final Exception e) {

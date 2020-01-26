@@ -1,7 +1,6 @@
 package main.org.vikingsoftware.dropshipper.core.net.http;
 
 import java.io.IOException;
-import java.net.SocketException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,7 +21,6 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.util.EntityUtils;
 
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
-import main.org.vikingsoftware.dropshipper.core.net.proxy.ProxyAuthenticationCooldownException;
 import main.org.vikingsoftware.dropshipper.core.net.proxy.VSDSProxy;
 
 public class WrappedHttpClient {
@@ -40,22 +38,9 @@ public class WrappedHttpClient {
 	
 	public HttpResponse execute(final HttpUriRequest request) throws ClientProtocolException, IOException {
 		try {
-			if(proxy != null && proxy.supportsSocks() && context.getAttribute("socks.address") == null) {
-				System.out.println("Setting socks.address attribute");
-				this.context.setAttribute("socks.address", proxy.generateSocksAddress());
-			}
 			return client.execute(request, context);
 		} catch(final IndexOutOfBoundsException e) { //happens on too many redirects?
 			HttpClientManager.get().flag(this);
-		} catch(final SocketException e) {
-			if(proxy != null && e.getMessage().contains("authentication failed")) {
-				System.out.println("Failed to authenticate proxy: " + this);
-				HttpClientManager.get().flag(this);
-				HttpClientManager.get().reportFailedProxyConnectionAttempt(proxy.source);
-				throw new ProxyAuthenticationCooldownException(e);
-			} else {
-				e.printStackTrace();
-			}
 		}
 		
 		return null;

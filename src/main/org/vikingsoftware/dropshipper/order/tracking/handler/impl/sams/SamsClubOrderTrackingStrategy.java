@@ -7,14 +7,13 @@ import com.ebay.soap.eBLBaseComponents.ShipmentDeliveryStatusCodeType;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrderManager;
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
-import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.tracking.ShippingCarrier;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsOrderDetailsAPI;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsOrderState;
 import main.org.vikingsoftware.dropshipper.order.tracking.error.UnknownTrackingIdException;
 import main.org.vikingsoftware.dropshipper.order.tracking.handler.OrderTrackingHandler;
 
-public class SamsClubOrderTrackingHandler implements OrderTrackingHandler {
+public class SamsClubOrderTrackingStrategy implements OrderTrackingHandler {
 	
 	@Override
 	public Optional<TrackingEntry> getTrackingInfo(final ProcessedOrder order) {
@@ -37,7 +36,7 @@ public class SamsClubOrderTrackingHandler implements OrderTrackingHandler {
 		}
 		
 		if(trackingEntry == null) {
-			//trackingEntry = parseTrackingEntryFromEmail(order);
+			trackingEntry = parseTrackingEntryFromEmail(order);
 		}
 		
 		return Optional.ofNullable(trackingEntry);
