@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import main.org.vikingsoftware.dropshipper.core.CycleParticipant;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
@@ -62,18 +63,19 @@ public class OrderExecutor implements CycleParticipant {
 					}
 					
 					try {
-						final ProcessedOrder processedOrder = manager.fulfill(order, listing);						
-		
-						if(processedOrder.fulfillment_transaction_id == null) { //TODO LOG UNSUCCESSFUL ORDER
-							System.out.println("Failed to fulfill order.");
-							failedOrders.add(processedOrder);
+						final Optional<ProcessedOrder> processedOrder = manager.fulfill(order, listing);	
+						if(processedOrder.isEmpty()) {
+							//TODO LOG FAILED ORDER?
+						} else if(processedOrder.get().fulfillment_transaction_id == null) { //TODO LOG UNSUCCESSFUL ORDER
+							failedOrders.add(processedOrder.get());
 						} else {
 							System.out.println("Successful order from " + FulfillmentPlatforms.getById(listing.fulfillment_platform_id) + "!");
-							if(insertSuccessfulOrderIntoDB(processedOrder)) {
-								TransactionUtils.insertTransactionForProcessedOrder(order, processedOrder);
+							if(insertSuccessfulOrderIntoDB(processedOrder.get())) {
+								TransactionUtils.insertTransactionForProcessedOrder(order, processedOrder.get());
 							}
 							break;
 						}
+						
 					} catch (final OrderExecutionException e) {
 						e.printStackTrace();
 						DBLogging.high(getClass(), "Failed to fulfill processed order", e);

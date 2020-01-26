@@ -37,6 +37,7 @@ public class FedexTrackingHistoryParsingStrategy implements TrackingHistoryParsi
 	@Override
 	public List<TrackingHistoryRecord> parse(final ProcessedOrder order) {
 		System.out.println("FedexTrackingHistoryParsingStrategy#parse for tracking number: " + order.tracking_number);
+		HttpResponse response = null;
 		final WrappedHttpClient client = HttpClientManager.get().getClient();
 		try {
 			final HttpPost req = new HttpPost(BASE_URL);
@@ -48,7 +49,7 @@ public class FedexTrackingHistoryParsingStrategy implements TrackingHistoryParsi
 			params.add(new BasicNameValuePair("format", "json"));
 			req.setEntity(new UrlEncodedFormEntity(params));
 			req.addHeader("Accept-Charset", "utf-8");
-			final HttpResponse response = client.execute(req);
+			response = client.execute(req);
 			final JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()));
 			System.out.println("JSON: " + json);
 			
@@ -66,6 +67,8 @@ public class FedexTrackingHistoryParsingStrategy implements TrackingHistoryParsi
 			HttpClientManager.get().flag(client);
 		} catch (final Exception e) {
 			e.printStackTrace();
+		} finally {
+			client.release(response);
 		}
 		
 		return new ArrayList<>();

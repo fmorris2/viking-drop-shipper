@@ -9,10 +9,8 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import main.org.vikingsoftware.dropshipper.core.browser.BrowserRepository;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.core.net.proxy.ProxyAuthenticationCooldownException;
@@ -60,9 +58,11 @@ public final class SamsOrderDetailsAPI extends JsonAPIParser {
 
 	public boolean parse(final String orderId) {
 		String apiUrl = null;
-		final SamsClubDriverSupplier driver = BrowserRepository.get().request(SamsClubDriverSupplier.class);
+		HttpClientManager.get().rotateClient();
 		final FulfillmentAccount acc = FulfillmentAccountManager.get().getAccountByTransactionId(orderId);
 		final WrappedHttpClient client = HttpClientManager.get().getClient();
+		System.out.println("Current Account Proxy: " + client.proxy);
+		HttpResponse response = null;
 		try {
 			reset();
 			apiUrl = API_BASE_URL + orderId + API_URL_ARGS;
@@ -78,7 +78,7 @@ public final class SamsOrderDetailsAPI extends JsonAPIParser {
 			get.addHeader("Content-Type", "application/json");
 			get.addHeader("Accept-Charset", "utf-8");
 			client.setCookies("samsclub.com", "/", session.cookies);
-			final HttpResponse response = client.execute(get);
+			response = client.execute(get);
 			
 			final String rawJson = EntityUtils.toString(response.getEntity());
 			
@@ -99,7 +99,7 @@ public final class SamsOrderDetailsAPI extends JsonAPIParser {
 		} catch(final Exception e) {
 			e.printStackTrace();
 		} finally {
-			BrowserRepository.get().relinquish(driver);
+			client.release(response);
 		}
 		
 		return false;

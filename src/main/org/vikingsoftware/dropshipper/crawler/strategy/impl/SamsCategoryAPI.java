@@ -39,6 +39,7 @@ public class SamsCategoryAPI extends JsonAPIParser {
 	private boolean parse(final String categoryId, final int offset) {
 		this.categoryId = categoryId;
 		String apiUrl = null;
+		HttpResponse response = null;
 		final WrappedHttpClient client = HttpClientManager.get().getClient();
 		try {
 			reset();
@@ -46,17 +47,20 @@ public class SamsCategoryAPI extends JsonAPIParser {
 			final HttpGet request = new HttpGet(apiUrl);
 			request.addHeader("Content-Type", "application/json");
 			request.addHeader("Accept-Charset", "utf-8");
-			final HttpResponse response = client.execute(request);
+			response = client.execute(request);
 			final JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()));
 			payload = Optional.ofNullable(json.getJSONObject("payload"));
 			payload.ifPresent(obj -> {
 				records = Optional.ofNullable(getJsonArr(obj, "records"));
 			});
+			EntityUtils.consume(response.getEntity());
 			return true;
 		} catch (final ProxyAuthenticationCooldownException e) {
 			System.out.println("Parsing Sams Category API failed due to proxy on cooldown.");
 		} catch (final Exception e) {
 			e.printStackTrace();
+		} finally {
+			client.release(response);
 		}
 		
 		return false;

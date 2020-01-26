@@ -16,7 +16,7 @@ public class TestSamsClubAuthenticateRequest {
 	@Test
 	public void test() {
 		final WrappedHttpClient client = HttpClientManager.get().getClient();
-		final FulfillmentAccount acc = FulfillmentAccountManager.get().getAccountById(15);
+		final FulfillmentAccount acc = FulfillmentAccountManager.get().getAccountById(31);
 		SamsClubSessionProvider.get().getSession(acc, client);
 		
 		final SamsClubPurchaseContractDependenciesRequest dependenciesReq = new SamsClubPurchaseContractDependenciesRequest(client);

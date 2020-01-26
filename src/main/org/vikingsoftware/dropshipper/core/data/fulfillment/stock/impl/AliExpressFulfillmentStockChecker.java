@@ -1,51 +1,18 @@
 package main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
+import java.util.Optional;
 
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.AbstractFulfillmentStockChecker;
-import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
-import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
-import main.org.vikingsoftware.dropshipper.core.web.aliexpress.AliExpressWebDriver;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.FulfillmentListingStockEntry;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.FulfillmentStockChecker;
 
-public class AliExpressFulfillmentStockChecker extends AbstractFulfillmentStockChecker<AliExpressWebDriver> {
-
-	private static AliExpressFulfillmentStockChecker instance;
-
-	private AliExpressFulfillmentStockChecker() {
-		super();
-	}
-
-	public synchronized static AliExpressFulfillmentStockChecker get() {
-		if(instance == null) {
-			instance = new AliExpressFulfillmentStockChecker();
-		}
-
-		return instance;
-	}
+public class AliExpressFulfillmentStockChecker implements FulfillmentStockChecker {
 
 	@Override
-	protected Class<? extends DriverSupplier<?>> getDriverSupplierClass() {
-		return AliExpressDriverSupplier.class;
+	public Optional<FulfillmentListingStockEntry> getStock(FulfillmentAccount account,
+			FulfillmentListing fulfillmentListing) {
+		return Optional.empty();
 	}
 
-	@Override
-	protected int parseItemStock(final AliExpressWebDriver driver) {
-		try {
-			final WebElement stockNumEl = driver.findElement(By.id("j-sell-stock-num"));
-			final String unparsedText = stockNumEl.getText();
-			final String parsedText = unparsedText.replaceAll("\\D", "");
-			System.out.println("parsed stock: " + parsedText);
-			return Integer.parseInt(parsedText);
-		} catch(final Exception e) {
-			DBLogging.medium(getClass(), "failed to parse item stock: ", e);
-		}
-
-		return 0;
-	}
-
-	@Override
-	protected double parseItemPrice(AliExpressWebDriver driver) {
-		return 0;
-	}
 }

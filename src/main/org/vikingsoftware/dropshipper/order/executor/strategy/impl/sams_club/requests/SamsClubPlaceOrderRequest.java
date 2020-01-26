@@ -2,6 +2,7 @@ package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_cl
 
 import java.util.Optional;
 
+import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ContentType;
@@ -31,6 +32,12 @@ public class SamsClubPlaceOrderRequest extends SamsClubRequest {
 		
 		addHeaders(request);
 		addPayload(request);
+		
+		final Optional<String> responseStr = sendRequest(client, request, HttpStatus.SC_OK);
+		if(responseStr.isPresent()) {
+			System.out.println("[SamsClubPlaceOrderRequest] Response: " + responseStr.get());
+			return Optional.of(new JSONObject(responseStr.get()));
+		}
 		
 		return Optional.empty();
 	}

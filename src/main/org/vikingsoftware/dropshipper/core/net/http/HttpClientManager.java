@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.http.auth.AuthScope;
@@ -20,7 +19,7 @@ import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContexts;
 
 import main.org.vikingsoftware.dropshipper.core.net.proxy.ProxyAuthenticator;
@@ -31,11 +30,7 @@ import main.org.vikingsoftware.dropshipper.core.net.proxy.VSDSProxySource;
 
 
 public final class HttpClientManager {
-	
-	private static final int CONNECTION_TTL_DAYS = 365;
-	private static final int NUM_CONNECTIONS_BEFORE_CYCLE = 1000;
-	private static final int MAX_POOLED_CONNECTIONS_PER_CLIENT = 5;
-	
+
 	private static final SocksConnectionSocketFactory SOCKS_CONNECTION_MANAGER 
 		= new SocksConnectionSocketFactory(SSLContexts.createSystemDefault());
 	
@@ -44,8 +39,6 @@ public final class HttpClientManager {
 	private final ProxySourceCooldownManager proxyCooldownManager = new ProxySourceCooldownManager();
 	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	private final Queue<WrappedHttpClient> clients = new LinkedList<>();
-	
-	private int numConnections = 0;
 	
 	private HttpClientManager() {
 		//singleton can't be instantiated from the outside...
@@ -62,17 +55,33 @@ public final class HttpClientManager {
 	
 	public WrappedHttpClient getClient() {
 		lock.writeLock().lock();
-		try {
-			
+		try {		
 			cycleClientsUntilNonCooldownProxyIsFound();		
 			final WrappedHttpClient client = clients.peek();
 			
-			if(++numConnections >= NUM_CONNECTIONS_BEFORE_CYCLE) {
-				System.out.println("Cycling Http Client due to Num Connections threshold");
-				clients.add(clients.poll());
-				numConnections = 0;
-			}
 			return client;
+		} finally {
+			lock.writeLock().unlock();
+		}
+	}
+	
+	public WrappedHttpClient getAndRotateClient() {
+		lock.writeLock().lock();
+		try {		
+			cycleClientsUntilNonCooldownProxyIsFound();		
+			final WrappedHttpClient client = clients.poll();
+			clients.add(client);
+			
+			return client;
+		} finally {
+			lock.writeLock().unlock();
+		}
+	}
+	
+	public void rotateClient() {
+		lock.writeLock().lock();
+		try {		
+			clients.add(clients.poll());
 		} finally {
 			lock.writeLock().unlock();
 		}
@@ -96,9 +105,8 @@ public final class HttpClientManager {
 		try {
 			if(client == clients.peek()) {
 				System.out.println("Rotating Http Client: " + clients.peek());
-				client.clearCookies();
+				client.resetContext();
 				clients.add(clients.poll());
-				numConnections = 0;
 			}
 		} finally {
 			lock.writeLock().unlock();
@@ -111,16 +119,14 @@ public final class HttpClientManager {
 	
 	private void populateClients() {
 		Authenticator.setDefault(new ProxyAuthenticator());
-		addProxiedClients();
+		//addProxiedClients();
 		
 		clients.add(generateHttpClientWithoutProxy());
 	}
 	
 	private WrappedHttpClient generateHttpClientWithoutProxy() {
-		final PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-		cm.setMaxTotal(MAX_POOLED_CONNECTIONS_PER_CLIENT);
-		final HttpClient client = HttpClients.custom().setConnectionTimeToLive(CONNECTION_TTL_DAYS, TimeUnit.DAYS)
-				.setConnectionManager(cm)
+		final HttpClient client = HttpClients.custom()
+				.setConnectionManager(new BasicHttpClientConnectionManager())
 				.build();
 
 		return new WrappedHttpClient(client, null);
@@ -131,8 +137,7 @@ public final class HttpClientManager {
 		        .register("http", PlainConnectionSocketFactory.INSTANCE)
 		        .register("https", SOCKS_CONNECTION_MANAGER)
 		        .build();
-		final PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(reg);
-		cm.setMaxTotal(MAX_POOLED_CONNECTIONS_PER_CLIENT);
+		final HttpClientConnectionManager cm = new BasicHttpClientConnectionManager(reg);
 		return cm;
 	}
 	
@@ -143,14 +148,15 @@ public final class HttpClientManager {
 			final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 			//only socks proxies currently
 			if(proxy.supportsSocks()) {
-				credentialsProvider.setCredentials(new AuthScope(proxy.host, proxy.socksPort),
+				credentialsProvider.setCredentials(new AuthScope(proxy.host, proxy.httpPort),
 						new UsernamePasswordCredentials(proxy.authenticationAccount.username, proxy.authenticationAccount.password));
 	
-				final HttpClient client = HttpClients.custom().setConnectionTimeToLive(CONNECTION_TTL_DAYS, TimeUnit.DAYS)
-						.setDefaultCredentialsProvider(credentialsProvider)
-						.setConnectionManager(generateSocksConnectionManager()).build();
-	
-				clients.add(new WrappedHttpClient(client, proxy));
+				final HttpClient client = HttpClients.custom()
+						.setConnectionManager(generateSocksConnectionManager())
+						.build();
+				
+				final WrappedHttpClient wrappedClient = new WrappedHttpClient(client, proxy);
+				clients.add(wrappedClient);
 			}
 		}
 	}

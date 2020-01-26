@@ -4,27 +4,20 @@ import java.util.Optional;
 
 import com.ebay.soap.eBLBaseComponents.ShipmentDeliveryStatusCodeType;
 
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrderManager;
 import main.org.vikingsoftware.dropshipper.core.data.tracking.TrackingEntry;
+import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.tracking.ShippingCarrier;
-import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
-import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsOrderDetailsAPI;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsOrderState;
 import main.org.vikingsoftware.dropshipper.order.tracking.error.UnknownTrackingIdException;
-import main.org.vikingsoftware.dropshipper.order.tracking.handler.AbstractOrderTrackingHandler;
+import main.org.vikingsoftware.dropshipper.order.tracking.handler.OrderTrackingHandler;
 
-public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<SamsClubWebDriver> {
-
-	@Override
-	public boolean prepareToTrack() {
-		return true;
-	}
+public class SamsClubOrderTrackingHandler implements OrderTrackingHandler {
 	
 	@Override
-	protected TrackingEntry getTrackingInfoImpl(ProcessedOrder order) {
+	public Optional<TrackingEntry> getTrackingInfo(final ProcessedOrder order) {
 		final SamsOrderDetailsAPI api = new SamsOrderDetailsAPI();
 		TrackingEntry trackingEntry = null;
 		if(api.parse(order.fulfillment_transaction_id)) {
@@ -44,10 +37,10 @@ public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<S
 		}
 		
 		if(trackingEntry == null) {
-			trackingEntry = parseTrackingEntryFromEmail(order);
+			//trackingEntry = parseTrackingEntryFromEmail(order);
 		}
 		
-		return trackingEntry;
+		return Optional.ofNullable(trackingEntry);
 	}
 	
 	private TrackingEntry parseTrackingEntryFromEmail(final ProcessedOrder order) {
@@ -72,19 +65,4 @@ public class SamsClubOrderTrackingHandler extends AbstractOrderTrackingHandler<S
 		System.out.println("Carrier: " + courierName);
 		return new TrackingEntry(courierName, trackingNum, ShipmentDeliveryStatusCodeType.IN_TRANSIT);
 	}
-
-	@Override
-	public void finishTracking() {
-	}
-
-	@Override
-	protected Class<? extends DriverSupplier<SamsClubWebDriver>> getDriverSupplierClass() {
-		return SamsClubDriverSupplier.class;
-	}
-
-	@Override
-	protected TrackingEntry parseTrackingInfo(SamsClubWebDriver driver, ProcessedOrder order) {
-		return null;
-	}
-
 }

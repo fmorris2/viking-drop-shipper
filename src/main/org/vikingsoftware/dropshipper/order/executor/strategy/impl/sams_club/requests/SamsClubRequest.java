@@ -1,6 +1,7 @@
 package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -29,19 +30,24 @@ public abstract class SamsClubRequest {
 	}
 	
 	public Optional<String> sendRequest(final WrappedHttpClient client, final HttpRequestBase request, final int expectedResponseCode) {
+		HttpResponse response = null;
 		try {
 			System.out.println("Cookie String: " + getCookieString());
-			final HttpResponse response = client.execute(request);
+			response = client.execute(request);
 			System.out.println("Response status: " + response.getStatusLine());
 			if(response.getStatusLine().getStatusCode() == expectedResponseCode) {
 				final String responseStr = EntityUtils.toString(response.getEntity());
 				return responseStr == null || responseStr.isEmpty() ? Optional.of("success") : Optional.of(responseStr);
+			} else {
+				System.out.println("Response Headers: " + Arrays.toString(response.getAllHeaders()));
 			}
 		} catch (final ProxyAuthenticationCooldownException e) {
 			System.out.println("SamsClubRequest failed due to proxy on cooldown.");
 		} catch (final IOException e) {
 			e.printStackTrace();
 			HttpClientManager.get().flag(client);
+		} finally {
+			client.release(response);
 		}
 		
 		return Optional.empty();

@@ -10,6 +10,11 @@ public class SamsClubPlaceOrderRequestDependencies {
 		this.amount = builder.amount;
 	}
 	
+	@Override
+	public String toString() {
+		return "Payment ID: " + paymentId + ", Amount: " + amount;
+	}
+	
 	public static final class Builder {
 		private String paymentId;
 		private double amount;

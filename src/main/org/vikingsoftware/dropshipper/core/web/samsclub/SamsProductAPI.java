@@ -51,8 +51,13 @@ public final class SamsProductAPI extends JsonAPIParser {
 	}
 	
 	public boolean parse(final String productId) {
+		return parse(productId, false);
+	}
+	
+	private boolean parse(final String productId, final boolean reAttempt) {
 		String apiUrl = null;
 		String text = "";
+		HttpResponse response = null;
 		final WrappedHttpClient client = HttpClientManager.get().getClient();
 		try {
 			reset();
@@ -61,7 +66,7 @@ public final class SamsProductAPI extends JsonAPIParser {
 			final HttpGet req = new HttpGet(apiUrl);
 			req.addHeader("Content-Type", "application/json");
 			req.addHeader("Accept-Charset", "utf-8");
-			final HttpResponse response = client.execute(req);
+			response = client.execute(req);
 			if(response == null) {
 				return false;
 			}
@@ -83,8 +88,13 @@ public final class SamsProductAPI extends JsonAPIParser {
 		} catch(final JSONException e) {
 			e.printStackTrace();
 			HttpClientManager.get().flag(client);
+			if(!reAttempt) {
+				return parse(productId, true);
+			}
 		} catch(final Exception e) {
 			e.printStackTrace();
+		} finally {
+			client.release(response);
 		}
 		
 		return false;

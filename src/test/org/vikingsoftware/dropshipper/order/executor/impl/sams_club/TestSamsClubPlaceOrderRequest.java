@@ -1,6 +1,8 @@
 package test.org.vikingsoftware.dropshipper.order.executor.impl.sams_club;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.json.JSONObject;
@@ -12,20 +14,77 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_clu
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubCreateContractRequest;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubGetCartItemsRequest;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubGetCurrentContractRequest;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubGetPaymentIdRequest;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubPlaceOrderRequest;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubRefreshSamsOrderRequest;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubRemoveFromCartRequest;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubUpdateCartItemQuantityRequest;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubAddress;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubCartItem;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubItem;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubPlaceOrderRequestDependencies;
 
 public class TestSamsClubPlaceOrderRequest extends SamsClubRequestTest {
 
 	@Test
 	public void testOrderSingleItem() {
+		final SamsClubItem itemToPurchase = new SamsClubItem("980207779", "162993", "123591");
+		final SamsClubAddress.Builder addr = new SamsClubAddress.Builder()
+				.firstName("Heidi")
+				.lastName("Sholtis")
+				.addressLineOne("105 South D Street")
+				.city("Easley")
+				.stateOrProvinceCode("SC")
+				.postalCode("29640")
+				.countryCode("US");
+		Assert.assertTrue(orderItem(itemToPurchase, addr));
+	}
+	
+	@Test
+	public void testOrderMultipleItems() {
+		final SamsClubItem itemToPurchase1 = new SamsClubItem("980207779", "162993", "123591");
+		final SamsClubAddress.Builder addr1 = new SamsClubAddress.Builder()
+				.firstName("Heidi")
+				.lastName("Sholtis")
+				.addressLineOne("105 South D Street")
+				.city("Easley")
+				.stateOrProvinceCode("SC")
+				.postalCode("29640")
+				.countryCode("US");
+		
+		final SamsClubItem itemToPurchase2 = new SamsClubItem("980094559", "prod22121370", "sku22675462");
+		final SamsClubAddress.Builder addr2 = new SamsClubAddress.Builder()
+				.firstName("Bren")
+				.lastName("Rosa")
+				.addressLineOne("105 S. D St")
+				.city("Easley")
+				.stateOrProvinceCode("SC")
+				.postalCode("29640")
+				.countryCode("US");
+		
+		Assert.assertTrue(orderItem(itemToPurchase1, addr1));
+		Assert.assertTrue(orderItem(itemToPurchase2, addr2));
+	}
+	
+	private boolean orderItem(final SamsClubItem item, final SamsClubAddress.Builder address) {
 		System.out.println("Adding single item to cart...");
-		final SamsClubItem itemToPurchase = new SamsClubItem("980094558", "183038", "185741");
-		final SamsClubAddToCartRequest addToCartReq = createAddToCartRequests(itemToPurchase).get(0);
+		final SamsClubAddToCartRequest addToCartReq = createAddToCartRequests(item).get(0);
 		final WrappedHttpClient client = addToCartReq.getClient();
+
+		System.out.println("Current sams order: " + addToCartReq.getCookie("samsorder"));
+		
+		final Optional<JSONObject> refreshSamsOrderResponse = new SamsClubRefreshSamsOrderRequest(client).execute();
+		Assert.assertTrue(refreshSamsOrderResponse.isPresent());
+		
+		final Map<String, String> newSamsOrderCookie = new HashMap<>();
+		newSamsOrderCookie.put("samsorder", refreshSamsOrderResponse.get()
+				.getJSONObject("payload")
+				.getJSONObject("cart")
+				.getString("id"));
+		
+		System.out.println("New SamsOrder: " + newSamsOrderCookie.get("samsorder"));
+		client.setCookies("samsclub.com", "/", newSamsOrderCookie);
+		
 		Assert.assertTrue(addToCartReq.execute());
 		
 		System.out.println("Testing get cart...");
@@ -34,11 +93,13 @@ public class TestSamsClubPlaceOrderRequest extends SamsClubRequestTest {
 		
 		Assert.assertTrue(!currentCartItems.isEmpty());
 		
-		Assert.assertTrue(adjustCartAsNecessary(currentCartItems, itemToPurchase, client));
+		Assert.assertTrue(adjustCartAsNecessary(currentCartItems, item, client));
 		
-		Assert.assertTrue(verifyCart(client, itemToPurchase));
+		Assert.assertTrue(verifyCart(client, item));
 		
-		final SamsClubAddress addr = generateAddress(client);
+		System.out.println("Client cookies: " + client.getCookieStore().getCookies());
+		
+		final SamsClubAddress addr = generateAddress(client, address);
 		Assert.assertNotNull(addr);
 		
 		Assert.assertTrue(createPurchaseContract(client, addr));
@@ -48,7 +109,30 @@ public class TestSamsClubPlaceOrderRequest extends SamsClubRequestTest {
 
 		Assert.assertTrue(verifyPurchaseContract(currentContract, addr));
 		
-		//final SamsClubPlaceOrderRequest placeOrderReq = new SamsClubPlaceOrderRequest(client);
+		final Optional<JSONObject> paymentDetails = new SamsClubGetPaymentIdRequest(client).execute();
+		Assert.assertTrue(paymentDetails.isPresent());
+		
+		final SamsClubPlaceOrderRequestDependencies placeOrderDependencies = 
+				new SamsClubPlaceOrderRequestDependencies.Builder()
+					.paymentId(paymentDetails.get()
+							.getJSONArray("cards")
+							.getJSONObject(0)
+							.getString("pid"))
+					.amount(currentContract
+							.getJSONObject("payload")
+							.getJSONObject("prepaySummary")
+							.getDouble("total"))
+					.build();
+		
+		System.out.println("PlaceOrderDependencies: " + placeOrderDependencies);
+		
+		final SamsClubPlaceOrderRequest placeOrderReq = new SamsClubPlaceOrderRequest(client, placeOrderDependencies);
+		final Optional<JSONObject> placeOrderResponse = placeOrderReq.execute();
+		Assert.assertTrue(placeOrderResponse.isPresent());
+		
+		System.out.println("PLACE ORDER RESPONSE: " + placeOrderResponse.get());
+		System.out.println("Client cookies: " + client.getCookieStore().getCookies());
+		return true;
 	}
 	
 	private boolean adjustCartAsNecessary(final List<SamsClubCartItem> currentCartItems, final SamsClubItem itemToPurchase,
@@ -95,7 +179,7 @@ public class TestSamsClubPlaceOrderRequest extends SamsClubRequestTest {
 		return true;
 	}
 	
-	private SamsClubAddress generateAddress(final WrappedHttpClient client) {
+	private SamsClubAddress generateAddress(final WrappedHttpClient client, final SamsClubAddress.Builder address) {
 		final Optional<SamsClubAddress> defaultAddr = SamsClubAddress.findDefaultAddress(client);
 		if(defaultAddr.isEmpty()) {
 			return null;
@@ -103,20 +187,11 @@ public class TestSamsClubPlaceOrderRequest extends SamsClubRequestTest {
 		
 		System.out.println("Default Address ID: " + defaultAddr.get().addressId);
 		
-		//TODO ENSURE YOU'RE PASSING ALL THE NECESSARY FIELDS HERE.
-		final SamsClubAddress address = new SamsClubAddress.Builder()
+		final SamsClubAddress builtAddress = address
 				.addressId(defaultAddr.get().addressId)
-				.firstName("Fred")
-				.middleName("C")
-				.lastName("Morrison Jr")
-				.addressLineOne("310 Boston Rd")
-				.city("Mattydale")
-				.stateOrProvinceCode("NY")
-				.postalCode("13211")
-				.countryCode("US")
 				.build();
 		
-		return address;
+		return builtAddress;
 	}
 	
 	private JSONObject getCurrentContract(final WrappedHttpClient client) {

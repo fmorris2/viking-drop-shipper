@@ -25,7 +25,7 @@ public class SamsClubGetPaymentIdRequest extends SamsClubRequest {
 		final Optional<String> responseStr = sendRequest(client, request, HttpStatus.SC_OK);
 		if(responseStr.isPresent()) {
 			System.out.println("[SamsClubGetPaymentIdRequest] Response: " + responseStr.get());
-			return Optional.of(new JSONObject(responseStr));
+			return Optional.of(new JSONObject(responseStr.get()));
 		}
 		
 		return Optional.empty();

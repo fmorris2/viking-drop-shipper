@@ -19,6 +19,7 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.cookie.ClientCookie;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.util.EntityUtils;
 
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.net.proxy.ProxyAuthenticationCooldownException;
@@ -28,18 +29,19 @@ public class WrappedHttpClient {
 	
 	public final HttpClient client;
 	public final VSDSProxy proxy;
-	public final HttpClientContext context;
+	
+	private HttpClientContext context;
 	
 	public WrappedHttpClient(final HttpClient client, final VSDSProxy proxy) {
 		this.client = client;
 		this.proxy = proxy;
-		this.context = HttpClientContext.create();
-		this.context.setCookieStore(new BasicCookieStore());
+		resetContext();
 	}
 	
 	public HttpResponse execute(final HttpUriRequest request) throws ClientProtocolException, IOException {
 		try {
 			if(proxy != null && proxy.supportsSocks() && context.getAttribute("socks.address") == null) {
+				System.out.println("Setting socks.address attribute");
 				this.context.setAttribute("socks.address", proxy.generateSocksAddress());
 			}
 			return client.execute(request, context);
@@ -59,12 +61,23 @@ public class WrappedHttpClient {
 		return null;
 	}
 	
+	public void release(final HttpResponse response) {
+		try {
+			if(response != null) {
+				EntityUtils.consume(response.getEntity());
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public CookieStore getCookieStore() {
 		return context.getCookieStore();
 	}
 	
-	public void clearCookies() {
-		context.getCookieStore().clear();
+	public void resetContext() {
+		context = HttpClientContext.create();
+		context.setCookieStore(new BasicCookieStore());
 	}
 	
 	public void setCookies(final String domain, final String path, final Map<String, String> cookieMap) {
@@ -76,6 +89,17 @@ public class WrappedHttpClient {
 			cookie.setAttribute(ClientCookie.DOMAIN_ATTR, domain);
 			context.getCookieStore().addCookie(cookie);
 		}
+	}
+	
+	public static Map<String, String> generateCookieMapFromString(final String cookies) {
+		final Map<String, String> cookieMap = new HashMap<>();
+		final String[] pairs = cookies.split(";");
+		for(final String pair : pairs) {
+			final String[] keyVal = pair.split("=");
+			cookieMap.put(keyVal[0].trim(), keyVal[1].trim());
+		}
+		
+		return cookieMap;
 	}
 	
 	public static Map<String, String> generateHeaderMapFromRequest(final HttpRequestBase post) {

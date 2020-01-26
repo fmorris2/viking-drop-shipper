@@ -6,32 +6,21 @@ import java.util.regex.Pattern;
 
 import com.ebay.soap.eBLBaseComponents.ShippingServiceCodeType;
 
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.utils.ListingUtils;
-import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsProductAPI;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
-import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.AbstractFulfillmentParser;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.FulfillmentParser;
 
-public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClubWebDriver> {
+public class SamsClubFulfillmentParser implements FulfillmentParser {
 	
 	private static final String PRODUCT_ID_REGEX = "\\/(prod)*(\\d{5,})";
 	private static final Pattern PRODUCT_ID_PATTERN = Pattern.compile(PRODUCT_ID_REGEX);
 	private static final int MAX_LISTING_IMAGES = 8;
 
 	@Override
-	public Class<SamsClubDriverSupplier> getDriverSupplierClass() {
-		return null;
-	}
-
-	@Override
-	public boolean needsToLogin() {
-		return false;
-	}
-
-	@Override
-	protected Listing parseListing(final String url) {
+	public Listing getListingTemplate(final FulfillmentAccount account, final String url) {
 		try {
 			final String productId = parseProductIdFromListingUrl(url);
 			final SamsProductAPI api = new SamsProductAPI();
