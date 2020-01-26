@@ -58,13 +58,13 @@ public class SamsClubListAddressesRequest extends SamsClubRequest {
 		final JSONArray addressesArr = json.getJSONArray("addresses");
 		for(int i = 0; i < addressesArr.length(); i++) {
 			final JSONObject addressObj = addressesArr.getJSONObject(i);
-			addresses.add(convertAddressJsonObjToPojo(addressObj));
+			addresses.add(addrFromJson(addressObj));
 		}
 		
 		return addresses;
 	}
 	
-	private SamsClubAddress convertAddressJsonObjToPojo(final JSONObject json) {
+	private SamsClubAddress addrFromJson(final JSONObject json) {
 		final JSONObject addr = json.getJSONObject("address");
 		return new SamsClubAddress.Builder()
 				.addressId(JsonAPIParser.getString(json, "addressId"))

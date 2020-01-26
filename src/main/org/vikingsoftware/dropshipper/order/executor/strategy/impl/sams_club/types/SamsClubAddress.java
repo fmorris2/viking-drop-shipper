@@ -104,6 +104,151 @@ public class SamsClubAddress {
 				+ "\t\tPhone: " + phone + "\n";
 	}
 	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((addressId == null) ? 0 : addressId.hashCode());
+		result = prime * result + ((addressLineOne == null) ? 0 : addressLineOne.hashCode());
+		result = prime * result + ((addressLineThree == null) ? 0 : addressLineThree.hashCode());
+		result = prime * result + ((addressLineTwo == null) ? 0 : addressLineTwo.hashCode());
+		result = prime * result + ((addressType == null) ? 0 : addressType.hashCode());
+		result = prime * result + ((businessName == null) ? 0 : businessName.hashCode());
+		result = prime * result + ((city == null) ? 0 : city.hashCode());
+		result = prime * result + ((countryCode == null) ? 0 : countryCode.hashCode());
+		result = prime * result + (dockDoorPresent ? 1231 : 1237);
+		result = prime * result + ((firstName == null) ? 0 : firstName.hashCode());
+		result = prime * result + (isDefault ? 1231 : 1237);
+		result = prime * result + ((lastName == null) ? 0 : lastName.hashCode());
+		result = prime * result + ((middleName == null) ? 0 : middleName.hashCode());
+		result = prime * result + ((nickName == null) ? 0 : nickName.hashCode());
+		result = prime * result + ((phone == null) ? 0 : phone.hashCode());
+		result = prime * result + ((phoneNumberType == null) ? 0 : phoneNumberType.hashCode());
+		result = prime * result + ((phoneTwo == null) ? 0 : phoneTwo.hashCode());
+		result = prime * result + ((phoneTwoType == null) ? 0 : phoneTwoType.hashCode());
+		result = prime * result + ((postalCode == null) ? 0 : postalCode.hashCode());
+		result = prime * result + ((prefix == null) ? 0 : prefix.hashCode());
+		result = prime * result + ((stateOrProvinceCode == null) ? 0 : stateOrProvinceCode.hashCode());
+		result = prime * result + ((suffix == null) ? 0 : suffix.hashCode());
+		return result;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		SamsClubAddress other = (SamsClubAddress) obj;
+		if (addressId == null) {
+			if (other.addressId != null)
+				return false;
+		} else if (!addressId.equalsIgnoreCase(other.addressId))
+			return false;
+		if (addressLineOne == null) {
+			if (other.addressLineOne != null)
+				return false;
+		} else if (!addressLineOne.equalsIgnoreCase(other.addressLineOne))
+			return false;
+		if (addressLineThree == null) {
+			if (other.addressLineThree != null)
+				return false;
+		} else if (!addressLineThree.equalsIgnoreCase(other.addressLineThree))
+			return false;
+		if (addressLineTwo == null) {
+			if (other.addressLineTwo != null)
+				return false;
+		} else if (!addressLineTwo.equalsIgnoreCase(other.addressLineTwo))
+			return false;
+		if (addressType == null) {
+			if (other.addressType != null)
+				return false;
+		} else if (!addressType.equalsIgnoreCase(other.addressType))
+			return false;
+		if (businessName == null) {
+			if (other.businessName != null)
+				return false;
+		} else if (!businessName.equalsIgnoreCase(other.businessName))
+			return false;
+		if (city == null) {
+			if (other.city != null)
+				return false;
+		} else if (!city.equalsIgnoreCase(other.city))
+			return false;
+		if (countryCode == null) {
+			if (other.countryCode != null)
+				return false;
+		} else if (!countryCode.equalsIgnoreCase(other.countryCode))
+			return false;
+		if (dockDoorPresent != other.dockDoorPresent)
+			return false;
+		if (firstName == null) {
+			if (other.firstName != null)
+				return false;
+		} else if (!firstName.equalsIgnoreCase(other.firstName))
+			return false;
+		if (isDefault != other.isDefault)
+			return false;
+		if (lastName == null) {
+			if (other.lastName != null)
+				return false;
+		} else if (!lastName.equalsIgnoreCase(other.lastName))
+			return false;
+		if (middleName == null) {
+			if (other.middleName != null)
+				return false;
+		} else if (!middleName.equalsIgnoreCase(other.middleName))
+			return false;
+		if (nickName == null) {
+			if (other.nickName != null)
+				return false;
+		} else if (!nickName.equalsIgnoreCase(other.nickName))
+			return false;
+		if (phone == null) {
+			if (other.phone != null)
+				return false;
+		} else if (!phone.equalsIgnoreCase(other.phone))
+			return false;
+		if (phoneNumberType == null) {
+			if (other.phoneNumberType != null)
+				return false;
+		} else if (!phoneNumberType.equalsIgnoreCase(other.phoneNumberType))
+			return false;
+		if (phoneTwo == null) {
+			if (other.phoneTwo != null)
+				return false;
+		} else if (!phoneTwo.equalsIgnoreCase(other.phoneTwo))
+			return false;
+		if (phoneTwoType == null) {
+			if (other.phoneTwoType != null)
+				return false;
+		} else if (!phoneTwoType.equalsIgnoreCase(other.phoneTwoType))
+			return false;
+		if (postalCode == null) {
+			if (other.postalCode != null)
+				return false;
+		} else if (!postalCode.equalsIgnoreCase(other.postalCode))
+			return false;
+		if (prefix == null) {
+			if (other.prefix != null)
+				return false;
+		} else if (!prefix.equalsIgnoreCase(other.prefix))
+			return false;
+		if (stateOrProvinceCode == null) {
+			if (other.stateOrProvinceCode != null)
+				return false;
+		} else if (!stateOrProvinceCode.equalsIgnoreCase(other.stateOrProvinceCode))
+			return false;
+		if (suffix == null) {
+			if (other.suffix != null)
+				return false;
+		} else if (!suffix.equalsIgnoreCase(other.suffix))
+			return false;
+		return true;
+	}
+	
 	public static final class Builder {
 		private String addressId = "";
 		private String addressType = "Residential";
