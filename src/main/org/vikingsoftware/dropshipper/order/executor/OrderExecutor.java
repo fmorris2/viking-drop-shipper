@@ -65,6 +65,7 @@ public class OrderExecutor implements CycleParticipant {
 					try {
 						final Optional<ProcessedOrder> processedOrder = manager.fulfill(order, listing);	
 						if(processedOrder.isEmpty()) {
+							System.err.println("Failed to process customer order ID: " + order.id);
 							//TODO LOG FAILED ORDER?
 						} else if(processedOrder.get().fulfillment_transaction_id == null) { //TODO LOG UNSUCCESSFUL ORDER
 							failedOrders.add(processedOrder.get());

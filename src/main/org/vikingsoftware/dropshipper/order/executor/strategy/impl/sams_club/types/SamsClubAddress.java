@@ -86,6 +86,24 @@ public class SamsClubAddress {
 		json.put("phoneSuffix", "0125");
 	}
 	
+	@Override
+	public String toString() {
+		return "\tSamsClubAddress:\n"
+				+ "\t\tAddress ID: " + addressId + "\n"
+				+ "\t\tAddress Type: " + addressType + "\n"
+				+ "\t\tFirst Name: " + firstName + "\n"
+				+ "\t\tMiddle Name: " + middleName + "\n"
+				+ "\t\tLast Name: " + lastName + "\n"
+				+ "\t\tAddress Line One: " + addressLineOne + "\n"
+				+ "\t\tAddress Line Two: " + addressLineTwo + "\n"
+				+ "\t\tAddress Line Three: " + addressLineThree + "\n"
+				+ "\t\tCity: " + city + "\n"
+				+ "\t\tState: " + stateOrProvinceCode + "\n"
+				+ "\t\tPostal Code: " + postalCode + "\n"
+				+ "\t\tCountry Code: " + countryCode + "\n"
+				+ "\t\tPhone: " + phone + "\n";
+	}
+	
 	public static final class Builder {
 		private String addressId = "";
 		private String addressType = "Residential";

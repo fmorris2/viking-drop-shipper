@@ -12,14 +12,18 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
+import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 import main.org.vikingsoftware.dropshipper.core.net.proxy.ProxyManager;
 import main.org.vikingsoftware.dropshipper.core.net.proxy.VSDSProxy;
 
 
 public final class HttpClientManager {
+	
+	private static final int MAX_CONCURRENT_CONNECTIONS_PER_CLIENT = 100;
 	
 	private static HttpClientManager instance;
 	
@@ -91,6 +95,7 @@ public final class HttpClientManager {
 	
 	private WrappedHttpClient generateHttpClientWithoutProxy() {
 		final HttpClient client = HttpClients.custom()
+				.setConnectionManager(generateConnectionManager())
 				.build();
 
 		return new WrappedHttpClient(client, null);
@@ -106,11 +111,19 @@ public final class HttpClientManager {
 
 			final HttpClient client = HttpClients.custom()
 					.setProxy(new HttpHost(proxy.host, proxy.httpsPort))
+					.setConnectionManager(generateConnectionManager())
 					.build();
 			
 			final WrappedHttpClient wrappedClient = new WrappedHttpClient(client, proxy);
 			
 			clients.add(wrappedClient);
 		}
+	}
+	
+	private HttpClientConnectionManager generateConnectionManager() {
+		final PoolingHttpClientConnectionManager manager = new PoolingHttpClientConnectionManager();
+		manager.setMaxTotal(MAX_CONCURRENT_CONNECTIONS_PER_CLIENT);
+		manager.setDefaultMaxPerRoute(MAX_CONCURRENT_CONNECTIONS_PER_CLIENT);
+		return manager;
 	}
 }

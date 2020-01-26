@@ -47,6 +47,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 		
 		boolean success = false;
 		try {
+			threadPool.shutdown();
 			success = threadPool.awaitTermination(MAX_INVENTORY_CYCLE_RUN_TIME_MINUTES, TimeUnit.MINUTES);
 		} catch(final InterruptedException e) {
 			e.printStackTrace();

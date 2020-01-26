@@ -51,7 +51,7 @@ public class SamsClubItem {
 
 	@Override
 	public String toString() {
-		return "SamsClubItem:\n"
+		return "\tSamsClubItem:\n"
 				+ "\t\tItem Number: " + itemNumber + "\n"
 				+ "\t\tProduct ID: " + productId + "\n"
 				+ "\t\tSku ID: " + skuId;
