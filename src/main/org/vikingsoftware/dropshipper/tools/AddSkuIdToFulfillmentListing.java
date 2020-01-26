@@ -7,7 +7,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentMana
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
-import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsProductAPI;
+import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubProductAPI;
 
 public class AddSkuIdToFulfillmentListing {
 	
@@ -17,7 +17,7 @@ public class AddSkuIdToFulfillmentListing {
 	
 	public static void main(final String[] args) {
 		final List<FulfillmentListing> listings = FulfillmentManager.get().getListingsForFulfillmentPlatform(FulfillmentPlatforms.SAMS_CLUB);
-		final SamsProductAPI api = new SamsProductAPI();
+		final SamsClubProductAPI api = new SamsClubProductAPI();
 		listings.removeIf(listing -> listing.sku_id != null);
 		System.out.println("Loaded " + listings.size() + " Sams Club listings");
 		

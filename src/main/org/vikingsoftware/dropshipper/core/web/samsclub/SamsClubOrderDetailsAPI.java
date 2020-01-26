@@ -15,7 +15,7 @@ import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.core.web.JsonAPIParser;
 
-public final class SamsOrderDetailsAPI extends JsonAPIParser {
+public final class SamsClubOrderDetailsAPI extends JsonAPIParser {
 	
 	private static final String API_BASE_URL = "http://www.samsclub.com/api/node/vivaldi/v1/orders/details?orderId=";
 	private static final String API_URL_ARGS = "&responseGroup=FULL";

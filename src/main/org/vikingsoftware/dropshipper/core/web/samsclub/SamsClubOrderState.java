@@ -5,7 +5,7 @@ import java.util.Map;
 
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 
-public enum SamsOrderState {
+public enum SamsClubOrderState {
 	RECENTLY_PLACED("recently placed order"),
 	ORDER_RECEIVED("order received"),
 	IN_PROGRESS("in progress"),
@@ -18,25 +18,25 @@ public enum SamsOrderState {
 	DELIVERED("delivered"),
 	CANCELLED("canceled");
 	
-	private static final Map<String, SamsOrderState> stateMappings = new HashMap<>();
+	private static final Map<String, SamsClubOrderState> stateMappings = new HashMap<>();
 	
 	static {
-		for(final SamsOrderState state : values()) {
+		for(final SamsClubOrderState state : values()) {
 			stateMappings.put(state.apiResponse, state);
 		}
 	}
 	
 	private final String apiResponse;
-	SamsOrderState(final String apiResponse) {
+	SamsClubOrderState(final String apiResponse) {
 		this.apiResponse = apiResponse;
 	}
 	
-	public static SamsOrderState getStateForApiResponse(final String apiResponse) {
-		final SamsOrderState state = stateMappings.get(apiResponse.toLowerCase());
+	public static SamsClubOrderState getStateForApiResponse(final String apiResponse) {
+		final SamsClubOrderState state = stateMappings.get(apiResponse.toLowerCase());
 		
 		if(state == null) {
 			System.err.println("Unknown Sam's Club Order state: " + apiResponse);
-			DBLogging.high(SamsOrderState.class, "Unknown Sam's Club order state for api response " + apiResponse, new RuntimeException());
+			DBLogging.high(SamsClubOrderState.class, "Unknown Sam's Club order state for api response " + apiResponse, new RuntimeException());
 		}
 		
 		return state;

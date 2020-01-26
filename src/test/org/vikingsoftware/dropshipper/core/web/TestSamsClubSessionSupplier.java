@@ -11,7 +11,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlat
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubSessionProvider;
-import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsOrderDetailsAPI;
+import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubOrderDetailsAPI;
 
 public class TestSamsClubSessionSupplier {
 
@@ -27,7 +27,7 @@ public class TestSamsClubSessionSupplier {
 	@Test
 	public void testSamsOrderDetailsAPI() {
 		final String orderId = "3818501695";
-		final SamsOrderDetailsAPI api = new SamsOrderDetailsAPI();
+		final SamsClubOrderDetailsAPI api = new SamsClubOrderDetailsAPI();
 		Assert.assertTrue(api.parse(orderId));
 		System.out.println("API Status: " + api.getAPIStatus().orElse(null));
 		System.out.println("Order State: " + api.getOrderState().orElse(null));

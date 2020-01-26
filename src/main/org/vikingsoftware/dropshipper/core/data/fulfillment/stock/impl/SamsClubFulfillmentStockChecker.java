@@ -6,11 +6,11 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAcco
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.FulfillmentListingStockEntry;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.FulfillmentStockChecker;
-import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsProductAPI;
+import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubProductAPI;
 
 public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker {
 
-	private final SamsProductAPI api = new SamsProductAPI();
+	private final SamsClubProductAPI api = new SamsClubProductAPI();
 	
 	@Override
 	public Optional<FulfillmentListingStockEntry> getStock(FulfillmentAccount account, FulfillmentListing fulfillmentListing) {

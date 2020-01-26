@@ -9,7 +9,7 @@ import com.ebay.soap.eBLBaseComponents.ShippingServiceCodeType;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.utils.ListingUtils;
-import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsProductAPI;
+import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubProductAPI;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.FulfillmentParser;
 
@@ -23,7 +23,7 @@ public class SamsClubFulfillmentParser implements FulfillmentParser {
 	public Listing getListingTemplate(final FulfillmentAccount account, final String url) {
 		try {
 			final String productId = parseProductIdFromListingUrl(url);
-			final SamsProductAPI api = new SamsProductAPI();
+			final SamsClubProductAPI api = new SamsClubProductAPI();
 			System.out.println("Product ID: " + productId);
 			api.parse(productId);
 			

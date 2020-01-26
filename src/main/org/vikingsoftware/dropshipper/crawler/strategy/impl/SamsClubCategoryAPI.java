@@ -14,7 +14,7 @@ import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.core.web.JsonAPIParser;
 
-public class SamsCategoryAPI extends JsonAPIParser {
+public class SamsClubCategoryAPI extends JsonAPIParser {
 	
 	private static final int PRODUCTS_PER_CALL = 48; //max you can request at once
 	private static final String API_BASE_URL = "http://www.samsclub.com/api/node/vivaldi/v1/products/search/?sourceType=1&sortKey=p_sales_rank&sortOrder=1"
@@ -26,7 +26,7 @@ public class SamsCategoryAPI extends JsonAPIParser {
 	private Optional<JSONArray> records;
 	
 	public static void main(final String[] args) {
-		final SamsCategoryAPI api = new SamsCategoryAPI();
+		final SamsClubCategoryAPI api = new SamsClubCategoryAPI();
 		api.parse("1959");
 		System.out.println("Parsed " + api.getProductUrls().size() + " products");
 	}
@@ -68,7 +68,7 @@ public class SamsCategoryAPI extends JsonAPIParser {
 		final int totalRecords = getInt(payload.get(), "totalRecords");
 		int currentOffset = 0;
 		while(currentOffset < totalRecords) {
-			final SamsCategoryAPI api = new SamsCategoryAPI();
+			final SamsClubCategoryAPI api = new SamsClubCategoryAPI();
 			api.parse(categoryId, currentOffset);
 			if(api.records.isPresent()) {
 				for(int i = 0; i < api.records.get().length(); i++) {

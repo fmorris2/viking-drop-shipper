@@ -20,7 +20,7 @@ import main.org.vikingsoftware.dropshipper.core.utils.UPCUtils;
 import main.org.vikingsoftware.dropshipper.core.web.JsonAPIParser;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingImage;
 
-public final class SamsProductAPI extends JsonAPIParser {
+public final class SamsClubProductAPI extends JsonAPIParser {
 	
 	private static final String API_BASE_URL = "http://www.samsclub.com/api/soa/services/v1/catalog/product/";
 	private static final String API_URL_ARGS = "?response_group=LARGE&clubId=6279";
@@ -37,7 +37,7 @@ public final class SamsProductAPI extends JsonAPIParser {
 	private String productId;
 	
 	public static void main(final String[] args) {
-		final SamsProductAPI api = new SamsProductAPI();
+		final SamsClubProductAPI api = new SamsClubProductAPI();
 		api.parse("prod21220949");
 		System.out.println("Current Stock: " + api.getAvailableToSellQuantity().orElse(0));
 		System.out.println("List Price: " + api.getListPrice().orElse(0D));
@@ -134,7 +134,7 @@ public final class SamsProductAPI extends JsonAPIParser {
 						//TODO FLAG LISTING FOR PURGE EXAMINATION?
 						return false;
 					default:
-						DBLogging.high(SamsProductAPI.class, "Unknown shipping type encountered: " + shippingType, new RuntimeException());
+						DBLogging.high(SamsClubProductAPI.class, "Unknown shipping type encountered: " + shippingType, new RuntimeException());
 				}
 			}
 		}
