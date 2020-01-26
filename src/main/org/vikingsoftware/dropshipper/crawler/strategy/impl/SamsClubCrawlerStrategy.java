@@ -44,7 +44,7 @@ public class SamsClubCrawlerStrategy extends FulfillmentListingCrawlerStrategy {
 	private boolean isCrawling = true;
 	
 	public void crawl() {
-		final SamsCategoryAPI api = new SamsCategoryAPI();
+		final SamsClubCategoryAPI api = new SamsClubCategoryAPI();
 		System.out.println("[SamsClubCrawlerStrategy] - crawl");
 		for(final Map.Entry<String, String> category : CATEGORY_MAP.entrySet()) {
 			System.out.println("Parsing products from category: " + category.getKey());

@@ -17,7 +17,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlat
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayApiContextManager;
-import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsProductAPI;
+import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubProductAPI;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingImage;
 
 public final class FixSamsClubListingDetails {
@@ -33,7 +33,7 @@ public final class FixSamsClubListingDetails {
 				String marketListingId = null;
 				try {
 					final FulfillmentListing list = listing;
-					final SamsProductAPI api = new SamsProductAPI();
+					final SamsClubProductAPI api = new SamsClubProductAPI();
 					final MarketplaceListing marketListing = MarketplaceListing.getMarketplaceListingForFulfillmentListing(list.id);
 					if(marketListing == null) {
 						return;

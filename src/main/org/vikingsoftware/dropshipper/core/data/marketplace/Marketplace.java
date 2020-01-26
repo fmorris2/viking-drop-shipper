@@ -60,7 +60,7 @@ public class Marketplace {
 		final Set<MarketplaceListing> listings = new HashSet<>();
 		
 		String sql = "SELECT * FROM marketplace_listing INNER JOIN fulfillment_mapping ON marketplace_listing.id=fulfillment_mapping.marketplace_listing_id "
-				+ "WHERE marketplace_id="+id;
+				+ "WHERE marketplace_id="+id + " AND is_purged=0";
 		if(activeOnly) {
 			sql += " AND active=1";
 		}

@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.Proxy;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -19,26 +20,42 @@ import org.openqa.selenium.firefox.FirefoxDriverLogLevel;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.firefox.FirefoxProfile;
 
+import main.org.vikingsoftware.dropshipper.core.net.proxy.VSDSProxy;
+
 public class DefaultWebDriver extends FirefoxDriver {
 	
 	public static final int DEFAULT_VISIBILITY_WAIT_SECONDS = 20;
 	//private static final String RAKUTEN_EXTENSION_PATH = "/home/freddy/.mozilla/firefox/xzvqk4xs.default-release/extensions/{35d6291e-1d4b-f9b4-c52f-77e6410d1326}.xpi";
 	
+	static {
+		System.setProperty("webdriver.gecko.driver", "lib/geckodriver");
+	}
+	
 	public DefaultWebDriver() {
-		super(getOptions());
+		this(null);
 	}
 	
-	public DefaultWebDriver(final FirefoxOptions options) {
-		super(options);
+	public DefaultWebDriver(final VSDSProxy proxy) {
+		super(getOptions(proxy));
 	}
 	
-	public static FirefoxOptions getOptions() {
+	public static FirefoxOptions getOptions(final VSDSProxy proxy) {
 		final FirefoxProfile profile = new FirefoxProfile();
+		
+		if(proxy != null && proxy.supportsSocks()) {
+			//TODO FIGURE OUT A WAY TO ENABLE AUTHENTICATED PROXIES ON FIREFOX DRIVER
+//			profile.setPreference("network.proxy.type", 1);
+//			profile.setPreference("network.proxy.socks", proxy.host);
+//			profile.setPreference("network.proxy.socks_port", 1080);
+		}
+		
 		//profile.addExtension(new File(RAKUTEN_EXTENSION_PATH));
-		return new FirefoxOptions()
+		FirefoxOptions options = new FirefoxOptions()
 				.setHeadless(false)
 				.setProfile(profile)
 				.setLogLevel(FirefoxDriverLogLevel.ERROR);
+		
+		return options;
 	}
 	
 	@Override

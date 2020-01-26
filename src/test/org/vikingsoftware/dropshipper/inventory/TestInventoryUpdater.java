@@ -1,8 +1,8 @@
 package test.org.vikingsoftware.dropshipper.inventory;
 
+import org.junit.Assert;
 import org.junit.Test;
 
-import junit.framework.Assert;
 import main.org.vikingsoftware.dropshipper.inventory.InventoryUpdater;
 
 public class TestInventoryUpdater {

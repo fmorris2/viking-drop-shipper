@@ -6,11 +6,20 @@ import java.util.function.Supplier;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 
+import main.org.vikingsoftware.dropshipper.core.net.proxy.VSDSProxy;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.web.LoginWebDriver;
 
 
 public class AliExpressWebDriver extends LoginWebDriver {
+	
+	public AliExpressWebDriver() {
+		this(null);
+	}
+	
+	public AliExpressWebDriver(final VSDSProxy proxy) {
+		super(proxy);
+	}
 
 	@Override
 	public boolean prepareForExecutionViaLoginImpl() {

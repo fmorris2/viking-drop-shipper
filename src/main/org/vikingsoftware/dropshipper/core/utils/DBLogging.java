@@ -3,11 +3,14 @@ package main.org.vikingsoftware.dropshipper.core.utils;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 
@@ -29,17 +32,23 @@ public class DBLogging {
 					+ " VALUES(?,?,?,?,?)");
 			while(!messageQueue.isEmpty()) {
 				final LogMessage msg = messageQueue.poll();
-				if(msg.level.ordinal() >= SEND_TO_DB_LEVEL.ordinal()) {
-					st.setString(1, msg.clazz.getName());
-					st.setString(2, msg.level.name());
-					st.setString(3, msg.message);
-					st.setString(4, convertExceptionToString(msg.exception));
-					st.setLong(5, System.currentTimeMillis());
-					st.addBatch();
+				try {
+					if(msg.level.ordinal() >= SEND_TO_DB_LEVEL.ordinal()) {
+						st.setString(1, msg.clazz.getName());
+						st.setString(2, msg.level.name());
+						st.setString(3, msg.message);
+						st.setString(4, convertExceptionToString(msg.exception));
+						st.setLong(5, System.currentTimeMillis());
+						st.execute();
+					}
+				} catch(final MySQLIntegrityConstraintViolationException e) {
+					if(!e.getMessage().contains("Duplicate entry")) {
+						e.printStackTrace();
+					}
+				} catch(final SQLException e) {
+					e.printStackTrace();
 				}
 			}
-
-			st.executeBatch();
 		} catch(final Exception e) {
 			e.printStackTrace();
 		}

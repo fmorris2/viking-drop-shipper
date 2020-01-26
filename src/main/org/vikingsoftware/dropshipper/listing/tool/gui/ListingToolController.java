@@ -466,7 +466,7 @@ public class ListingToolController {
 			statement.setInt(1, Marketplaces.EBAY.getMarketplaceId());
 			statement.setString(2, listingId);
 			statement.setString(3, listing.title);
-			statement.setInt(4, 1);
+			statement.setInt(4, listing.minPurchaseQty);
 			statement.setInt(5, 1);
 			statement.setDouble(6, listing.targetProfitMargin);
 			statement.setDouble(7, listing.shipping);
@@ -486,8 +486,8 @@ public class ListingToolController {
 	private boolean insertFulfillmentListing(final Listing listing) {
 		try {
 			final String query = "INSERT INTO fulfillment_listing(fulfillment_platform_id, item_id, product_id, listing_title, listing_url,"
-					+ "upc,ean)"
-					+ " VALUES(?,?,?,?,?,?,?)";
+					+ "upc,ean,sku_id)"
+					+ " VALUES(?,?,?,?,?,?,?,?)";
 			final PreparedStatement statement = VSDSDBManager.get().createPreparedStatement(query);
 			statement.setInt(1, listing.fulfillmentPlatformId);
 			statement.setString(2, listing.itemId);
@@ -496,6 +496,7 @@ public class ListingToolController {
 			statement.setString(5, listing.url);
 			statement.setString(6, listing.upc);
 			statement.setString(7, listing.ean);
+			statement.setString(8, listing.skuId);
 			statement.execute();
 			return true;
 		} catch(final Exception e) {

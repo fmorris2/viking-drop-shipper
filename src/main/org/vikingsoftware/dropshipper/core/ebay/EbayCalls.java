@@ -85,6 +85,10 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 public class EbayCalls {
 
 	public static final int FAKE_MAX_QUANTITY = 1;
+	
+	//view all error codes here: https://developer.ebay.com/devzone/xml/docs/Reference/ebay/Errors/errormessages.htm
+	private static final String[] MARK_AS_INACTIVE_ERROR_CODES = {"17", "291", "21916333", "21916750"};
+	private static final String[] MARK_AS_PURGED_ERROR_CODES = {"17", "291", "21916333", "21916750"};
 
 	private EbayCalls() {}
 	
@@ -133,7 +137,9 @@ public class EbayCalls {
 				final int qtyAvailable = totalQty - totalSold;
 				stock = Optional.of(qtyAvailable);
 			}
-		} catch (Exception e) {
+		} catch(final ApiException e) {
+			handleApiException(e, ebayListingID);
+		} catch(final Exception e) {
 			e.printStackTrace();
 		}
 		
@@ -308,8 +314,49 @@ public class EbayCalls {
 			call.setItemToBeRevised(itemToRevise);
 			call.reviseFixedPriceItem();
 			return !call.hasError();
-		} catch(final Exception e) {
+		} catch(final ApiException e) {
+			handleApiException(e, listingId);
+ 		} catch(final Exception e) {
 			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
+	private static void handleApiException(final ApiException e, final String listingId) {
+		final boolean markAsInactive = exceptionQualifiesForInactiveMarking(e);
+		final boolean markAsPurged = exceptionQualifiesForPurgedMarking(e);
+		
+		if(markAsInactive) {
+			System.out.println("Marking listing " + listingId + " as inactive...");
+			MarketplaceListing.setIsActive(listingId, false);
+		}
+		
+		if(markAsPurged) {
+			System.out.println("Marking listing " + listingId + " as purged...");
+			MarketplaceListing.setIsPurged(listingId, true);
+		}
+		
+		if(!markAsInactive && !markAsPurged) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static boolean exceptionQualifiesForPurgedMarking(final ApiException e) {
+		for(final String code : MARK_AS_PURGED_ERROR_CODES) {
+			if(e.containsErrorCode(code)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	private static boolean exceptionQualifiesForInactiveMarking(final ApiException e) {
+		for(final String code : MARK_AS_INACTIVE_ERROR_CODES) {
+			if(e.containsErrorCode(code)) {
+				return true;
+			}
 		}
 		
 		return false;
@@ -360,18 +407,11 @@ public class EbayCalls {
 			call.reviseInventoryStatus();
 			logToFile("updateInventory: listingId - " + listingId + ", quantity: " + Math.max(0, Math.min(FAKE_MAX_QUANTITY, invStatus.getQuantity())));
 			return !call.hasError();
+		} catch(final ApiException e) {
+			handleApiException(e, listingId);
 		} catch(final Exception e) {
 			e.printStackTrace();
 			DBLogging.medium(EbayCalls.class, "failed to update inventory for listing " + listingId + " w/ stock " + inventory+ ": ", e);
-		
-			if(e.getMessage().equals("You are not allowed to revise ended listings.")) {
-				System.out.println("setting ended listing to inactive in database...");
-				if(MarketplaceListing.setIsActive(listingId, false)) {
-					System.out.println("\tsuccess");
-				} else {
-					System.out.println("\tfailure");
-				}
-			}
 		}
 
 		return false;

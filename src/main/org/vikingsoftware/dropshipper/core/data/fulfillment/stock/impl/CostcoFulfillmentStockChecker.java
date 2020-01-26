@@ -1,65 +1,18 @@
 package main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Optional;
 
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.AbstractFulfillmentStockChecker;
-import main.org.vikingsoftware.dropshipper.core.utils.CostcoUtils;
-import main.org.vikingsoftware.dropshipper.core.web.DriverSupplier;
-import main.org.vikingsoftware.dropshipper.core.web.costco.CostcoWebDriver;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.FulfillmentListingStockEntry;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.FulfillmentStockChecker;
 
-public class CostcoFulfillmentStockChecker extends AbstractFulfillmentStockChecker<CostcoWebDriver> {
+public class CostcoFulfillmentStockChecker implements FulfillmentStockChecker {
+
+	@Override
+	public Optional<FulfillmentListingStockEntry> getStock(FulfillmentAccount account,
+			FulfillmentListing fulfillmentListing) {
+		return Optional.empty();
+	}
 	
-	private static CostcoFulfillmentStockChecker instance;
-
-	private CostcoFulfillmentStockChecker() {
-		super();
-	}
-
-	public synchronized static CostcoFulfillmentStockChecker get() {
-		if(instance == null) {
-			instance = new CostcoFulfillmentStockChecker();
-		}
-
-		return instance;
-	}
-
-	@Override
-	protected int parseItemStock(CostcoWebDriver driver) {
-		int stock = 0;
-		final String pageSource = driver.getPageSource();
-		
-		if(CostcoUtils.isTwoDayShipping(pageSource) || CostcoUtils.getListingLimitPerMember(pageSource) != -1) {
-			System.out.println("LISTING IS 2 DAY SHIPPING: " + driver.getCurrentUrl());
-			return 0;
-		}
-		
-		final Pattern pattern = Pattern.compile("\"ordinal\" : \"(.+)\",");
-		final Matcher matcher = pattern.matcher(pageSource);
-		if(matcher.find()) {
-			stock = (int)Double.parseDouble(matcher.group(1));
-			System.out.println("Parsed stock: " + stock);
-		}
-		return stock;
-	}
-
-	@Override
-	protected Class<? extends DriverSupplier<?>> getDriverSupplierClass() {
-		return CostcoDriverSupplier.class;
-	}
-
-	@Override
-	protected double parseItemPrice(CostcoWebDriver driver) {
-		double price = -1;
-		final String pageSource = driver.getPageSource();
-		
-		final Pattern pattern = Pattern.compile("product:price:amount\" content=\"(.*)\"");
-		final Matcher matcher = pattern.matcher(pageSource);
-		if(matcher.find()) {
-			price = Double.parseDouble(matcher.group(1));
-			System.out.println("Parsed price: " + price);
-		}
-		
-		return price;
-	}
 }

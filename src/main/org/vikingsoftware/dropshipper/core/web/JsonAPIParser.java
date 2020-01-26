@@ -5,7 +5,7 @@ import org.json.JSONObject;
 
 public class JsonAPIParser {
 	
-	protected JSONObject getJsonObj(final JSONObject parent, final String obj) {
+	public static JSONObject getJsonObj(final JSONObject parent, final String obj) {
 		try {
 			return parent.getJSONObject(obj);
 		} catch(final Exception e) {
@@ -15,7 +15,7 @@ public class JsonAPIParser {
 		return null;
 	}
 	
-	protected JSONArray getJsonArr(final JSONObject parent, final String obj) {
+	public static JSONArray getJsonArr(final JSONObject parent, final String obj) {
 		try {
 			return parent.getJSONArray(obj);
 		} catch(final Exception e) {
@@ -25,7 +25,7 @@ public class JsonAPIParser {
 		return null;
 	}
 	
-	protected String getString(final JSONObject parent, final String key) {
+	public static String getString(final JSONObject parent, final String key) {
 		try {
 			return parent.getString(key);
 		} catch(final Exception e) {
@@ -35,7 +35,7 @@ public class JsonAPIParser {
 		return null;
 	}
 	
-	protected int getInt(final JSONObject parent, final String key) {
+	public static int getInt(final JSONObject parent, final String key) {
 		try {
 			return parent.getInt(key);
 		} catch(final Exception e) {
@@ -45,7 +45,7 @@ public class JsonAPIParser {
 		return -1;
 	}
 	
-	protected boolean getBoolean(final JSONObject parent, final String key) {
+	public static boolean getBoolean(final JSONObject parent, final String key) {
 		try {
 			return parent.getBoolean(key);
 		} catch(final Exception e) {

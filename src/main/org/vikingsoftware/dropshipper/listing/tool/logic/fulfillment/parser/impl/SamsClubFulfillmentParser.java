@@ -6,35 +6,24 @@ import java.util.regex.Pattern;
 
 import com.ebay.soap.eBLBaseComponents.ShippingServiceCodeType;
 
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubDriverSupplier;
 import main.org.vikingsoftware.dropshipper.core.utils.ListingUtils;
-import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubWebDriver;
-import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsProductAPI;
+import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubProductAPI;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
-import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.AbstractFulfillmentParser;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.FulfillmentParser;
 
-public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClubWebDriver> {
+public class SamsClubFulfillmentParser implements FulfillmentParser {
 	
 	private static final String PRODUCT_ID_REGEX = "\\/(prod)*(\\d{5,})";
 	private static final Pattern PRODUCT_ID_PATTERN = Pattern.compile(PRODUCT_ID_REGEX);
 	private static final int MAX_LISTING_IMAGES = 8;
 
 	@Override
-	public Class<SamsClubDriverSupplier> getDriverSupplierClass() {
-		return null;
-	}
-
-	@Override
-	public boolean needsToLogin() {
-		return false;
-	}
-
-	@Override
-	protected Listing parseListing(final String url) {
+	public Listing getListingTemplate(final FulfillmentAccount account, final String url) {
 		try {
 			final String productId = parseProductIdFromListingUrl(url);
-			final SamsProductAPI api = new SamsProductAPI();
+			final SamsClubProductAPI api = new SamsClubProductAPI();
 			System.out.println("Product ID: " + productId);
 			api.parse(productId);
 			
@@ -72,25 +61,21 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 				return listing;
 			}
 			
-			if(api.hasMinPurchaseQty()) {
-				System.out.println("\tListing has a min purchase quantity of > 1. Skipping...");
-				listing.canShip = false;
-				return listing;
-			}
+			listing.minPurchaseQty = api.getMinPurchaseQty();
 			
 			listing.canShip = true;
 			
 			listing.ean = api.getEAN().orElse(null);
 			listing.upc = api.getUPC().orElse(null);
+			listing.skuId = api.getSkuId().orElse(null);
 			
 			System.out.println("EAN: " + listing.ean);
 			System.out.println("UPC: " + listing.upc);
+			System.out.println("SKU ID: " + listing.skuId);
 			
 			listing.title = cleanse(api.getProductName().orElse(null)
 					.replace(" and ", "&")
 					.replace("with", "w/"));
-			
-			System.out.println("Product Name: " + listing.title);
 			
 			listing.itemId = api.getItemNumber().orElse(null);
 			System.out.println("Item ID: " + listing.itemId);
@@ -102,10 +87,20 @@ public class SamsClubFulfillmentParser extends AbstractFulfillmentParser<SamsClu
 			
 			api.getSpecifications().ifPresent(specs -> listing.description += "<br /><br />" + cleanse(specs));
 			
+			
+			if(listing.minPurchaseQty > 1) {
+				listing.title = "[" + listing.minPurchaseQty + "x]" + listing.title;
+				listing.description = "<h3>ATTENTION: THIS IS A " + listing.minPurchaseQty + " PACK. "
+						+ "THE PACKAGE CONTAINS " + listing.minPurchaseQty + " OF THIS ITEM.</h3><br /><hr />"
+						+ listing.description;
+			}
+			
+			System.out.println("Listing Title: " + listing.title);
+			
 			ListingUtils.makeDescriptionPretty(listing);
 			System.out.println("Description: " + listing.description);
 			
-			listing.price = api.getListPrice().orElse(-1D);
+			listing.price = api.getListPrice().orElse(-1D) * listing.minPurchaseQty;
 			if(listing.price <= 0) {
 				System.out.println("\tCould not parse listing price. Skipping...");
 				listing.canShip = false;

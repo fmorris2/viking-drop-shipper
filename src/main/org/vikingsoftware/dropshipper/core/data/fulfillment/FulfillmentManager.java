@@ -21,6 +21,7 @@ import java.util.Set;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.FulfillmentListingStockEntry;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubFulfillmentStockChecker;
 import main.org.vikingsoftware.dropshipper.core.data.misc.Pair;
 import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOrder;
@@ -84,7 +85,7 @@ public class FulfillmentManager {
 	}
 	
 	private static boolean isBatchingOrders() {
-		return true;
+		return false;
 	}
 
 	public static void disableOrderExecution(final int fulfillmentPlatformId) {
@@ -114,7 +115,12 @@ public class FulfillmentManager {
 		
 		final int numOrders = FulfillmentAccountManager.get().getNumProcessedOrdersForAccount(acc.id);
 		final double businessDaysSinceOrder = getBusinessDaysSinceOrder(order.date_parsed);
-		final int stock = SamsClubFulfillmentStockChecker.get().parseItemStock(listing);
+		final SamsClubFulfillmentStockChecker stockChecker = new SamsClubFulfillmentStockChecker();
+		final Optional<FulfillmentListingStockEntry> stockEntry = stockChecker.getStock(acc, listing);
+		if(stockEntry.isEmpty()) {
+			return false;
+		}
+		final int stock = stockEntry.get().stock;
 		System.out.println("Business Days Since Order: " + businessDaysSinceOrder);
 		
 		final boolean failsSafeOrderThreshold = numOrders > SAMS_SAFE_NUM_ORDERS_THRESHOLD;
@@ -205,16 +211,13 @@ public class FulfillmentManager {
 			if(strategy == null) {
 				continue;
 			}
-			if(!strategy.prepareForExecution()) {
-				return false;
-			}
 			strategies.put(platform, strategy);
 		}
 
 		return true;
 	}
 
-	public ProcessedOrder fulfill(final CustomerOrder order, final FulfillmentListing listing) {
+	public Optional<ProcessedOrder> fulfill(final CustomerOrder order, final FulfillmentListing listing) {
 		final FulfillmentPlatforms applicablePlatform = FulfillmentPlatforms.getById(listing.fulfillment_platform_id);
 		System.out.println("Applicable fulfillment platform for order " + order.id + ": " + applicablePlatform);
 		final OrderExecutionStrategy strategy = strategies.get(applicablePlatform);
@@ -226,10 +229,6 @@ public class FulfillmentManager {
 	}
 
 	public void endFulfillment() {
-		for(final OrderExecutionStrategy strategy : strategies.values()) {
-			strategy.finishExecution();
-		}
-
 		strategies.clear();
 	}
 
@@ -263,6 +262,7 @@ public class FulfillmentManager {
 						.upc(results.getString("upc"))
 						.ean(results.getString("ean"))
 						.product_id(results.getString("product_id"))
+						.sku_id(results.getString("sku_id"))
 						.listing_title(results.getString("listing_title"))
 						.listing_url(results.getString("listing_url"))
 						.build();
@@ -290,6 +290,7 @@ public class FulfillmentManager {
 						.upc(results.getString("upc"))
 						.ean(results.getString("ean"))
 						.product_id(results.getString("product_id"))
+						.sku_id(results.getString("sku_id"))
 						.listing_title(results.getString("listing_title"))
 						.listing_url(results.getString("listing_url"))
 						.build();
@@ -327,6 +328,7 @@ public class FulfillmentManager {
 					.upc(results.getString("upc"))
 					.ean(results.getString("ean"))
 					.product_id(results.getString("product_id"))
+					.sku_id(results.getString("sku_id"))
 					.listing_title(results.getString("listing_title"))
 					.listing_url(results.getString("listing_url"))
 					.build();

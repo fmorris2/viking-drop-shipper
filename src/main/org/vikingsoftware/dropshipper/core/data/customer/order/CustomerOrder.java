@@ -1,7 +1,13 @@
 package main.org.vikingsoftware.dropshipper.core.data.customer.order;
 
-import java.text.DecimalFormat;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.Normalizer;
+import java.util.Optional;
+
+import main.org.vikingsoftware.dropshipper.core.data.misc.StateUtils;
+import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 
 
 public class CustomerOrder {
@@ -72,18 +78,41 @@ public class CustomerOrder {
 		this.handling_time = builder.handling_time;
 	}
 	
-	public String getFirstName() {
-		return buyer_name.split(" ")[0];
+	public String getFirstName(final boolean normalized) {
+		final String name = normalized ? normalizedBuyerName : buyer_name;
+		return name.split(" ")[0];
 	}
 
-	public String getLastName() {
-		return buyer_name.substring(getFirstName().length() + 1);
+	public String getLastName(final boolean normalized) {
+		final String name = normalized ? normalizedBuyerName : buyer_name;
+		return name.substring(getFirstName(normalized).length() + 1);
 	}
-
-	public double getProfit(final double totalFulfillmentPrice) {
-		final double profit = (sell_total * .87) - totalFulfillmentPrice;
-		final DecimalFormat format = new DecimalFormat("###.##");
-		return Double.parseDouble(format.format(profit));
+	
+	public String getStateCode() {
+		return StateUtils.isStateCode(buyer_state_province_region) 
+				? buyer_state_province_region
+				: StateUtils.getCodeFromStateName(buyer_state_province_region);
+	}
+	
+	public String getFiveDigitZip() {
+		return this.buyer_zip_postal_code.substring(0, 5);
+	}
+	
+	public Optional<Double> getTransactionSum() {
+		final String sql = "SELECT SUM(amount) as sum from transaction where customer_order_id=?";
+		try(final PreparedStatement st = VSDSDBManager.get().createPreparedStatement(sql)) {
+			st.setInt(1, id);
+			final ResultSet res = st.executeQuery();
+			if(res.next()) {
+				final Optional<Double> sum = Optional.of(res.getDouble("sum"));
+				res.close();
+				return sum;
+			}
+		} catch(final SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return Optional.empty();
 	}
 
 	public static class Builder {

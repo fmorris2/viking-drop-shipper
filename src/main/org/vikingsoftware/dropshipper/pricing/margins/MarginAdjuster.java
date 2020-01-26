@@ -29,7 +29,7 @@ public class MarginAdjuster implements CycleParticipant {
 	 */
 	private static final int MIN_PRODUCTIVE_ORDERS_IN_LAST_ORDER_TIME_WINDOW = 2;
 	
-	private static final double MARGIN_FLOOR = 5.0; //5% margin is the lowest we'll go
+	private static final double MARGIN_FLOOR = 8.0; //8% margin is the lowest we'll go
 	private static final double MARGIN_ADJUSTMENT_STEP = 1.0; //We'll change the margin by this amount on each adjustment
 	
 	private static final String STAGNANT_LISTING_QUERY = "SELECT marketplace_listing.id as stagnantMarketplaceListingID, marketplace_listing.target_margin as currentMargin, marketplace_listing.listing_title as listingTitle" + 
@@ -128,8 +128,6 @@ public class MarginAdjuster implements CycleParticipant {
 		if(listing.adjustmentType == MarginAdjustmentType.STAGNANT) {
 			if(listing.currentMargin > MARGIN_FLOOR) {
 				adjustMargin(listing);
-			} else { //flag listing for purge examination
-				MarketplaceListing.flagForPurgeExamination(listing.marketplaceListingId);
 			}
 		} else { //productive listing
 			adjustMargin(listing);

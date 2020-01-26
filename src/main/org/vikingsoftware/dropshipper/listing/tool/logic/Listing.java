@@ -16,6 +16,7 @@ public class Listing implements Cloneable {
 	public Map<String, String> itemSpecifics = new HashMap<>();
 	public String itemId;
 	public String productId;
+	public String skuId;
 	public String brand;
 	public String url;
 	public String upc;
@@ -23,6 +24,7 @@ public class Listing implements Cloneable {
 	public String mpn;
 	public int fulfillmentPlatformId;
 	public int handlingTime = 5;
+	public int minPurchaseQty = 1;
 	public double price;
 	public ShippingServiceCodeType shippingService;
 	public double shipping;
@@ -42,6 +44,7 @@ public class Listing implements Cloneable {
 		clone.description = description;
 		clone.itemId = itemId;
 		clone.productId = productId;
+		clone.skuId = skuId;
 		clone.brand = brand;
 		clone.url = url;
 		clone.fulfillmentPlatformId = fulfillmentPlatformId;
@@ -56,6 +59,7 @@ public class Listing implements Cloneable {
 		clone.ean = ean;
 		clone.mpn = mpn;
 		clone.handlingTime = handlingTime;
+		clone.minPurchaseQty = minPurchaseQty;
 		return clone;
 	}
 	
@@ -73,8 +77,10 @@ public class Listing implements Cloneable {
 				+ "\tUPC: " + this.upc + "\n"
 				+ "\tEAN: " + this.ean + "\n"
 				+ "\tMPN: " + this.mpn + "\n"
+				+ "\tSKU Id: " + this.skuId + "\n"
 				+ "\tPrice: " + this.price + "\n"
 				+ "\tShipping: " + this.shipping + "\n"
-				+ "\tNum Pictures: " + this.pictures.size();
+				+ "\tNum Pictures: " + this.pictures.size()
+				+ "\tMin Purchase Qty: " + this.minPurchaseQty;
 	}
 }
