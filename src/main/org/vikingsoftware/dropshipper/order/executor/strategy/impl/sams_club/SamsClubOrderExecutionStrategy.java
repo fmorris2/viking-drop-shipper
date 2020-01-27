@@ -1,10 +1,12 @@
 package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
@@ -47,10 +49,17 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 	
 	private static final int MAX_ADDRESS_LINE_LENGTH = 35;
 	private static final int MAX_NAME_LINE_LENGTH = 25;
+	
+	private final Set<FulfillmentAccount> preparedAccounts = new HashSet<>();
 
 	@Override
 	public Optional<ProcessedOrder> order(final CustomerOrder order, final FulfillmentAccount account,
 			final FulfillmentListing listing) {
+		
+		if(!preparedAccounts.contains(account)) {
+			SamsClubSessionProvider.get().clearSession(account);
+			preparedAccounts.add(account);
+		}
 		
 		LOG.info("Initiating order process for customer order: " + order);
 		

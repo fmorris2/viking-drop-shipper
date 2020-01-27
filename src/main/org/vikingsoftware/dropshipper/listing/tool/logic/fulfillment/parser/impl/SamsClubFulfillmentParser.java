@@ -89,7 +89,7 @@ public class SamsClubFulfillmentParser implements FulfillmentParser {
 			
 			
 			if(listing.minPurchaseQty > 1) {
-				listing.title = "[" + listing.minPurchaseQty + "x]" + listing.title;
+				listing.title = "[" + listing.minPurchaseQty + "x] " + listing.title;
 				listing.description = "<h3>ATTENTION: THIS IS A " + listing.minPurchaseQty + " PACK. "
 						+ "THE PACKAGE CONTAINS " + listing.minPurchaseQty + " OF THIS ITEM.</h3><br /><hr />"
 						+ listing.description;

@@ -403,7 +403,7 @@ public class ListingToolController {
 		//publish...
 		final Listing toPublish = createListingToPublish();
 		final boolean isAlreadyListed = FulfillmentManager.get().getListingForItemId(toPublish.fulfillmentPlatformId, toPublish.itemId).isPresent();
-		if(toPublish != null && verifyRequiredItemSpecifics(toPublish) && !isAlreadyListed
+		if(toPublish != null && toPublish.url != null && verifyRequiredItemSpecifics(toPublish) && !isAlreadyListed
 				&& toPublish.title.length() <= 80) {
 			final Optional<String> publishedEbayListingItemId = EbayCalls.createListing(toPublish);
 			if(publishedEbayListingItemId.isPresent()) {
@@ -412,6 +412,13 @@ public class ListingToolController {
 				publishedItemIds.add(toPublish.itemId);
 			} else {
 				System.out.println("Failed to publish eBay listing for listing: " + toPublish.title);
+			}
+		} else if(toPublish.title.length() > 80) {
+			try(final PreparedStatement st = VSDSDBManager.get().createPreparedStatement("INSERT INTO listing_tool_title_mapping(original_title) VALUES(?)")) {
+				st.setString(1, toPublish.title);
+				st.execute();
+			} catch(final Exception e) {
+				//swallow
 			}
 		}
 		ListingQueue.poll();
