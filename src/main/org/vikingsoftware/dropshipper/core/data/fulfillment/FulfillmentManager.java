@@ -84,8 +84,12 @@ public class FulfillmentManager {
 		return canUpdateInventoryPlatforms.contains(fulfillmentPlatformId);
 	}
 	
-	private static boolean isBatchingOrders() {
+	public static boolean isDisregardingProfit() {
 		return false;
+	}
+	
+	private static boolean isBatchingOrders() {
+		return true;
 	}
 
 	public static void disableOrderExecution(final int fulfillmentPlatformId) {

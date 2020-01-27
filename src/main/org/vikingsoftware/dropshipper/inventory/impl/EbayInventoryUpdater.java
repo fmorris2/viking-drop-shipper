@@ -102,10 +102,11 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			} else {
 				System.out.println("Fulfillment platform inventory is frozen for fulfillment listing " + fulfillmentListing.id
 						+ ". Setting stock to 0.");
-				entries.add(new FulfillmentListingStockEntry(0, 0D));
+				entries.add(new FulfillmentListingStockEntry(0, 0D, listing.fulfillment_quantity_multiplier));
 			}
 			System.out.println("SkuInventoryEntries: " + entries.size());
 			int totalStock = 0;
+			int maxMinPurchaseQty = -1;
 			double maxPrice = -1;
 			for(final FulfillmentListingStockEntry entry : entries) {
 				if(entry.stock <= 0 || entry.price <= 0) {
@@ -113,9 +114,12 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 				}
 				totalStock += entry.stock;
 				maxPrice = Math.max(maxPrice, entry.price);
+				maxMinPurchaseQty = Math.max(maxMinPurchaseQty, entry.minPurchaseQty);
 			}
 			
-			return Optional.of(new FulfillmentListingStockEntry(totalStock, maxPrice));
+			if(maxMinPurchaseQty > -1 && maxPrice > -1) {	
+				return Optional.of(new FulfillmentListingStockEntry(totalStock, maxPrice, maxMinPurchaseQty));
+			}
 		}
 		
 		return Optional.empty();
@@ -145,9 +149,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			int parsedStock = combinedStockEntry.stock;
 			
 			if(parsedStock < 0) {
-				System.err.println("JSoup parsed invalid " + parsedStock + " from metadata for marketplace listing id " + listing.id + ". Assuming stock is 0...");
 				parsedStock = 0;
-				//return true;
 			}
 			
 			System.out.println("parsedStock: " + parsedStock);

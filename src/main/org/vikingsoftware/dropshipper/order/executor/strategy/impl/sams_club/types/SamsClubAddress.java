@@ -112,7 +112,6 @@ public class SamsClubAddress {
 		result = prime * result + ((addressLineOne == null) ? 0 : addressLineOne.hashCode());
 		result = prime * result + ((addressLineThree == null) ? 0 : addressLineThree.hashCode());
 		result = prime * result + ((addressLineTwo == null) ? 0 : addressLineTwo.hashCode());
-		result = prime * result + ((addressType == null) ? 0 : addressType.hashCode());
 		result = prime * result + ((businessName == null) ? 0 : businessName.hashCode());
 		result = prime * result + ((city == null) ? 0 : city.hashCode());
 		result = prime * result + ((countryCode == null) ? 0 : countryCode.hashCode());
@@ -161,11 +160,6 @@ public class SamsClubAddress {
 			if (other.addressLineTwo != null)
 				return false;
 		} else if (!addressLineTwo.equalsIgnoreCase(other.addressLineTwo))
-			return false;
-		if (addressType == null) {
-			if (other.addressType != null)
-				return false;
-		} else if (!addressType.equalsIgnoreCase(other.addressType))
 			return false;
 		if (businessName == null) {
 			if (other.businessName != null)

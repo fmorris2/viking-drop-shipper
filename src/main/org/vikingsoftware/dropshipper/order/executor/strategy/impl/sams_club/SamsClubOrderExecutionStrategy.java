@@ -361,7 +361,7 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 		
 		final double profit = transactionSum.get() - pricing.total;
 		
-		if(profit < 0) {
+		if(profit < 0 && !FulfillmentManager.isDisregardingProfit()) {
 			LOG.warn("Detected fulfillment at loss for customer order " + order.id + ": -$" + profit + " profit.");
 			return null;
 		}
@@ -374,7 +374,7 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 	private Optional<JSONObject> submitPlaceOrderRequest(final WrappedHttpClient client,
 			final SamsClubPlaceOrderRequestDependencies placeOrderDependencies) {
 		final SamsClubPlaceOrderRequest placeOrderReq = new SamsClubPlaceOrderRequest(client, placeOrderDependencies);
-		return Optional.empty();//placeOrderReq.execute();
+		return placeOrderReq.execute();
 	}
 
 	private SamsClubPlaceOrderRequestDependencies generatePlaceOrderDependencies(final SamsClubOrderPricingDetails pricing,

@@ -17,12 +17,13 @@ public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker 
 		if(api.parse(fulfillmentListing.product_id)) {		
 			if(!fulfillmentListing.item_id.equalsIgnoreCase(api.getItemNumber().orElse(null))) {
 				System.out.println("Could not parse metadata as the item IDs don't match!");
-				return Optional.of(new FulfillmentListingStockEntry(0, -1));
+				return Optional.of(new FulfillmentListingStockEntry(0, -1, -1));
 			}
 			
 			final int stock = api.getAvailableToSellQuantity().orElse(0);
 			final double price = api.getListPrice().orElse(-1D);
-			return Optional.of(new FulfillmentListingStockEntry(stock, price));
+			final int minPurchaseQty = api.getMinPurchaseQty();
+			return Optional.of(new FulfillmentListingStockEntry(stock, price, minPurchaseQty));
 		}
 		
 		return Optional.empty();
