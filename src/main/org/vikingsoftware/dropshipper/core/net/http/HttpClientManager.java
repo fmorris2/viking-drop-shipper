@@ -112,6 +112,7 @@ public final class HttpClientManager {
 			final HttpClient client = HttpClients.custom()
 					.setProxy(new HttpHost(proxy.host, proxy.httpsPort))
 					.setConnectionManager(generateConnectionManager())
+					.setDefaultCredentialsProvider(credentialsProvider)
 					.build();
 			
 			final WrappedHttpClient wrappedClient = new WrappedHttpClient(client, proxy);

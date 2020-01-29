@@ -3,6 +3,7 @@ package main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl;
 import java.util.Optional;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.FulfillmentListingStockEntry;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.FulfillmentStockChecker;
@@ -20,7 +21,10 @@ public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker 
 				return Optional.of(new FulfillmentListingStockEntry(0, -1, -1));
 			}
 			
-			final int stock = api.getAvailableToSellQuantity().orElse(0);
+			int stock = api.getAvailableToSellQuantity().orElse(0);
+			if(stock < FulfillmentManager.SAFE_STOCK_THRESHOLD) {
+				stock = 0;
+			}
 			final double price = api.getListPrice().orElse(-1D);
 			final int minPurchaseQty = api.getMinPurchaseQty();
 			return Optional.of(new FulfillmentListingStockEntry(stock, price, minPurchaseQty));

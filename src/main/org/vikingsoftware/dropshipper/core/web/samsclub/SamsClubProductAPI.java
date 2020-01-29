@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -19,10 +20,11 @@ import main.org.vikingsoftware.dropshipper.core.utils.ImageUtils;
 import main.org.vikingsoftware.dropshipper.core.utils.UPCUtils;
 import main.org.vikingsoftware.dropshipper.core.web.JsonAPIParser;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingImage;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubRequest;
 
 public final class SamsClubProductAPI extends JsonAPIParser {
 	
-	private static final String API_BASE_URL = "http://www.samsclub.com/api/soa/services/v1/catalog/product/";
+	private static final String API_BASE_URL = "https://www.samsclub.com/api/soa/services/v1/catalog/product/";
 	private static final String API_URL_ARGS = "?response_group=LARGE&clubId=6279";
 	
 	private static final String INVALID_IMAGE_URL = "http://scene7.samsclub.com/is/image/samsclub/fgsdfgsdgfsdgds";
@@ -63,10 +65,7 @@ public final class SamsClubProductAPI extends JsonAPIParser {
 			this.productId = productId;
 			apiUrl = API_BASE_URL + productId + API_URL_ARGS;
 			final HttpGet req = new HttpGet(apiUrl);
-			req.addHeader("Content-Type", "application/json");
-			req.addHeader("Accept-Charset", "utf-8");
-			req.addHeader("Accept-Encoding", "gzip, deflate, br");
-			req.addHeader("cache-control", "max-age=0");
+			addHeaders(req);
 			response = client.execute(req);
 			if(response == null) {
 				return false;
@@ -394,5 +393,18 @@ public final class SamsClubProductAPI extends JsonAPIParser {
 		}
 		
 		return str;
+	}
+	
+	private void addHeaders(final HttpRequestBase req) {
+		req.addHeader("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+		req.addHeader("accept-language", "en-US,en;q=0.5");
+		req.addHeader("host", "www.samsclub.com");
+		req.addHeader("upgrade-insecure-requests", "1");
+		req.addHeader("user-agent", SamsClubRequest.DEFAULT_USER_AGENT);
+		req.addHeader("connection", "keep-alive");
+		req.addHeader("Content-Type", "application/json");
+		req.addHeader("Accept-Charset", "utf-8");
+		req.addHeader("Accept-Encoding", "gzip, deflate, br");
+		req.addHeader("cache-control", "max-age=0");
 	}
 }

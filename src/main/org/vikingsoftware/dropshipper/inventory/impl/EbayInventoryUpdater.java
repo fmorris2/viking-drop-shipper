@@ -66,6 +66,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			Optional<FulfillmentListingStockEntry> combinedStockEntry = Optional.empty();
 			System.out.println("Updating inventory for eBay listing " + listing);
 			if(listing.active) {
+				System.out.println("Generating FulfillmentListingStockEntry for active listing " + listing.id);
 				combinedStockEntry = generateFulfillmentListingStockEntryForListing(listing);
 			} else if(EbayCalls.getListingStock(listing.listingId).orElse(-1) > 0){
 				System.out.println("Setting inactive listing stock to 0...");
@@ -109,7 +110,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			int maxMinPurchaseQty = -1;
 			double maxPrice = -1;
 			for(final FulfillmentListingStockEntry entry : entries) {
-				if(entry.stock <= 0 || entry.price <= 0) {
+				if(entry.stock < 0 || entry.price <= 0) {
 					continue;
 				}
 				totalStock += entry.stock;
