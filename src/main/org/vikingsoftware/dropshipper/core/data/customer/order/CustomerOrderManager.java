@@ -90,7 +90,7 @@ public class CustomerOrderManager {
 		try(final Statement st = VSDSDBManager.get().createStatement()) {
 			System.out.println("Marking customer order w/ transaction id as refunded:" + transactionId);
 			st.execute("UPDATE customer_order SET is_refunded=1 WHERE marketplace_order_id="+transactionId
-					+ " AND marketplace_listing_id="+marketplaceListingId);
+					+ " AND marketplace_listing_id="+marketplaceListingId + " AND is_resolved=0");
 			refundedOrderUpdates.add(new Pair<>(marketplaceListingId, transactionId));
 			return true;
 		} catch(final Exception e) {
@@ -127,6 +127,8 @@ public class CustomerOrderManager {
 			.is_cancelled(results.getBoolean("is_cancelled"))
 			.handling_time(results.getInt("handling_time"))
 			.snapshot_fulfillment_quantity_multiplier(snapshot_fulfillment_quantity_multiplier)
+			.is_refunded(results.getBoolean("is_refunded"))
+			.is_resolved(results.getBoolean("is_resolved"))
 			.build();
 	}
 }

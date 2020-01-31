@@ -40,11 +40,11 @@ public class OrderParser implements CycleParticipant {
 				+ " sell_shipping, sell_percentage_cut, sell_total,"
 				+ " quantity, marketplace_order_id, buyer_username,"
 				+ " buyer_name, buyer_country, buyer_street_address, buyer_apt_suite_unit_etc, buyer_state_province_region,"
-				+ "buyer_city, buyer_zip_postal_code, buyer_phone_number, date_parsed, handling_time) "
-				+ "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+				+ "buyer_city, buyer_zip_postal_code, buyer_phone_number, date_parsed, handling_time,"
+				+ "snapshot_fulfillment_quantity_multiplier) "
+				+ "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
-		final PreparedStatement prepared = VSDSDBManager.get().createPreparedStatement(sql);
-		try {
+		try(final PreparedStatement prepared = VSDSDBManager.get().createPreparedStatement(sql)) {
 			for(final CustomerOrder order : newOrders) {
 				prepared.setInt(1, order.marketplace_listing_id);
 				prepared.setString(2, order.sku);
@@ -65,6 +65,7 @@ public class OrderParser implements CycleParticipant {
 				prepared.setString(17, order.buyer_phone_number);
 				prepared.setLong(18, System.currentTimeMillis());
 				prepared.setInt(19, order.handling_time);
+				prepared.setInt(20, order.snapshot_fulfillment_quantity_multiplier);
 				prepared.addBatch();
 			}
 
