@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.data.misc.Pair;
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
@@ -102,6 +101,7 @@ public class CustomerOrderManager {
 	}
 
 	private static CustomerOrder buildOrderFromResultSet(final ResultSet results) throws SQLException {
+		final int snapshot_fulfillment_quantity_multiplier = results.getInt("snapshot_fulfillment_quantity_multiplier");
 		return new CustomerOrder.Builder()
 			.id(results.getInt("id"))
 			.marketplace_listing_id(results.getInt("marketplace_listing_id"))
@@ -111,7 +111,7 @@ public class CustomerOrderManager {
 			.sell_percentage_cut(results.getDouble("sell_percentage_cut"))
 			.sell_total(results.getDouble("sell_total"))
 			.quantity(results.getInt("quantity"))
-			.fulfillment_purchase_quantity(results.getInt("quantity") * MarketplaceLoader.loadMarketplaceListingById(results.getInt("marketplace_listing_id")).fulfillment_quantity_multiplier)
+			.fulfillment_purchase_quantity(results.getInt("quantity") * snapshot_fulfillment_quantity_multiplier)
 			.marketplace_order_id(results.getString("marketplace_order_id"))
 			.buyer_username(results.getString("buyer_username"))
 			.buyer_name(results.getString("buyer_name"))
@@ -126,6 +126,7 @@ public class CustomerOrderManager {
 			.date_cancelled(results.getLong("date_cancelled"))
 			.is_cancelled(results.getBoolean("is_cancelled"))
 			.handling_time(results.getInt("handling_time"))
+			.snapshot_fulfillment_quantity_multiplier(snapshot_fulfillment_quantity_multiplier)
 			.build();
 	}
 }

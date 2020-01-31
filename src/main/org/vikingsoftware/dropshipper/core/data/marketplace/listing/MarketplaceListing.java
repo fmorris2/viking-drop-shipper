@@ -139,6 +139,19 @@ public class MarketplaceListing {
 		return Optional.empty();
 	}
 	
+	public static Optional<Integer> getFulfillmentQuantityMultiplier(final int listingId) {
+		try(final Statement st = VSDSDBManager.get().createStatement();
+				final ResultSet res =st.executeQuery("SELECT fulfillment_quantity_multiplier FROM marketplace_listing WHERE id="+listingId)) {
+				if(res.next()) {
+					return Optional.of(res.getInt("fulfillment_quantity_multiplier"));
+				}
+			} catch(final Exception e) {
+				e.printStackTrace();
+			}
+			
+			return Optional.empty();
+	}
+	
 	public void updatePrice(final double newPrice) throws SQLException {
 		if(EbayCalls.updatePrice(listingId, newPrice)) {
 			try(final Statement st = VSDSDBManager.get().createStatement()) {

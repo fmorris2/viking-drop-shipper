@@ -27,6 +27,7 @@ public class EbayConversionUtils {
 			System.out.println("About to call EbayCalls#getHandlingTime");
 			//final Integer handlingTime = EbayCalls.getHandlingTime(transactionId).orElse(-1);
 			final Integer handlingTime = MarketplaceListing.getCurrentHandlingTime(dbListingId).orElse(-1);
+			final Integer fulfillmentQtyMultiplier = MarketplaceListing.getFulfillmentQuantityMultiplier(dbListingId).orElse(-1);
 			System.out.println("\tdone. About to build customer order.");
 			
 			return new CustomerOrder.Builder()
@@ -51,6 +52,7 @@ public class EbayConversionUtils {
 				.payment_processor_fee(initialBuyerPayment.getFeeOrCreditAmount().getValue() * -1)
 				.marketplace_sell_fee(transaction.getFinalValueFee().getValue() * -1)
 				.handling_time(handlingTime)
+				.snapshot_fulfillment_quantity_multiplier(fulfillmentQtyMultiplier)
 				.build();
 		} catch(final Exception e) {
 			e.printStackTrace();

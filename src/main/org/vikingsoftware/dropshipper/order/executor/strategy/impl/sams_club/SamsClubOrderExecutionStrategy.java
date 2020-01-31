@@ -148,7 +148,7 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 				.skuId(item.skuId)
 				.itemNumber(item.itemNumber)
 				.client(client)
-				.quantity(order.fulfillment_purchase_quantity)
+				.quantity(order.snapshot_fulfillment_quantity_multiplier)
 				.build();
 		LOG.info("Attempting to submit add to cart request");
 		return request.execute();
@@ -182,7 +182,7 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 			final WrappedHttpClient client, final CustomerOrder order) {
 		for (final SamsClubCartItem cartItem : currentCartItems) {
 			if (cartItem.item.equals(itemToPurchase)) {
-				if(cartItem.quantity != order.fulfillment_purchase_quantity) {
+				if(cartItem.quantity != order.snapshot_fulfillment_quantity_multiplier) {
 					final SamsClubCartItem updatedCartItem = new SamsClubCartItem.Builder().cartItemId(cartItem.cartItemId)
 							.quantity(order.fulfillment_purchase_quantity).build();
 	
