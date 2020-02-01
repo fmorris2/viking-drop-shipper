@@ -110,7 +110,7 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			int maxMinPurchaseQty = -1;
 			double maxPrice = -1;
 			for(final FulfillmentListingStockEntry entry : entries) {
-				if(entry.stock < 0 || entry.price <= 0) {
+				if(entry.stock < 0 || entry.price < 0) {
 					continue;
 				}
 				totalStock += entry.stock;
