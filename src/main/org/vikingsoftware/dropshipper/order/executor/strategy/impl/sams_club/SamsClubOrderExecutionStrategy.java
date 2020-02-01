@@ -181,7 +181,7 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 			final WrappedHttpClient client, final CustomerOrder order) {
 		for (final SamsClubCartItem cartItem : currentCartItems) {
 			if (cartItem.item.equals(itemToPurchase)) {
-				if(cartItem.quantity != order.snapshot_fulfillment_quantity_multiplier) {
+				if(cartItem.quantity != order.fulfillment_purchase_quantity) {
 					final SamsClubCartItem updatedCartItem = new SamsClubCartItem.Builder().cartItemId(cartItem.cartItemId)
 							.quantity(order.fulfillment_purchase_quantity).build();
 	
