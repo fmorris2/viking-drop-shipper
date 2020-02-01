@@ -25,7 +25,7 @@ public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker 
 			if(stock < FulfillmentManager.SAFE_STOCK_THRESHOLD) {
 				stock = 0;
 			}
-			final double price = api.getListPrice().orElse(-1D);
+			double price = api.getListPrice().orElse(-1D);
 			final int minPurchaseQty = api.getMinPurchaseQty();
 			return Optional.of(new FulfillmentListingStockEntry(stock, price, minPurchaseQty));
 		}

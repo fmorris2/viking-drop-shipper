@@ -15,7 +15,6 @@ import org.json.JSONObject;
 import main.org.vikingsoftware.dropshipper.VSDropShipper;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
@@ -355,11 +354,11 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 		
 		final SamsClubOrderPricingDetails pricing = new SamsClubOrderPricingDetails(contract);
 		
-		if(pricing.shipping > 0) {
-			LOG.warn("Fulfillment Account has lost free shipping!");
-			FulfillmentAccountManager.get().markAccountAsDisabled(account);
-			return null;
-		}
+//		if(pricing.shipping > 0) {
+//			LOG.warn("Fulfillment Account has lost free shipping!");
+//			FulfillmentAccountManager.get().markAccountAsDisabled(account);
+//			return null;
+//		}
 		
 		final Optional<Double> transactionSum = order.getTransactionSum();
 		
