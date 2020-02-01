@@ -89,8 +89,6 @@ import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.impl.SamsClubFulfillmentParser;
 
 public class EbayCalls {
-
-	public static final int FAKE_MAX_QUANTITY = 1;
 	
 	//view all error codes here: https://developer.ebay.com/devzone/xml/docs/Reference/ebay/Errors/errormessages.htm
 	private static final String[] MARK_AS_INACTIVE_ERROR_CODES = {"17", "291", "21916333", "21916750"};
@@ -433,15 +431,11 @@ public class EbayCalls {
 			final ReviseInventoryStatusCall call = new ReviseInventoryStatusCall(api);
 			final InventoryStatusType invStatus = new InventoryStatusType();
 			invStatus.setItemID(listingId);
-			if(inventory < FulfillmentManager.SAFE_STOCK_THRESHOLD) {
-				invStatus.setQuantity(0);
-			} else {
-				invStatus.setQuantity(Math.max(0, Math.min(FAKE_MAX_QUANTITY, inventory)));
-			}
+			invStatus.setQuantity(Math.max(0, inventory));
 			System.out.println("Setting stock for listing id " + listingId + " to " + invStatus.getQuantity());
 			call.setInventoryStatus(new InventoryStatusType[] {invStatus});
 			call.reviseInventoryStatus();
-			logToFile("updateInventory: listingId - " + listingId + ", quantity: " + Math.max(0, Math.min(FAKE_MAX_QUANTITY, invStatus.getQuantity())));
+			logToFile("updateInventory: listingId - " + listingId + ", quantity: " + Math.max(0, inventory));
 			return !call.hasError();
 		} catch(final ApiException e) {
 			handleApiException(e, listingId);
@@ -708,7 +702,7 @@ public class EbayCalls {
 		return type;
 	}
 
-	private static ShippingDetailsType createShippingDetailsForListing(final Listing listing) {
+	public static ShippingDetailsType createShippingDetailsForListing(final Listing listing) {
 		final ShippingDetailsType type = new ShippingDetailsType();
 		type.setGlobalShipping(false);
 		type.setShippingServiceOptions(createShippingServiceOptionsForListing(listing));

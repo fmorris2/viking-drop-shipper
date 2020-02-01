@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
@@ -22,7 +23,12 @@ import main.org.vikingsoftware.dropshipper.core.utils.PriceUtils;
 import main.org.vikingsoftware.dropshipper.inventory.AutomaticInventoryUpdater;
 
 public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
+	
+	public static final Function<Double,Integer> AMT_IN_STOCK_FORMULA = price -> calculateAppropriateStockForPrice(price);
 
+	private static final int MAX_EBAY_STOCK = 2;
+	private static final double PRICE_INCREMENT_FOR_STOCK = 8.00;
+	
 	//1000 seconds minimum between updates for a specific listing. eBay caps revisions at 150 per day for a listing
 	private static final int MIN_UPDATE_TIME_THRESH = 576_000;
 	private static final double MARGIN_TOLERANCE = 0.2;
@@ -32,6 +38,11 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 	private static final Map<String, Long> updateCache = new HashMap<>();
 	
 	private final ExecutorService threadPool = Executors.newFixedThreadPool(NUM_EXECUTION_THREADS);
+	
+	private static int calculateAppropriateStockForPrice(final double price) {
+		int calculatedStock = MAX_EBAY_STOCK - (int)Math.floor(price / PRICE_INCREMENT_FOR_STOCK);
+		return Math.max(calculatedStock, 1);
+	}
 
 	@Override
 	public List<FulfillmentListingStockEntry> updateInventory(final List<MarketplaceListing> listings) {
@@ -192,7 +203,10 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			 * we should simply return instead of updating the listing on eBay.
 			 */
 			
-			if(currentEbayInventory > 0 && parsedStock > 0) {
+			final int calculatedStock = Math.min(parsedStock, AMT_IN_STOCK_FORMULA.apply(combinedStockEntry.price));
+			System.out.println("Calculated stock: " + calculatedStock);
+			
+			if(currentEbayInventory >= calculatedStock && parsedStock >= 0) {
 				System.out.println("eBay still has inventory - No need to update.");
 				return Optional.of(combinedStockEntry);
 			} else if(currentEbayInventory <= 0 && parsedStock <= 0) {
@@ -200,9 +214,9 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 				return Optional.of(combinedStockEntry);
 			}
 			
-			if(EbayCalls.updateInventory(listing.listingId, combinedStockEntry.stock)) {
+			if(EbayCalls.updateInventory(listing.listingId, calculatedStock)) {
 				System.out.println("successfully sent inventory update to ebay - Updating our DB with last inv update.");
-				listing.setCurrentEbayInventory(Math.max(0, Math.min(EbayCalls.FAKE_MAX_QUANTITY, parsedStock)));
+				listing.setCurrentEbayInventory(Math.max(0, calculatedStock));
 			} else {
 				System.err.println("did not send inventory update to ebay successfully for id " + listing.id + "!");
 			}

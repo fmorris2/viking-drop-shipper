@@ -59,14 +59,14 @@ public final class SamsClubOrderDetailsAPI extends JsonAPIParser {
 		String apiUrl = null;
 		HttpClientManager.get().rotateClient();
 		final FulfillmentAccount acc = FulfillmentAccountManager.get().getAccountByTransactionId(orderId);
+		if(acc == null || acc.id != 46) {
+			return false;
+		}
 		final WrappedHttpClient client = HttpClientManager.get().getClient();
 		HttpResponse response = null;
 		try {
 			reset();
 			apiUrl = API_BASE_URL + orderId + API_URL_ARGS;
-			if(acc == null) {
-				return false;
-			}
 			final SamsClubLoginResponse session = SamsClubSessionProvider.get().getSession(acc, client);
 			if(session == null || session.cookies.isEmpty()) {
 				return false;

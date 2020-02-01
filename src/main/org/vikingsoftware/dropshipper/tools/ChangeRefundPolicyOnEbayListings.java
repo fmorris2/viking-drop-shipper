@@ -25,37 +25,36 @@ public class ChangeRefundPolicyOnEbayListings {
 		final ApiContext ebayApi = EbayApiContextManager.getLiveContext();
 		Collections.shuffle(listings);
 		for(final FulfillmentListing listing : listings) {
-//			executor.execute(() -> {
+			executor.execute(() -> {
 				String marketListingId = null;
 				try {
 					final FulfillmentListing list = listing;
 					final MarketplaceListing marketListing = MarketplaceListing.getMarketplaceListingForFulfillmentListing(list.id);
-					if(marketListing == null) {
-						continue;
-						//return;
+					if (marketListing != null) {
+
+						marketListingId = marketListing.listingId;
+
+						final ReviseFixedPriceItemCall call = new ReviseFixedPriceItemCall(ebayApi);
+						final ItemType itemToRevise = new ItemType();
+						itemToRevise.setItemID(marketListing.listingId);
+						final ReturnPolicyType returnPolicyType = new ReturnPolicyType();
+						returnPolicyType.setReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_ACCEPTED.value());
+						returnPolicyType.setInternationalReturnsAcceptedOption(
+								ReturnsAcceptedCodeType.RETURNS_NOT_ACCEPTED.value());
+						returnPolicyType.setReturnsWithin("Days_30");
+						itemToRevise.setDispatchTimeMax(2);
+						itemToRevise.setReturnPolicy(returnPolicyType);
+
+						call.setItemToBeRevised(itemToRevise);
+						call.reviseFixedPriceItem();
+						System.out.println("Successfully updated return policy for listing https://www.ebay.com/itm/"
+								+ marketListingId);
 					}
-					
-					marketListingId = marketListing.listingId;
-					
-					final ReviseFixedPriceItemCall call = new ReviseFixedPriceItemCall(ebayApi);
-					final ItemType itemToRevise = new ItemType();
-					itemToRevise.setItemID(marketListing.listingId);
-					final ReturnPolicyType returnPolicyType = new ReturnPolicyType();
-					returnPolicyType.setReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_ACCEPTED.value());
-					returnPolicyType.setInternationalReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_NOT_ACCEPTED.value());
-					returnPolicyType.setReturnsWithin("Days_30");
-					itemToRevise.setDispatchTimeMax(2);
-					itemToRevise.setReturnPolicy(returnPolicyType);
-					
-					call.setItemToBeRevised(itemToRevise);
-					call.reviseFixedPriceItem();
-					System.out.println("Successfully updated return policy for listing https://www.ebay.com/itm/" + marketListingId);
-					
 				} catch(final Exception e) {
 					System.err.println("Failed to update info for listing https://www.ebay.com/itm/" + marketListingId);
 					e.printStackTrace();			
 				}
-//			});
+			});
 		}
 	}
 	
