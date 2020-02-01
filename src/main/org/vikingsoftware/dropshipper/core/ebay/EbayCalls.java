@@ -27,6 +27,7 @@ import com.ebay.sdk.call.GetItemTransactionsCall;
 import com.ebay.sdk.call.GetOrdersCall;
 import com.ebay.sdk.call.GetSellerTransactionsCall;
 import com.ebay.sdk.call.GetSuggestedCategoriesCall;
+import com.ebay.sdk.call.GeteBayDetailsCall;
 import com.ebay.sdk.call.ReviseFixedPriceItemCall;
 import com.ebay.sdk.call.ReviseInventoryStatusCall;
 import com.ebay.soap.eBLBaseComponents.AccountEntrySortTypeCodeType;
@@ -41,6 +42,7 @@ import com.ebay.soap.eBLBaseComponents.CategoryType;
 import com.ebay.soap.eBLBaseComponents.CountryCodeType;
 import com.ebay.soap.eBLBaseComponents.CurrencyCodeType;
 import com.ebay.soap.eBLBaseComponents.DetailLevelCodeType;
+import com.ebay.soap.eBLBaseComponents.DetailNameCodeType;
 import com.ebay.soap.eBLBaseComponents.InventoryStatusType;
 import com.ebay.soap.eBLBaseComponents.ItemType;
 import com.ebay.soap.eBLBaseComponents.ListingDurationCodeType;
@@ -430,7 +432,7 @@ public class EbayCalls {
 	
 	public static void main(final String[] args) throws Exception {
 //		System.out.println(getListingStock("372748630490").orElse(-5));
-		checkAPIAccessRules();
+//		checkAPIAccessRules();
 //		MarketplaceLoader.loadMarketplaces();
 //		final Set<MarketplaceListing> listings = Marketplaces.EBAY.getMarketplace().getMarketplaceListings();
 //		for(final MarketplaceListing listing : listings) {
@@ -439,7 +441,16 @@ public class EbayCalls {
 		
 //		getOrdersLastXDays(2);
 		
-
+		
+		final ApiContext api = EbayApiContextManager.getLiveContext();
+		final GeteBayDetailsCall call = new GeteBayDetailsCall(api);
+		call.setDetailName(new DetailNameCodeType[]{DetailNameCodeType.RETURN_POLICY_DETAILS});
+		call.geteBayDetails();
+		System.out.println(Arrays.toString(
+				Arrays.stream(call.getReturnedReturnPolicyDetails().getReturnsWithin())
+				.map(pol -> pol.getReturnsWithinOption())
+				.toArray(String[]::new)
+				));
 	}
 	
 	public static List<AccountEntryType> getAccountActivityLastXDays(final int days) {
