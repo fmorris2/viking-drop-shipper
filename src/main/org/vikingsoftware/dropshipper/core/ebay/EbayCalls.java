@@ -70,7 +70,10 @@ import com.ebay.soap.eBLBaseComponents.TransactionType;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrderManager;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.UnknownMarketplaceMapping;
@@ -83,6 +86,7 @@ import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.EbayConversionUtils;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.EbayCategory;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.impl.SamsClubFulfillmentParser;
 
 public class EbayCalls {
 
@@ -271,6 +275,36 @@ public class EbayCalls {
 		} catch(final Exception e) {
 			DBLogging.high(EbayCalls.class, "Failed to insert unknown marketplace mappings into DB", e);
 		}
+	}
+	
+
+	public static boolean updateFulfillmentQuantityMultiplier(final MarketplaceListing listing, final int minPurchaseQty) {
+		try {
+			System.out.println("Updating fulfillment quantity multiplier for marketplace listing: " + listing.id);
+			final ApiContext api = EbayApiContextManager.getLiveContext();
+			final ReviseFixedPriceItemCall call = new ReviseFixedPriceItemCall(api);
+			final SamsClubFulfillmentParser parser = new SamsClubFulfillmentParser();
+			final FulfillmentListing fulfillmentListing = FulfillmentManager.get().getListingsForMarketplaceListing(listing.id).get(0);
+			final Listing template = parser.getListingTemplate(FulfillmentAccountManager.get().peekEnabledAccount(FulfillmentPlatforms.SAMS_CLUB),
+					fulfillmentListing.listing_url);
+			
+			final ItemType item = new ItemType();
+			item.setItemID(listing.listingId);
+			item.setTitle(template.title);
+			item.setDescription(template.description);
+			item.setPictureDetails(createPictureDetailsForListing(template));
+			
+			call.setItemToBeRevised(item);
+			call.reviseFixedPriceItem();
+			System.out.println("Successfully updated fulfillment quantity multiplier for marketplace listing " + listing.id
+					+ " and ebay url https://www.ebay.com/itm/" + listing.listingId);
+			return true;
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		System.out.println("Failed to update fulfillment quantity multiplier for marketplace listing " + listing.id);
+		return false;
 	}
 	
 	public static boolean updatePrice(final String listingId, final double price) {

@@ -1,5 +1,6 @@
 package main.org.vikingsoftware.dropshipper.tools;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,14 +23,16 @@ public class ChangeRefundPolicyOnEbayListings {
 		final ExecutorService executor = Executors.newFixedThreadPool(8);
 		final List<FulfillmentListing> listings = FulfillmentManager.get().getListingsForFulfillmentPlatform(FulfillmentPlatforms.SAMS_CLUB);
 		final ApiContext ebayApi = EbayApiContextManager.getLiveContext();
+		Collections.shuffle(listings);
 		for(final FulfillmentListing listing : listings) {
-			executor.execute(() -> {
+//			executor.execute(() -> {
 				String marketListingId = null;
 				try {
 					final FulfillmentListing list = listing;
 					final MarketplaceListing marketListing = MarketplaceListing.getMarketplaceListingForFulfillmentListing(list.id);
 					if(marketListing == null) {
-						return;
+						continue;
+						//return;
 					}
 					
 					marketListingId = marketListing.listingId;
@@ -41,6 +44,7 @@ public class ChangeRefundPolicyOnEbayListings {
 					returnPolicyType.setReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_ACCEPTED.value());
 					returnPolicyType.setInternationalReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_NOT_ACCEPTED.value());
 					returnPolicyType.setReturnsWithin("Days_30");
+					itemToRevise.setDispatchTimeMax(2);
 					itemToRevise.setReturnPolicy(returnPolicyType);
 					
 					call.setItemToBeRevised(itemToRevise);
@@ -51,7 +55,7 @@ public class ChangeRefundPolicyOnEbayListings {
 					System.err.println("Failed to update info for listing https://www.ebay.com/itm/" + marketListingId);
 					e.printStackTrace();			
 				}
-			});
+//			});
 		}
 	}
 	

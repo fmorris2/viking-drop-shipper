@@ -8,6 +8,7 @@ import com.ebay.soap.eBLBaseComponents.ShippingServiceCodeType;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubFulfillmentStockChecker;
 import main.org.vikingsoftware.dropshipper.core.utils.ListingUtils;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubProductAPI;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
@@ -106,6 +107,9 @@ public class SamsClubFulfillmentParser implements FulfillmentParser {
 				listing.canShip = false;
 				return listing;
 			}
+			
+			listing.price += SamsClubFulfillmentStockChecker.SAMS_CLUB_SHIPPING_RATE;
+			
 			System.out.println("Price: " + listing.price);
 			
 			listing.brand = api.getBrandName().orElse(null);

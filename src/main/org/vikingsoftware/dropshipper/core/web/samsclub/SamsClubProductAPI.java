@@ -27,8 +27,6 @@ public final class SamsClubProductAPI extends JsonAPIParser {
 	private static final String API_BASE_URL = "https://www.samsclub.com/api/soa/services/v1/catalog/product/";
 	private static final String API_URL_ARGS = "?response_group=LARGE&clubId=6279";
 	
-	private static final double SAMS_CLUB_SHIPPING_RATE = 5.00; //$5
-	
 	private static final String INVALID_IMAGE_URL = "http://scene7.samsclub.com/is/image/samsclub/fgsdfgsdgfsdgds";
 	private static final BufferedImage notFoundImage = ImageUtils.getImageFromUrl(INVALID_IMAGE_URL);
 	
@@ -223,9 +221,6 @@ public final class SamsClubProductAPI extends JsonAPIParser {
 			final JSONObject finalPriceObj = getJsonObj(onlinePricing.get(), "listPrice");
 			if(finalPriceObj != null) {
 				double price = finalPriceObj.getDouble("currencyAmount");
-				if(price > 0) {
-					price += SAMS_CLUB_SHIPPING_RATE;
-				}
 				return Optional.ofNullable(price);
 			}
 		}

@@ -11,6 +11,8 @@ import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubProductAPI;
 
 public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker {
 
+	public static final double SAMS_CLUB_SHIPPING_RATE = 5.00; //$5
+	
 	private final SamsClubProductAPI api = new SamsClubProductAPI();
 	
 	@Override
@@ -18,7 +20,11 @@ public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker 
 		if(api.parse(fulfillmentListing.product_id)) {		
 			if(!fulfillmentListing.item_id.equalsIgnoreCase(api.getItemNumber().orElse(null))) {
 				System.out.println("Could not parse metadata as the item IDs don't match!");
-				return Optional.of(new FulfillmentListingStockEntry(0, -1, -1));
+				final FulfillmentListingStockEntry entry = new FulfillmentListingStockEntry.Builder()
+						.successfullyParsedDetails(false)
+						.build();
+						
+				return Optional.of(entry);
 			}
 			
 			int stock = api.getAvailableToSellQuantity().orElse(0);
@@ -27,7 +33,13 @@ public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker 
 			}
 			double price = api.getListPrice().orElse(-1D);
 			final int minPurchaseQty = api.getMinPurchaseQty();
-			return Optional.of(new FulfillmentListingStockEntry(stock, price, minPurchaseQty));
+			final FulfillmentListingStockEntry entry = new FulfillmentListingStockEntry.Builder()
+					.successfullyParsedDetails(true)
+					.minPurchaseQty(minPurchaseQty)
+					.stock(stock)
+					.price((price * minPurchaseQty) + SAMS_CLUB_SHIPPING_RATE)
+					.build();
+			return Optional.of(entry);
 		}
 		
 		return Optional.empty();

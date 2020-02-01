@@ -64,6 +64,18 @@ public class MarketplaceListing {
 		return false;
 	}
 	
+	public static boolean setFulfillmentQuantityMultiplier(final MarketplaceListing listing, final int multiplier) {
+		try (final Statement st = VSDSDBManager.get().createStatement()) {
+			st.execute("UPDATE marketplace_listing SET fulfillment_quantity_multiplier=" + multiplier
+					+ " WHERE listing_id=" + listing.listingId);
+			return true;
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
 	public static boolean setCurrentEbayInventory(final String listingId, final long amount) {
 		try (final Statement st = VSDSDBManager.get().createStatement()) {
 			st.execute("UPDATE marketplace_listing SET current_ebay_inventory=" + amount
