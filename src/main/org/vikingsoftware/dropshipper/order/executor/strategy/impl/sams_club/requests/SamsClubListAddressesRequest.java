@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.core.web.JsonAPIParser;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubAddress;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubResponse;
 
 public class SamsClubListAddressesRequest extends SamsClubRequest {
 	
@@ -27,10 +28,10 @@ public class SamsClubListAddressesRequest extends SamsClubRequest {
 			final HttpGet request = new HttpGet(URL);
 			System.out.println("[SamsClubListAddressesRequest] About to dispatch GET request to " + URL);
 			addHeaders(request);
-			final String responseStr = this.sendRequest(client, request, HttpStatus.SC_OK).orElse(null);
-			if(responseStr != null) {
-				System.out.println("[SamsClubListAddressesRequest] Response String: " + responseStr);
-				addresses.addAll(convertJsonToAddressPojos(new JSONObject(responseStr)));
+			final SamsClubResponse response = this.sendRequest(client, request, HttpStatus.SC_OK).orElse(null);
+			if(response != null) {
+				System.out.println("[SamsClubListAddressesRequest] Response String: " + response);
+				addresses.addAll(convertJsonToAddressPojos(new JSONObject(response)));
 			}
 		} catch(final Exception e) {
 			e.printStackTrace();

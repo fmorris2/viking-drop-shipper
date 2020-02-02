@@ -3,4 +3,5 @@
 /debug/
 *.png
 *.log
-vsds.log
+*.log.*
+/.settings/

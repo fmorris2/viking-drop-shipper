@@ -13,6 +13,7 @@ import org.apache.http.util.EntityUtils;
 
 import main.org.vikingsoftware.dropshipper.core.net.http.HttpClientManager;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubResponse;
 
 public abstract class SamsClubRequest {
 	
@@ -28,7 +29,7 @@ public abstract class SamsClubRequest {
 		return client;
 	}
 	
-	public Optional<String> sendRequest(final WrappedHttpClient client, final HttpRequestBase request, final int expectedResponseCode) {
+	public Optional<SamsClubResponse> sendRequest(final WrappedHttpClient client, final HttpRequestBase request, final int expectedResponseCode) {
 		HttpResponse response = null;
 		try {
 			System.out.println("Cookie String: " + getCookieString());
@@ -36,7 +37,9 @@ public abstract class SamsClubRequest {
 			System.out.println("Response status: " + response.getStatusLine());
 			if(response.getStatusLine().getStatusCode() == expectedResponseCode) {
 				final String responseStr = EntityUtils.toString(response.getEntity());
-				return responseStr == null || responseStr.isEmpty() ? Optional.of("success") : Optional.of(responseStr);
+				return responseStr == null || responseStr.isEmpty() 
+						? Optional.of(new SamsClubResponse(expectedResponseCode, "success")) 
+						: Optional.of(new SamsClubResponse(expectedResponseCode, responseStr));
 			} else {
 				System.out.println("Response Headers: " + Arrays.toString(response.getAllHeaders()));
 			}

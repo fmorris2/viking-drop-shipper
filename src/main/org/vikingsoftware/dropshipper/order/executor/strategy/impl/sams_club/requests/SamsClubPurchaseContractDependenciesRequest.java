@@ -12,6 +12,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.json.JSONObject;
 
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubResponse;
 
 
 public class SamsClubPurchaseContractDependenciesRequest extends SamsClubRequest {
@@ -41,23 +42,23 @@ public class SamsClubPurchaseContractDependenciesRequest extends SamsClubRequest
 	}
 	
 	public boolean execute() {
-		final Optional<String> data = generateHtml();
+		final Optional<SamsClubResponse> data = generateHtml();
 		if(data.isEmpty()) {
 			return false;
 		}
 		
-		this.mappings = generateMappingsFromHtml(data.get());
+		this.mappings = generateMappingsFromHtml(data.get().response);
 		return true;
 	}
 	
-	private Optional<String> generateHtml() {
+	private Optional<SamsClubResponse> generateHtml() {
 		/*
 		 * This first part is so we can get Apache to handle the cookies
 		 * from the Cart.jsp page and modify our client with them
 		 */
 		final HttpGet request = new HttpGet(PURCHASE_CONTRACT_DEPENDENCIES_URL);
 		addHeaders(request);
-		final Optional<String> response = sendRequest(client, request, HttpStatus.SC_OK);
+		final Optional<SamsClubResponse> response = sendRequest(client, request, HttpStatus.SC_OK);
 		
 		return response;
 	}

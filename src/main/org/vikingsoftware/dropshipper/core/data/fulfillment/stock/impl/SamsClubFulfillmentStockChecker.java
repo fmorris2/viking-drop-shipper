@@ -23,6 +23,9 @@ public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker 
 			+ "SUM(buy_shipping)/COUNT(*) as average_shipping_cost from processed_order "
 			+ "where buy_shipping > 0 group by fulfillment_listing_id";
 	
+	private static final String ESTIMATED_SHIPPING_COST_QUERY = "select id,estimated_shipping_cost FROM fulfillment_listing"
+			+ " WHERE estimated_shipping_cost IS NOT NULL";
+	
 	private static final long RECOMPUTE_AVG_SHIPPING_COSTS_CYCLE_TIME = 60_000 * 30;
 	
 	private static final Map<String, Double> averageShippingCosts = new ConcurrentHashMap<>();
@@ -78,11 +81,20 @@ public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker 
 	
 	private void recomputeAvgShippingCosts() {
 		averageShippingCosts.clear();
-		try(final Statement st = VSDSDBManager.get().createStatement();
-			final ResultSet res = st.executeQuery(AVG_SHIPPING_COST_QUERY)) {
+		try(final Statement st1 = VSDSDBManager.get().createStatement();
+			final Statement st2 = VSDSDBManager.get().createStatement();
+			final ResultSet res1 = st1.executeQuery(AVG_SHIPPING_COST_QUERY);
+			final ResultSet res2 = st2.executeQuery(ESTIMATED_SHIPPING_COST_QUERY)) {
 			
-			while(res.next()) {
-				averageShippingCosts.put(res.getString("fulfillment_listing_id"), res.getDouble("average_shipping_cost"));
+			while(res1.next()) {
+				averageShippingCosts.put(res1.getString("fulfillment_listing_id"), res1.getDouble("average_shipping_cost"));
+			}
+			
+			while(res2.next()) {
+				final String listingId = res2.getString("id");
+				if(!averageShippingCosts.containsKey(listingId)) {
+					averageShippingCosts.put(listingId, res2.getDouble("estimated_shipping_cost"));
+				}
 			}
 			
 			System.out.println("Computed " + averageShippingCosts.size() + " average shipping costs");

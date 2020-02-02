@@ -18,7 +18,7 @@ public class TestSamsClubRemoveFromCartRequest extends SamsClubRequestTest {
 		System.out.println("Adding single item to cart...");
 		final SamsClubItem item = new SamsClubItem("645081", "prod17750489", "sku18264565");
 		final SamsClubAddToCartRequest addToCartReq = createAddToCartRequests(item).get(0);
-		Assert.assertTrue(addToCartReq.execute());
+		Assert.assertTrue(addToCartReq.execute().isPresent());
 		
 		System.out.println("Testing get cart...");
 		final SamsClubGetCartItemsRequest getCartReq = new SamsClubGetCartItemsRequest(addToCartReq.getClient());

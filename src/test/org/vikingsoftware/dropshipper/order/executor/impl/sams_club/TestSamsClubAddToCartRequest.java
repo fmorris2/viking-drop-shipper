@@ -26,7 +26,6 @@ public class TestSamsClubAddToCartRequest {
 				.quantity(1)
 				.build();
 		
-		request.setCookies("samsclub.com", "/", session.cookies);
-		Assert.assertTrue(request.execute());
+		Assert.assertTrue(request.execute().isPresent());
 	}
 }

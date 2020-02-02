@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.FulfillmentListingStockEntry;
@@ -51,6 +53,7 @@ public class FulfillmentManager {
 		new Pair<>(12,25) //Christmas Day
 	);
 
+	private static final Logger log = Logger.getLogger(FulfillmentManager.class);
 	private static final Set<Integer> canExecuteOrdersPlatforms = new HashSet<>();
 	private static final Set<Integer> canUpdateInventoryPlatforms = new HashSet<>();
 
@@ -287,18 +290,7 @@ public class FulfillmentManager {
 		   final ResultSet results = st.executeQuery("SELECT * FROM fulfillment_listing WHERE fulfillment_platform_id=" + platform.getId())) {
 			
 			while(results.next()) {
-				final FulfillmentListing listing = new FulfillmentListing.Builder()
-						.id(results.getInt("id"))
-						.fulfillment_platform_id(platform.getId())
-						.item_id(results.getString("item_id"))
-						.upc(results.getString("upc"))
-						.ean(results.getString("ean"))
-						.product_id(results.getString("product_id"))
-						.sku_id(results.getString("sku_id"))
-						.listing_title(results.getString("listing_title"))
-						.listing_url(results.getString("listing_url"))
-						.build();
-				listings.add(listing);
+				generateFulfillmentListingFromResultSet(platform, results).ifPresent(listings::add);
 			}
 			
 			
@@ -307,6 +299,28 @@ public class FulfillmentManager {
 		}
 		
 		return listings;
+	}
+	
+	public static Optional<FulfillmentListing> generateFulfillmentListingFromResultSet(final FulfillmentPlatforms platform, final ResultSet results) {
+		try {
+			return Optional.of(
+				new FulfillmentListing.Builder()
+				.id(results.getInt("id"))
+				.fulfillment_platform_id(platform.getId())
+				.item_id(results.getString("item_id"))
+				.upc(results.getString("upc"))
+				.ean(results.getString("ean"))
+				.product_id(results.getString("product_id"))
+				.sku_id(results.getString("sku_id"))
+				.listing_title(results.getString("listing_title"))
+				.listing_url(results.getString("listing_url"))
+				.build()
+			);
+		} catch(final SQLException e) {
+			log.warn("Failed to generate fulfillment listing from result set", e);
+		}
+		
+		return Optional.empty();
 	}
 
 	public List<FulfillmentListing> getListingsForOrder(final CustomerOrder order) {

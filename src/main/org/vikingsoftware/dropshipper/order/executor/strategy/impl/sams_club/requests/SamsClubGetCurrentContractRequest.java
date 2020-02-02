@@ -8,6 +8,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.json.JSONObject;
 
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubResponse;
 
 public class SamsClubGetCurrentContractRequest extends SamsClubRequest {
 
@@ -23,10 +24,10 @@ public class SamsClubGetCurrentContractRequest extends SamsClubRequest {
 		System.out.println("[SamsClubGetCurrentContractRequest] About to dispatch GET request to " + url);
 		addHeaders(request);
 		
-		final Optional<String> response = sendRequest(client, request, HttpStatus.SC_OK);
+		final Optional<SamsClubResponse> response = sendRequest(client, request, HttpStatus.SC_OK);
 		if(response.isPresent()) {
 			System.out.println("[SamsClubGetCurrentContractRequest] Response: " + response.get());
-			return Optional.of(new JSONObject(response.get()));
+			return Optional.of(new JSONObject(response.get().response));
 		}
 		
 		return Optional.empty();

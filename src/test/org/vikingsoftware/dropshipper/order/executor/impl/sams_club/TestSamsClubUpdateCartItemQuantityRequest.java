@@ -20,7 +20,7 @@ public class TestSamsClubUpdateCartItemQuantityRequest extends SamsClubRequestTe
 		System.out.println("Adding single item to cart...");
 		final SamsClubItem item = new SamsClubItem("645081", "prod17750489", "sku18264565");
 		final SamsClubAddToCartRequest addToCartReq = createAddToCartRequests(item).get(0);
-		Assert.assertTrue(addToCartReq.execute());
+		Assert.assertTrue(addToCartReq.execute().isPresent());
 		
 		final SamsClubGetCartItemsRequest getCartReq = new SamsClubGetCartItemsRequest(addToCartReq.getClient());
 		final List<SamsClubCartItem> currentCartItems = getCartReq.execute();

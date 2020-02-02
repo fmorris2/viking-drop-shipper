@@ -10,7 +10,8 @@ public enum FulfillmentPlatforms {
 	SAMS_CLUB(SamsClubOrderExecutionStrategy.class),
 	AMAZON(null),
 	COSTCO(CostcoOrderExecutionStrategy.class),
-	WALMART(null)
+	WALMART(null),
+	BJS(null),
 	;
 
 	private final Class<? extends OrderExecutionStrategy> strategy;

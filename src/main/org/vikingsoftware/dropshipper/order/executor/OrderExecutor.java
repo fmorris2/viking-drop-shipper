@@ -17,7 +17,6 @@ import main.org.vikingsoftware.dropshipper.core.data.processed.order.ProcessedOr
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.TransactionUtils;
-import main.org.vikingsoftware.dropshipper.order.executor.error.OrderExecutionException;
 
 public class OrderExecutor implements CycleParticipant {
 
@@ -77,7 +76,7 @@ public class OrderExecutor implements CycleParticipant {
 							break;
 						}
 						
-					} catch (final OrderExecutionException e) {
+					} catch (final Exception e) {
 						e.printStackTrace();
 						DBLogging.high(getClass(), "Failed to fulfill processed order", e);
 					}

@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubCartItem;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubItem;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubResponse;
 
 public class SamsClubGetCartItemsRequest extends SamsClubRequest {
 	
@@ -29,9 +30,9 @@ public class SamsClubGetCartItemsRequest extends SamsClubRequest {
 		final HttpGet request = new HttpGet(url);
 		addHeaders(request);
 		
-		final Optional<String> responseStr = super.sendRequest(client, request, HttpStatus.SC_OK);
-		if(responseStr.isPresent()) {
-			return convertResponseToCartItemList(responseStr.get());
+		final Optional<SamsClubResponse> response = super.sendRequest(client, request, HttpStatus.SC_OK);
+		if(response.isPresent()) {
+			return convertResponseToCartItemList(response.get().response);
 		}
 		
 		return Collections.emptyList();
