@@ -11,7 +11,7 @@ import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubProductAPI;
 
 public class SamsClubFulfillmentStockChecker implements FulfillmentStockChecker {
 
-	public static final double SAMS_CLUB_SHIPPING_RATE = 5.00; //$5
+	public static final double SAMS_CLUB_SHIPPING_RATE = 7.00; //$7
 	
 	private final SamsClubProductAPI api = new SamsClubProductAPI();
 	

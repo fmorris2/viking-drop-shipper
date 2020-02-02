@@ -35,7 +35,7 @@ public class EbayConversionUtils {
 				.sku(item.getSKU())
 				.sell_listing_price(transaction.getTransactionPrice().getValue())
 				.sell_shipping(transaction.getActualShippingCost().getValue())
-				.sell_total(transaction.getTransactionPrice().getValue() + transaction.getActualShippingCost().getValue())
+				.sell_total((transaction.getTransactionPrice().getValue() + transaction.getActualShippingCost().getValue()) * transaction.getQuantityPurchased())
 				.quantity(transaction.getQuantityPurchased())
 				.marketplace_order_id(transaction.getTransactionID())
 				.buyer_username(buyer.getUserID())
