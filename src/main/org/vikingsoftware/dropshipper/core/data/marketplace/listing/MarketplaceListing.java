@@ -64,6 +64,18 @@ public class MarketplaceListing {
 		return false;
 	}
 	
+	public static boolean setFulfillmentQuantityMultiplier(final MarketplaceListing listing, final int multiplier) {
+		try (final Statement st = VSDSDBManager.get().createStatement()) {
+			st.execute("UPDATE marketplace_listing SET fulfillment_quantity_multiplier=" + multiplier
+					+ " WHERE listing_id=" + listing.listingId);
+			return true;
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
 	public static boolean setCurrentEbayInventory(final String listingId, final long amount) {
 		try (final Statement st = VSDSDBManager.get().createStatement()) {
 			st.execute("UPDATE marketplace_listing SET current_ebay_inventory=" + amount
@@ -137,6 +149,19 @@ public class MarketplaceListing {
 		}
 		
 		return Optional.empty();
+	}
+	
+	public static Optional<Integer> getFulfillmentQuantityMultiplier(final int listingId) {
+		try(final Statement st = VSDSDBManager.get().createStatement();
+				final ResultSet res =st.executeQuery("SELECT fulfillment_quantity_multiplier FROM marketplace_listing WHERE id="+listingId)) {
+				if(res.next()) {
+					return Optional.of(res.getInt("fulfillment_quantity_multiplier"));
+				}
+			} catch(final Exception e) {
+				e.printStackTrace();
+			}
+			
+			return Optional.empty();
 	}
 	
 	public void updatePrice(final double newPrice) throws SQLException {

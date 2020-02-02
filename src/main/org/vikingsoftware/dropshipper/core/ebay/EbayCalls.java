@@ -27,6 +27,7 @@ import com.ebay.sdk.call.GetItemTransactionsCall;
 import com.ebay.sdk.call.GetOrdersCall;
 import com.ebay.sdk.call.GetSellerTransactionsCall;
 import com.ebay.sdk.call.GetSuggestedCategoriesCall;
+import com.ebay.sdk.call.GeteBayDetailsCall;
 import com.ebay.sdk.call.ReviseFixedPriceItemCall;
 import com.ebay.sdk.call.ReviseInventoryStatusCall;
 import com.ebay.soap.eBLBaseComponents.AccountEntrySortTypeCodeType;
@@ -41,6 +42,7 @@ import com.ebay.soap.eBLBaseComponents.CategoryType;
 import com.ebay.soap.eBLBaseComponents.CountryCodeType;
 import com.ebay.soap.eBLBaseComponents.CurrencyCodeType;
 import com.ebay.soap.eBLBaseComponents.DetailLevelCodeType;
+import com.ebay.soap.eBLBaseComponents.DetailNameCodeType;
 import com.ebay.soap.eBLBaseComponents.InventoryStatusType;
 import com.ebay.soap.eBLBaseComponents.ItemType;
 import com.ebay.soap.eBLBaseComponents.ListingDurationCodeType;
@@ -68,7 +70,10 @@ import com.ebay.soap.eBLBaseComponents.TransactionType;
 
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrderManager;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.MarketplaceLoader;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.Marketplaces;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.UnknownMarketplaceMapping;
@@ -81,10 +86,9 @@ import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.EbayConversionUtils;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.EbayCategory;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
+import main.org.vikingsoftware.dropshipper.listing.tool.logic.fulfillment.parser.impl.SamsClubFulfillmentParser;
 
 public class EbayCalls {
-
-	public static final int FAKE_MAX_QUANTITY = 1;
 	
 	//view all error codes here: https://developer.ebay.com/devzone/xml/docs/Reference/ebay/Errors/errormessages.htm
 	private static final String[] MARK_AS_INACTIVE_ERROR_CODES = {"17", "291", "21916333", "21916750"};
@@ -271,6 +275,36 @@ public class EbayCalls {
 		}
 	}
 	
+
+	public static boolean updateFulfillmentQuantityMultiplier(final MarketplaceListing listing, final int minPurchaseQty) {
+		try {
+			System.out.println("Updating fulfillment quantity multiplier for marketplace listing: " + listing.id);
+			final ApiContext api = EbayApiContextManager.getLiveContext();
+			final ReviseFixedPriceItemCall call = new ReviseFixedPriceItemCall(api);
+			final SamsClubFulfillmentParser parser = new SamsClubFulfillmentParser();
+			final FulfillmentListing fulfillmentListing = FulfillmentManager.get().getListingsForMarketplaceListing(listing.id).get(0);
+			final Listing template = parser.getListingTemplate(FulfillmentAccountManager.get().peekEnabledAccount(FulfillmentPlatforms.SAMS_CLUB),
+					fulfillmentListing.listing_url);
+			
+			final ItemType item = new ItemType();
+			item.setItemID(listing.listingId);
+			item.setTitle(template.title);
+			item.setDescription(template.description);
+			item.setPictureDetails(createPictureDetailsForListing(template));
+			
+			call.setItemToBeRevised(item);
+			call.reviseFixedPriceItem();
+			System.out.println("Successfully updated fulfillment quantity multiplier for marketplace listing " + listing.id
+					+ " and ebay url https://www.ebay.com/itm/" + listing.listingId);
+			return true;
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+		
+		System.out.println("Failed to update fulfillment quantity multiplier for marketplace listing " + listing.id);
+		return false;
+	}
+	
 	public static boolean updatePrice(final String listingId, final double price) {
 		try {
 			final ApiContext api = EbayApiContextManager.getLiveContext();
@@ -397,15 +431,11 @@ public class EbayCalls {
 			final ReviseInventoryStatusCall call = new ReviseInventoryStatusCall(api);
 			final InventoryStatusType invStatus = new InventoryStatusType();
 			invStatus.setItemID(listingId);
-			if(inventory < FulfillmentManager.SAFE_STOCK_THRESHOLD) {
-				invStatus.setQuantity(0);
-			} else {
-				invStatus.setQuantity(Math.max(0, Math.min(FAKE_MAX_QUANTITY, inventory)));
-			}
+			invStatus.setQuantity(Math.max(0, inventory));
 			System.out.println("Setting stock for listing id " + listingId + " to " + invStatus.getQuantity());
 			call.setInventoryStatus(new InventoryStatusType[] {invStatus});
 			call.reviseInventoryStatus();
-			logToFile("updateInventory: listingId - " + listingId + ", quantity: " + Math.max(0, Math.min(FAKE_MAX_QUANTITY, invStatus.getQuantity())));
+			logToFile("updateInventory: listingId - " + listingId + ", quantity: " + Math.max(0, inventory));
 			return !call.hasError();
 		} catch(final ApiException e) {
 			handleApiException(e, listingId);
@@ -430,7 +460,7 @@ public class EbayCalls {
 	
 	public static void main(final String[] args) throws Exception {
 //		System.out.println(getListingStock("372748630490").orElse(-5));
-		checkAPIAccessRules();
+//		checkAPIAccessRules();
 //		MarketplaceLoader.loadMarketplaces();
 //		final Set<MarketplaceListing> listings = Marketplaces.EBAY.getMarketplace().getMarketplaceListings();
 //		for(final MarketplaceListing listing : listings) {
@@ -439,7 +469,16 @@ public class EbayCalls {
 		
 //		getOrdersLastXDays(2);
 		
-
+		
+		final ApiContext api = EbayApiContextManager.getLiveContext();
+		final GeteBayDetailsCall call = new GeteBayDetailsCall(api);
+		call.setDetailName(new DetailNameCodeType[]{DetailNameCodeType.RETURN_POLICY_DETAILS});
+		call.geteBayDetails();
+		System.out.println(Arrays.toString(
+				Arrays.stream(call.getReturnedReturnPolicyDetails().getReturnsWithin())
+				.map(pol -> pol.getReturnsWithinOption())
+				.toArray(String[]::new)
+				));
 	}
 	
 	public static List<AccountEntryType> getAccountActivityLastXDays(final int days) {
@@ -555,13 +594,13 @@ public class EbayCalls {
 		item.setCountry(CountryCodeType.US);
 		item.setCurrency(CurrencyCodeType.USD);
 		item.setDescription(listing.description);
-		item.setDispatchTimeMax(5);
-		listing.handlingTime = 5;
+		item.setDispatchTimeMax(2);
+		listing.handlingTime = 2;
 		item.setListingDuration(ListingDurationCodeType.GTC.value());
 		item.setListingType(ListingTypeCodeType.FIXED_PRICE_ITEM);
 		item.setLocation("St. Louis, MO");
 		item.setPostalCode("63101");
-		item.setPayPalEmailAddress("thevikingmarketplace@gmail.com");
+		item.setPayPalEmailAddress("sales@vikingwholesale.org");
 		item.setProductListingDetails(createProductListingDetailsForListing(listing, listing.upc, listing.ean));
 		item.setPictureDetails(createPictureDetailsForListing(listing));
 		item.setPrimaryCategory(createCategoryTypeForListing(listing));
@@ -658,12 +697,13 @@ public class EbayCalls {
 
 	private static ReturnPolicyType createReturnPolicyTypeForListing(final Listing listing) {
 		final ReturnPolicyType type = new ReturnPolicyType();
-		type.setReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_NOT_ACCEPTED.value());
+		type.setReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_ACCEPTED.value());
 		type.setInternationalReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_NOT_ACCEPTED.value());
+		type.setReturnsWithin("Days_30");
 		return type;
 	}
 
-	private static ShippingDetailsType createShippingDetailsForListing(final Listing listing) {
+	public static ShippingDetailsType createShippingDetailsForListing(final Listing listing) {
 		final ShippingDetailsType type = new ShippingDetailsType();
 		type.setGlobalShipping(false);
 		type.setShippingServiceOptions(createShippingServiceOptionsForListing(listing));

@@ -9,8 +9,6 @@ import java.awt.Dimension;
 
 import javax.swing.JButton;
 
-import main.org.vikingsoftware.dropshipper.listing.tool.logic.ListingQueue;
-
 /**
  *
  * @author Bren
@@ -38,6 +36,7 @@ public class ListingToolGUI extends javax.swing.JFrame {
 //        recentSalesScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         platformDropdown.setEnabled(false);
         setTitle(TITLE);
+        shippingPriceInput.setVisible(false);
     }
 
     public static synchronized ListingToolGUI get() {

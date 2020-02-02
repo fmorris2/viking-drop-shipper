@@ -25,6 +25,7 @@ public class CustomerOrder {
 	public final int quantity;
 	public final int fulfillment_purchase_quantity;
 	public final int handling_time;
+	public final int snapshot_fulfillment_quantity_multiplier;
 
 	public final String marketplace_order_id;
 	public final String buyer_username;
@@ -39,6 +40,8 @@ public class CustomerOrder {
 	public final long date_parsed;
 	public final long date_cancelled;
 	public final boolean is_cancelled;
+	public final boolean is_resolved;
+	public final boolean is_refunded;
 	
 	public final Double marketplace_sell_fee;
 	public final Double payment_processor_fee;
@@ -76,6 +79,9 @@ public class CustomerOrder {
 		this.payment_processor_fee = builder.payment_processor_fee;
 		this.payment_processor_fee_date = builder.payment_processor_fee_date;
 		this.handling_time = builder.handling_time;
+		this.snapshot_fulfillment_quantity_multiplier = builder.snapshot_fulfillment_quantity_multiplier;
+		this.is_resolved = builder.is_resolved;
+		this.is_refunded = builder.is_refunded;
 	}
 	
 	public String getFirstName(final boolean normalized) {
@@ -126,6 +132,7 @@ public class CustomerOrder {
 		private int quantity;
 		private int fulfillment_purchase_quantity;
 		private int handling_time;
+		private int snapshot_fulfillment_quantity_multiplier = 1;
 
 		private String marketplace_order_id;
 		private String buyer_username;
@@ -140,6 +147,8 @@ public class CustomerOrder {
 		private long date_parsed;
 		private long date_cancelled;
 		private boolean is_cancelled;
+		private boolean is_resolved;
+		private boolean is_refunded;
 		
 		private Double marketplace_sell_fee;
 		private Double payment_processor_fee;
@@ -176,6 +185,9 @@ public class CustomerOrder {
 			this.marketplace_sell_fee = clone.marketplace_sell_fee;
 			this.payment_processor_fee = clone.payment_processor_fee;
 			this.payment_processor_fee_date = clone.payment_processor_fee_date;
+			this.snapshot_fulfillment_quantity_multiplier = clone.snapshot_fulfillment_quantity_multiplier;
+			this.is_refunded = clone.is_refunded;
+			this.is_resolved = clone.is_resolved;
 		}
 
 		public Builder id(final int id) {
@@ -305,6 +317,21 @@ public class CustomerOrder {
 		
 		public Builder handling_time(final int time) {
 			this.handling_time = time;
+			return this;
+		}
+		
+		public Builder snapshot_fulfillment_quantity_multiplier(final int snapshot) {
+			this.snapshot_fulfillment_quantity_multiplier = snapshot;
+			return this;
+		}
+		
+		public Builder is_refunded(final boolean val) {
+			this.is_refunded = val;
+			return this;
+		}
+		
+		public Builder is_resolved(final boolean val) {
+			this.is_resolved = val;
 			return this;
 		}
 

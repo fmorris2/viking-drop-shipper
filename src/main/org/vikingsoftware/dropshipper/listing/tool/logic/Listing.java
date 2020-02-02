@@ -23,7 +23,7 @@ public class Listing implements Cloneable {
 	public String ean;
 	public String mpn;
 	public int fulfillmentPlatformId;
-	public int handlingTime = 5;
+	public int handlingTime = 2;
 	public int minPurchaseQty = 1;
 	public double price;
 	public ShippingServiceCodeType shippingService;

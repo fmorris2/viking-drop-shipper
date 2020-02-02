@@ -2,3 +2,5 @@
 /target/
 /debug/
 *.png
+*.log
+vsds.log

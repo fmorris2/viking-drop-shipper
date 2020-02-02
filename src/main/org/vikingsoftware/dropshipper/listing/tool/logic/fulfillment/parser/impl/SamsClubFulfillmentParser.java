@@ -8,6 +8,7 @@ import com.ebay.soap.eBLBaseComponents.ShippingServiceCodeType;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
+import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.impl.SamsClubFulfillmentStockChecker;
 import main.org.vikingsoftware.dropshipper.core.utils.ListingUtils;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubProductAPI;
 import main.org.vikingsoftware.dropshipper.listing.tool.logic.Listing;
@@ -28,6 +29,7 @@ public class SamsClubFulfillmentParser implements FulfillmentParser {
 			api.parse(productId);
 			
 			final Listing listing = new Listing();
+			listing.url = url;
 			listing.fulfillmentPlatformId = FulfillmentPlatforms.SAMS_CLUB.getId();
 			listing.shippingService = ShippingServiceCodeType.SHIPPING_METHOD_STANDARD;
 			
@@ -39,12 +41,6 @@ public class SamsClubFulfillmentParser implements FulfillmentParser {
 			
 			if(!api.isAvailableOnline()) {
 				System.out.println("\tListing is not available online. Skipping...");
-				listing.canShip = false;
-				return listing;
-			}
-			
-			if(!api.isFreeShipping()) {
-				System.out.println("\tListing is not free shipping. Skipping...");
 				listing.canShip = false;
 				return listing;
 			}
@@ -89,7 +85,7 @@ public class SamsClubFulfillmentParser implements FulfillmentParser {
 			
 			
 			if(listing.minPurchaseQty > 1) {
-				listing.title = "[" + listing.minPurchaseQty + "x]" + listing.title;
+				listing.title = "[" + listing.minPurchaseQty + "x] " + listing.title;
 				listing.description = "<h3>ATTENTION: THIS IS A " + listing.minPurchaseQty + " PACK. "
 						+ "THE PACKAGE CONTAINS " + listing.minPurchaseQty + " OF THIS ITEM.</h3><br /><hr />"
 						+ listing.description;
@@ -98,7 +94,7 @@ public class SamsClubFulfillmentParser implements FulfillmentParser {
 			System.out.println("Listing Title: " + listing.title);
 			
 			ListingUtils.makeDescriptionPretty(listing);
-			System.out.println("Description: " + listing.description);
+			//System.out.println("Description: " + listing.description);
 			
 			listing.price = api.getListPrice().orElse(-1D) * listing.minPurchaseQty;
 			if(listing.price <= 0) {
@@ -106,6 +102,9 @@ public class SamsClubFulfillmentParser implements FulfillmentParser {
 				listing.canShip = false;
 				return listing;
 			}
+			
+			listing.price += SamsClubFulfillmentStockChecker.SAMS_CLUB_SHIPPING_RATE;
+			
 			System.out.println("Price: " + listing.price);
 			
 			listing.brand = api.getBrandName().orElse(null);

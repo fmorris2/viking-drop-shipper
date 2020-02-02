@@ -79,14 +79,18 @@ public final class SamsClubTrackingEmailRepository {
 			final String base64Body = body.getData();
 			final byte[] decoded = Base64.decodeBase64(base64Body);
 			try {
-				final String rawBody = new String(decoded, "UTF-8");
-				final Matcher orderNumMatcher = ORDER_NUM_PATTERN.matcher(rawBody);
-				final Matcher trackingNumMatcher = TRACKING_NUM_PATTERN.matcher(rawBody);
-				if(orderNumMatcher.find() && trackingNumMatcher.find()) {
-					System.out.println("Successfully parsed Sams Tracking Email: " + orderNumMatcher.group(1) + " --> " + trackingNumMatcher.group(1));
-					trackingDetails.put(orderNumMatcher.group(1), trackingNumMatcher.group(1));
+				if(decoded != null) {
+					final String rawBody = new String(decoded, "UTF-8");
+					final Matcher orderNumMatcher = ORDER_NUM_PATTERN.matcher(rawBody);
+					final Matcher trackingNumMatcher = TRACKING_NUM_PATTERN.matcher(rawBody);
+					if(orderNumMatcher.find() && trackingNumMatcher.find()) {
+						System.out.println("Successfully parsed Sams Tracking Email: " + orderNumMatcher.group(1) + " --> " + trackingNumMatcher.group(1));
+						trackingDetails.put(orderNumMatcher.group(1), trackingNumMatcher.group(1));
+					} else {
+						System.out.println("Could not parse tracking info from email w/ id " + email.getId());
+					}
 				} else {
-					System.out.println("Could not parse tracking info from email w/ id " + email.getId());
+					System.out.println("Failed to parse tracking info from email w/ id " + email.getId());
 				}
 				
 			} catch (final UnsupportedEncodingException e) {

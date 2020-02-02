@@ -1,10 +1,12 @@
 package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
@@ -13,7 +15,6 @@ import org.json.JSONObject;
 import main.org.vikingsoftware.dropshipper.VSDropShipper;
 import main.org.vikingsoftware.dropshipper.core.data.customer.order.CustomerOrder;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
-import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentPlatforms;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
@@ -47,10 +48,17 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 	
 	private static final int MAX_ADDRESS_LINE_LENGTH = 35;
 	private static final int MAX_NAME_LINE_LENGTH = 25;
+	
+	private final Set<FulfillmentAccount> preparedAccounts = new HashSet<>();
 
 	@Override
 	public Optional<ProcessedOrder> order(final CustomerOrder order, final FulfillmentAccount account,
 			final FulfillmentListing listing) {
+		
+		if(!preparedAccounts.contains(account)) {
+			SamsClubSessionProvider.get().clearSession(account);
+			preparedAccounts.add(account);
+		}
 		
 		LOG.info("Initiating order process for customer order: " + order);
 		
@@ -139,7 +147,7 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 				.skuId(item.skuId)
 				.itemNumber(item.itemNumber)
 				.client(client)
-				.quantity(order.fulfillment_purchase_quantity)
+				.quantity(order.snapshot_fulfillment_quantity_multiplier)
 				.build();
 		LOG.info("Attempting to submit add to cart request");
 		return request.execute();
@@ -346,11 +354,11 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 		
 		final SamsClubOrderPricingDetails pricing = new SamsClubOrderPricingDetails(contract);
 		
-		if(pricing.shipping > 0) {
-			LOG.warn("Fulfillment Account has lost free shipping!");
-			FulfillmentAccountManager.get().markAccountAsDisabled(account);
-			return null;
-		}
+//		if(pricing.shipping > 0) {
+//			LOG.warn("Fulfillment Account has lost free shipping!");
+//			FulfillmentAccountManager.get().markAccountAsDisabled(account);
+//			return null;
+//		}
 		
 		final Optional<Double> transactionSum = order.getTransactionSum();
 		
@@ -361,7 +369,7 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 		
 		final double profit = transactionSum.get() - pricing.total;
 		
-		if(profit < 0) {
+		if(profit < 0 && !FulfillmentManager.isDisregardingProfit()) {
 			LOG.warn("Detected fulfillment at loss for customer order " + order.id + ": -$" + profit + " profit.");
 			return null;
 		}
@@ -374,7 +382,7 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 	private Optional<JSONObject> submitPlaceOrderRequest(final WrappedHttpClient client,
 			final SamsClubPlaceOrderRequestDependencies placeOrderDependencies) {
 		final SamsClubPlaceOrderRequest placeOrderReq = new SamsClubPlaceOrderRequest(client, placeOrderDependencies);
-		return Optional.empty();//placeOrderReq.execute();
+		return placeOrderReq.execute();
 	}
 
 	private SamsClubPlaceOrderRequestDependencies generatePlaceOrderDependencies(final SamsClubOrderPricingDetails pricing,

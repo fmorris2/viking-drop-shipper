@@ -1,8 +1,6 @@
 package main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock;
 
-import java.util.Collections;
 import java.util.Optional;
-import java.util.concurrent.FutureTask;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccount;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentAccountManager;
