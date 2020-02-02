@@ -38,6 +38,7 @@ public class ShippingEstimator implements CycleParticipant {
 			final Optional<ShippingEstimation> estimation = strategyManager.generateShippingEstimation(listing);
 			if(estimation.isPresent()) {
 				log.info("Successfully estimated shipping cost for fulfillment listing w/ id " + listing.id + ": " + estimation.get());
+				updateDBWithEstimation(estimation.get());
 			} else {
 				log.warn("Failed to estimate shipping cost for fulfillment listing w/ id"  + listing.id);
 			}
@@ -61,6 +62,15 @@ public class ShippingEstimator implements CycleParticipant {
 		
 		log.info("Generated " + listings.size() + " unestimated listings");
 		return listings;
+	}
+	
+	private void updateDBWithEstimation(final ShippingEstimation estimation) {
+		try(final Statement st = VSDSDBManager.get().createStatement()) {
+			st.execute("UPDATE fulfillment_listing SET estimated_shipping_cost="+estimation.estimatedCost
+					+ " WHERE id="+estimation.fulfillmentListing.id);
+		} catch(final Exception e) {
+			log.warn("Failed to update DB with shipping estimation: " + estimation);
+		}
 	}
 
 }

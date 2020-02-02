@@ -10,6 +10,7 @@ import org.json.JSONObject;
 
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubAddress;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubResponse;
 
 public class SamsClubCreateContractRequest extends SamsClubRequest {
 	
@@ -28,10 +29,10 @@ public class SamsClubCreateContractRequest extends SamsClubRequest {
 		final HttpPost request = new HttpPost(url);
 		addHeaders(request);
 		addPayload(request);
-		final Optional<String> response = sendRequest(client, request, HttpStatus.SC_OK);
+		final Optional<SamsClubResponse> response = sendRequest(client, request, HttpStatus.SC_OK);
 		if(response.isPresent()) {
 			System.out.println("[SamsClubCreateContractRequest] Response: " + response.get());
-			return Optional.of(new JSONObject(response.get()));
+			return Optional.of(new JSONObject(response.get().response));
 		}
 		
 		return Optional.empty();

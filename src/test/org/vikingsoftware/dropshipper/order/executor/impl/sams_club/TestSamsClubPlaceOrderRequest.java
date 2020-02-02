@@ -85,7 +85,7 @@ public class TestSamsClubPlaceOrderRequest extends SamsClubRequestTest {
 		System.out.println("New SamsOrder: " + newSamsOrderCookie.get("samsorder"));
 		client.setCookies("samsclub.com", "/", newSamsOrderCookie);
 		
-		Assert.assertTrue(addToCartReq.execute());
+		Assert.assertTrue(addToCartReq.execute().isPresent());
 		
 		System.out.println("Testing get cart...");
 		final SamsClubGetCartItemsRequest getCartReq = new SamsClubGetCartItemsRequest(client);

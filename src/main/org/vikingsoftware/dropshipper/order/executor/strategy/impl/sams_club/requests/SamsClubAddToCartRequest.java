@@ -1,5 +1,7 @@
 package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests;
 
+import java.util.Optional;
+
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -9,6 +11,7 @@ import org.json.JSONObject;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubResponse;
 
 public class SamsClubAddToCartRequest extends SamsClubRequest {
 	
@@ -28,13 +31,13 @@ public class SamsClubAddToCartRequest extends SamsClubRequest {
 		this.itemNumber = builder.itemNumber;
 	}
 	
-	public boolean execute() {
+	public Optional<SamsClubResponse> execute() {
 		final String url = URL_PREFIX + getCookie("samsorder") + URL_SUFFIX;
 		System.out.println("[SamsClubAddToCartRequest] Formulating POST request for url: " + url);
 		final HttpPost request = new HttpPost(url);
 		addHeaders(request);
 		addPayload(request);
-		return sendRequest(client, request, HttpStatus.SC_OK).isPresent();
+		return sendRequest(client, request, HttpStatus.SC_OK);
 	}
 	
 	private void addHeaders(final HttpPost request) {

@@ -17,6 +17,10 @@ public class ShippingEstimatorStrategyManager {
 	
 	private final Map<FulfillmentPlatforms, ShippingEstimatorStrategy> strategies = new HashMap<>();
 	
+	public ShippingEstimatorStrategyManager() {
+		reset();
+	}
+	
 	public Optional<ShippingEstimation> generateShippingEstimation(final FulfillmentListing listing) {
 		log.info("Generating shipping estimation for fulfillment listing w/ id " + listing.id);
 		final FulfillmentPlatforms specifiedPlatform = FulfillmentPlatforms.getById(listing.fulfillment_platform_id);

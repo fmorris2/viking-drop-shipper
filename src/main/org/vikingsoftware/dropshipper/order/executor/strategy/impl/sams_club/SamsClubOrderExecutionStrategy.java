@@ -150,7 +150,7 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 				.quantity(order.snapshot_fulfillment_quantity_multiplier)
 				.build();
 		LOG.info("Attempting to submit add to cart request");
-		return request.execute();
+		return request.execute().isPresent();
 	}
 	
 	private boolean verifyCart(final CustomerOrder order, final SamsClubItem item, 

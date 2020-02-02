@@ -11,6 +11,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubResponse;
 
 public class SamsClubRefreshSamsOrderRequest extends SamsClubRequest {
 	
@@ -26,9 +27,9 @@ public class SamsClubRefreshSamsOrderRequest extends SamsClubRequest {
 		addHeaders(request);
 		addPayload(request);
 		
-		final Optional<String> responseStr = sendRequest(client, request, HttpStatus.SC_OK);
-		if(responseStr.isPresent()) {
-			return Optional.of(new JSONObject(responseStr.get()));
+		final Optional<SamsClubResponse> response = sendRequest(client, request, HttpStatus.SC_OK);
+		if(response.isPresent()) {
+			return Optional.of(new JSONObject(response.get().response));
 		}
 		
 		return Optional.empty();
