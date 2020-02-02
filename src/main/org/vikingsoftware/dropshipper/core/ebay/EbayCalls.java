@@ -594,13 +594,13 @@ public class EbayCalls {
 		item.setCountry(CountryCodeType.US);
 		item.setCurrency(CurrencyCodeType.USD);
 		item.setDescription(listing.description);
-		item.setDispatchTimeMax(5);
-		listing.handlingTime = 5;
+		item.setDispatchTimeMax(2);
+		listing.handlingTime = 2;
 		item.setListingDuration(ListingDurationCodeType.GTC.value());
 		item.setListingType(ListingTypeCodeType.FIXED_PRICE_ITEM);
 		item.setLocation("St. Louis, MO");
 		item.setPostalCode("63101");
-		item.setPayPalEmailAddress("thevikingmarketplace@gmail.com");
+		item.setPayPalEmailAddress("sales@vikingwholesale.org");
 		item.setProductListingDetails(createProductListingDetailsForListing(listing, listing.upc, listing.ean));
 		item.setPictureDetails(createPictureDetailsForListing(listing));
 		item.setPrimaryCategory(createCategoryTypeForListing(listing));
@@ -697,8 +697,9 @@ public class EbayCalls {
 
 	private static ReturnPolicyType createReturnPolicyTypeForListing(final Listing listing) {
 		final ReturnPolicyType type = new ReturnPolicyType();
-		type.setReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_NOT_ACCEPTED.value());
+		type.setReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_ACCEPTED.value());
 		type.setInternationalReturnsAcceptedOption(ReturnsAcceptedCodeType.RETURNS_NOT_ACCEPTED.value());
+		type.setReturnsWithin("Days_30");
 		return type;
 	}
 

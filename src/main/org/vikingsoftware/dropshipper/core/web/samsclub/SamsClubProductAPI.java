@@ -100,7 +100,7 @@ public final class SamsClubProductAPI extends JsonAPIParser {
 	
 	public boolean passesAllListingConditions() {
 		try {
-			return isFreeShipping() && isAvailableOnline()
+			return isAvailableOnline()
 					&& !hasVariations() && !isGiftCard() 
 					&& !isFlowersTemplateProduct();
 		} catch(final Exception e) {

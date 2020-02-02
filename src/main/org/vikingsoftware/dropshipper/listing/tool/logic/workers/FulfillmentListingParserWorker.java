@@ -173,7 +173,7 @@ public class FulfillmentListingParserWorker extends SwingWorker<Void, String> {
 	    } else if(!listing.canShip) {
 			System.out.println("Can't ship listing " + listing.url + "!");
 		} else if(listing.price > MAX_LISTING_PRICE) {
-			System.out.println("Listing price is over our comfortable threshold!");
+			System.out.println("Listing price is over our comfortable threshold for url: " + listing.url);
 		} else if(!platformToFulfillmentIds.getOrDefault(listing.fulfillmentPlatformId, new HashSet<>()).contains(listing.itemId)) {
 			final boolean shouldDisplayListing = ListingQueue.isEmpty();
 			ListingQueue.add(listing);

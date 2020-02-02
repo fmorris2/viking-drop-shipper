@@ -1,15 +1,19 @@
 package main.org.vikingsoftware.dropshipper.inventory.impl;
 
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.FulfillmentManager;
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.listing.FulfillmentListing;
@@ -17,6 +21,7 @@ import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.Fulfillme
 import main.org.vikingsoftware.dropshipper.core.data.fulfillment.stock.FulfillmentStockManager;
 import main.org.vikingsoftware.dropshipper.core.data.marketplace.listing.MarketplaceListing;
 import main.org.vikingsoftware.dropshipper.core.data.misc.Pair;
+import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.ebay.EbayCalls;
 import main.org.vikingsoftware.dropshipper.core.utils.DBLogging;
 import main.org.vikingsoftware.dropshipper.core.utils.PriceUtils;
@@ -24,10 +29,18 @@ import main.org.vikingsoftware.dropshipper.inventory.AutomaticInventoryUpdater;
 
 public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 	
-	public static final Function<Double,Integer> AMT_IN_STOCK_FORMULA = price -> calculateAppropriateStockForPrice(price);
-
-	private static final int MAX_EBAY_STOCK = 2;
-	private static final double PRICE_INCREMENT_FOR_STOCK = 8.00;
+	private static final int NUM_TOP_SELLING_LISTINGS_CONSIDERED = 200;
+	
+	private static final String TOP_SELLING_LISTINGS_QUERY = "SELECT marketplace_listing.listing_id " + 
+			"FROM marketplace_listing " + 
+			"INNER JOIN fulfillment_mapping ON marketplace_listing.id=fulfillment_mapping.marketplace_listing_id " + 
+			"INNER JOIN processed_order ON processed_order.fulfillment_listing_id=fulfillment_mapping.fulfillment_listing_id " + 
+			"GROUP BY marketplace_listing.listing_id " + 
+			"ORDER BY COUNT(*) DESC " + 
+			"LIMIT " + NUM_TOP_SELLING_LISTINGS_CONSIDERED;
+	
+	private static final int MAX_EBAY_STOCK = 5;
+	private static final double PRICE_INCREMENT_FOR_STOCK = 10.00;
 	
 	//1000 seconds minimum between updates for a specific listing. eBay caps revisions at 150 per day for a listing
 	private static final int MIN_UPDATE_TIME_THRESH = 576_000;
@@ -38,10 +51,27 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 	private static final Map<String, Long> updateCache = new HashMap<>();
 	
 	private final ExecutorService threadPool = Executors.newFixedThreadPool(NUM_EXECUTION_THREADS);
+	public final BiFunction<String,Double,Integer> AMT_IN_STOCK_FORMULA = this::calculateAppropriateStockForPrice;
+	private final Set<String> topSellingListings = new HashSet<>();
 	
-	private static int calculateAppropriateStockForPrice(final double price) {
-		int calculatedStock = MAX_EBAY_STOCK - (int)Math.floor(price / PRICE_INCREMENT_FOR_STOCK);
-		return Math.max(calculatedStock, 1);
+	public EbayInventoryUpdater() {
+		try(final Statement st = VSDSDBManager.get().createStatement();
+			final ResultSet res = st.executeQuery(TOP_SELLING_LISTINGS_QUERY)) {
+			while(res.next()) {
+				topSellingListings.add(res.getString("listing_id"));
+			}
+		} catch(final Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private int calculateAppropriateStockForPrice(final String listingId, final double price) {
+		if(topSellingListings.contains(listingId)) {
+			int calculatedStock = MAX_EBAY_STOCK - (int)Math.floor(price / PRICE_INCREMENT_FOR_STOCK);
+			return Math.max(calculatedStock, 1);
+		}
+		
+		return 1;
 	}
 
 	@Override
@@ -203,10 +233,12 @@ public class EbayInventoryUpdater implements AutomaticInventoryUpdater {
 			 * we should simply return instead of updating the listing on eBay.
 			 */
 			
-			final int calculatedStock = Math.min(parsedStock, AMT_IN_STOCK_FORMULA.apply(combinedStockEntry.price));
+			final int calculatedStock = Math.min(parsedStock, AMT_IN_STOCK_FORMULA.apply(listing.listingId, combinedStockEntry.price));
 			System.out.println("Calculated stock: " + calculatedStock);
 			
-			if(currentEbayInventory >= calculatedStock && parsedStock >= 0) {
+			if(currentEbayInventory > calculatedStock && parsedStock >= 0) {
+				System.out.println("eBay has too much inventory - Decreasing.");
+			} else if(currentEbayInventory >= calculatedStock && parsedStock >= 0) {
 				System.out.println("eBay still has inventory - No need to update.");
 				return Optional.of(combinedStockEntry);
 			} else if(currentEbayInventory <= 0 && parsedStock <= 0) {

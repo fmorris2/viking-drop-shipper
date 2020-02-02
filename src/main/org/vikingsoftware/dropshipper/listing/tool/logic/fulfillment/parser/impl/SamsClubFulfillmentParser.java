@@ -29,6 +29,7 @@ public class SamsClubFulfillmentParser implements FulfillmentParser {
 			api.parse(productId);
 			
 			final Listing listing = new Listing();
+			listing.url = url;
 			listing.fulfillmentPlatformId = FulfillmentPlatforms.SAMS_CLUB.getId();
 			listing.shippingService = ShippingServiceCodeType.SHIPPING_METHOD_STANDARD;
 			
@@ -40,12 +41,6 @@ public class SamsClubFulfillmentParser implements FulfillmentParser {
 			
 			if(!api.isAvailableOnline()) {
 				System.out.println("\tListing is not available online. Skipping...");
-				listing.canShip = false;
-				return listing;
-			}
-			
-			if(!api.isFreeShipping()) {
-				System.out.println("\tListing is not free shipping. Skipping...");
 				listing.canShip = false;
 				return listing;
 			}
@@ -99,7 +94,7 @@ public class SamsClubFulfillmentParser implements FulfillmentParser {
 			System.out.println("Listing Title: " + listing.title);
 			
 			ListingUtils.makeDescriptionPretty(listing);
-			System.out.println("Description: " + listing.description);
+			//System.out.println("Description: " + listing.description);
 			
 			listing.price = api.getListPrice().orElse(-1D) * listing.minPurchaseQty;
 			if(listing.price <= 0) {
