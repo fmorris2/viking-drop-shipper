@@ -23,6 +23,7 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_clu
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubCartItem;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubItem;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubPlaceOrderRequestDependencies;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubResponse;
 
 public class TestSamsClubPlaceOrderRequest extends SamsClubRequestTest {
 
@@ -85,7 +86,8 @@ public class TestSamsClubPlaceOrderRequest extends SamsClubRequestTest {
 		System.out.println("New SamsOrder: " + newSamsOrderCookie.get("samsorder"));
 		client.setCookies("samsclub.com", "/", newSamsOrderCookie);
 		
-		Assert.assertTrue(addToCartReq.execute().isPresent());
+		final Optional<SamsClubResponse> addToCartResponse = addToCartReq.execute();
+		Assert.assertTrue(addToCartResponse.isPresent() && addToCartResponse.get().success);
 		
 		System.out.println("Testing get cart...");
 		final SamsClubGetCartItemsRequest getCartReq = new SamsClubGetCartItemsRequest(client);

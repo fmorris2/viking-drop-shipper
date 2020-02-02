@@ -1,5 +1,7 @@
 package test.org.vikingsoftware.dropshipper.order.executor.impl.sams_club;
 
+import java.util.Optional;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -10,6 +12,7 @@ import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubLoginResponse;
 import main.org.vikingsoftware.dropshipper.core.web.samsclub.SamsClubSessionProvider;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubAddToCartRequest;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubResponse;
 
 public class TestSamsClubAddToCartRequest {
 
@@ -26,6 +29,8 @@ public class TestSamsClubAddToCartRequest {
 				.quantity(1)
 				.build();
 		
-		Assert.assertTrue(request.execute().isPresent());
+		final Optional<SamsClubResponse> response = request.execute();
+		
+		Assert.assertTrue(response.isPresent() && response.get().success);
 	}
 }

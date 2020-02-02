@@ -1,6 +1,7 @@
 package test.org.vikingsoftware.dropshipper.order.executor.impl.sams_club;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -10,6 +11,7 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_clu
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests.SamsClubRemoveFromCartRequest;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubCartItem;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubItem;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubResponse;
 
 public class TestSamsClubRemoveFromCartRequest extends SamsClubRequestTest {
 	
@@ -18,7 +20,9 @@ public class TestSamsClubRemoveFromCartRequest extends SamsClubRequestTest {
 		System.out.println("Adding single item to cart...");
 		final SamsClubItem item = new SamsClubItem("645081", "prod17750489", "sku18264565");
 		final SamsClubAddToCartRequest addToCartReq = createAddToCartRequests(item).get(0);
-		Assert.assertTrue(addToCartReq.execute().isPresent());
+		
+		final Optional<SamsClubResponse> addToCartResponse = addToCartReq.execute();
+		Assert.assertTrue(addToCartResponse.isPresent() && addToCartResponse.get().success);
 		
 		System.out.println("Testing get cart...");
 		final SamsClubGetCartItemsRequest getCartReq = new SamsClubGetCartItemsRequest(addToCartReq.getClient());

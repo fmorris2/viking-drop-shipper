@@ -4,10 +4,12 @@ public class SamsClubResponse {
 	
 	public final int statusCode;
 	public final String response;
+	public final boolean success;
 	
-	public SamsClubResponse(final int statusCode, final String response) {
+	public SamsClubResponse(final int statusCode, final String response, final boolean success) {
 		this.statusCode = statusCode;
 		this.response = response;
+		this.success = success;
 	}
 	
 	@Override

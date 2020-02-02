@@ -30,7 +30,7 @@ public class SamsClubCreateContractRequest extends SamsClubRequest {
 		addHeaders(request);
 		addPayload(request);
 		final Optional<SamsClubResponse> response = sendRequest(client, request, HttpStatus.SC_OK);
-		if(response.isPresent()) {
+		if(response.isPresent() && response.get().success) {
 			System.out.println("[SamsClubCreateContractRequest] Response: " + response.get());
 			return Optional.of(new JSONObject(response.get().response));
 		}

@@ -1,9 +1,12 @@
 package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests;
 
+import java.util.Optional;
+
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubResponse;
 
 public class SamsClubAuthenticateRequest extends SamsClubRequest {
 
@@ -21,7 +24,8 @@ public class SamsClubAuthenticateRequest extends SamsClubRequest {
 		final String url = BASE_URL + System.currentTimeMillis();
 		final HttpPost request = new HttpPost(url);
 		addHeaders(request);
-		return sendRequest(client, request, HttpStatus.SC_OK).isPresent();
+		final Optional<SamsClubResponse> response = sendRequest(client, request, HttpStatus.SC_OK);
+		return response.isPresent() && response.get().success;
 	}
 	
 	private void addHeaders(final HttpPost request) {

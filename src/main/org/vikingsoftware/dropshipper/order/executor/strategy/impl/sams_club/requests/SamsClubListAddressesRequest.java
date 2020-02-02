@@ -31,7 +31,7 @@ public class SamsClubListAddressesRequest extends SamsClubRequest {
 			final SamsClubResponse response = this.sendRequest(client, request, HttpStatus.SC_OK).orElse(null);
 			if(response != null) {
 				System.out.println("[SamsClubListAddressesRequest] Response String: " + response);
-				addresses.addAll(convertJsonToAddressPojos(new JSONObject(response)));
+				addresses.addAll(convertJsonToAddressPojos(new JSONObject(response.response)));
 			}
 		} catch(final Exception e) {
 			e.printStackTrace();

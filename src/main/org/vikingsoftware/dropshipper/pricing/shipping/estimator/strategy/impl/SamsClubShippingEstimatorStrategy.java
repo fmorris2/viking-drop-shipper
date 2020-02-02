@@ -51,7 +51,7 @@ public class SamsClubShippingEstimatorStrategy implements ShippingEstimatorStrat
 		}
 		
 		final Optional<SamsClubResponse> addToCartAction = addItemToCart(client, fulfillmentListing);
-		if(!addToCartAction.isPresent()) {
+		if(!addToCartAction.isPresent() || !addToCartAction.get().success) {
 			log.info("Failed to add fulfillment listing w/ id " + fulfillmentListing.id + " to cart.");
 			return Optional.empty();
 		}

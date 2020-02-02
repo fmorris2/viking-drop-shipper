@@ -31,7 +31,7 @@ public class SamsClubGetCartItemsRequest extends SamsClubRequest {
 		addHeaders(request);
 		
 		final Optional<SamsClubResponse> response = super.sendRequest(client, request, HttpStatus.SC_OK);
-		if(response.isPresent()) {
+		if(response.isPresent() && response.get().success) {
 			return convertResponseToCartItemList(response.get().response);
 		}
 		

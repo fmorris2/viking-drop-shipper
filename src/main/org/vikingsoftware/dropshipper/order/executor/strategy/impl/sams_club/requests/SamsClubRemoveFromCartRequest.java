@@ -1,11 +1,14 @@
 package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests;
 
+import java.util.Optional;
+
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpRequestBase;
 
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubCartItem;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubResponse;
 
 public class SamsClubRemoveFromCartRequest extends SamsClubRequest {
 
@@ -22,7 +25,9 @@ public class SamsClubRemoveFromCartRequest extends SamsClubRequest {
 		
 		final HttpDelete request = new HttpDelete(url);
 		addHeaders(request);
-		return sendRequest(client, request, HttpStatus.SC_OK).isPresent();
+		
+		final Optional<SamsClubResponse> response = sendRequest(client, request, HttpStatus.SC_OK);
+		return response.isPresent() && response.get().success;
 	}
 	
 	private void addHeaders(final HttpRequestBase request) {

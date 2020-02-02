@@ -38,10 +38,11 @@ public abstract class SamsClubRequest {
 			if(response.getStatusLine().getStatusCode() == expectedResponseCode) {
 				final String responseStr = EntityUtils.toString(response.getEntity());
 				return responseStr == null || responseStr.isEmpty() 
-						? Optional.of(new SamsClubResponse(expectedResponseCode, "success")) 
-						: Optional.of(new SamsClubResponse(expectedResponseCode, responseStr));
+						? Optional.of(new SamsClubResponse(expectedResponseCode, "success", true)) 
+						: Optional.of(new SamsClubResponse(expectedResponseCode, responseStr, true));
 			} else {
 				System.out.println("Response Headers: " + Arrays.toString(response.getAllHeaders()));
+				return Optional.of(new SamsClubResponse(response.getStatusLine().getStatusCode(), "failure", false));
 			}
 		} catch (final IOException e) {
 			e.printStackTrace();

@@ -43,7 +43,7 @@ public class SamsClubPurchaseContractDependenciesRequest extends SamsClubRequest
 	
 	public boolean execute() {
 		final Optional<SamsClubResponse> data = generateHtml();
-		if(data.isEmpty()) {
+		if(data.isEmpty() || !data.get().success) {
 			return false;
 		}
 		

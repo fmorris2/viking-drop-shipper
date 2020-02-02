@@ -1,5 +1,7 @@
 package main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.requests;
 
+import java.util.Optional;
+
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -10,6 +12,7 @@ import org.json.JSONObject;
 
 import main.org.vikingsoftware.dropshipper.core.net.http.WrappedHttpClient;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubCartItem;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubResponse;
 
 public class SamsClubUpdateCartItemQuantityRequest extends SamsClubRequest {
 
@@ -26,7 +29,9 @@ public class SamsClubUpdateCartItemQuantityRequest extends SamsClubRequest {
 		final HttpPut request = new HttpPut(url);
 		addHeaders(request);
 		addPayload(request, items);
-		return sendRequest(client, request, HttpStatus.SC_OK).isPresent();
+		
+		final Optional<SamsClubResponse> response = sendRequest(client, request, HttpStatus.SC_OK);
+		return response.isPresent() && response.get().success;
 	}
 	
 	private void addHeaders(final HttpRequestBase request) {

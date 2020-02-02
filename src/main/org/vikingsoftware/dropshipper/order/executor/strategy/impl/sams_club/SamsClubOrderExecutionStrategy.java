@@ -41,6 +41,7 @@ import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_clu
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubItem;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubOrderPricingDetails;
 import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubPlaceOrderRequestDependencies;
+import main.org.vikingsoftware.dropshipper.order.executor.strategy.impl.sams_club.types.SamsClubResponse;
 
 public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 	
@@ -150,7 +151,8 @@ public class SamsClubOrderExecutionStrategy implements OrderExecutionStrategy {
 				.quantity(order.snapshot_fulfillment_quantity_multiplier)
 				.build();
 		LOG.info("Attempting to submit add to cart request");
-		return request.execute().isPresent();
+		final Optional<SamsClubResponse> response = request.execute();
+		return response.isPresent() && response.get().success;
 	}
 	
 	private boolean verifyCart(final CustomerOrder order, final SamsClubItem item, 

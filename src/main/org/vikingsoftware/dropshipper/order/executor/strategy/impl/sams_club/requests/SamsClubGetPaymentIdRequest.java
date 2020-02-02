@@ -23,10 +23,10 @@ public class SamsClubGetPaymentIdRequest extends SamsClubRequest {
 		addHeaders(request);
 		
 		System.out.println("[SamsClubGetPaymentIdRequest] Dispatching GET request to " + URL);
-		final Optional<SamsClubResponse> responseStr = sendRequest(client, request, HttpStatus.SC_OK);
-		if(responseStr.isPresent()) {
-			System.out.println("[SamsClubGetPaymentIdRequest] Response: " + responseStr.get());
-			return Optional.of(new JSONObject(responseStr.get()));
+		final Optional<SamsClubResponse> response = sendRequest(client, request, HttpStatus.SC_OK);
+		if(response.isPresent() && response.get().success) {
+			System.out.println("[SamsClubGetPaymentIdRequest] Response: " + response.get().response);
+			return Optional.of(new JSONObject(response.get().response));
 		}
 		
 		return Optional.empty();

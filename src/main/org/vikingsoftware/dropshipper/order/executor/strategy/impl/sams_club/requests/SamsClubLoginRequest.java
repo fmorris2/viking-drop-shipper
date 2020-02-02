@@ -32,7 +32,7 @@ public class SamsClubLoginRequest extends SamsClubRequest {
 			addHeaders(request);
 			addPayload(request);
 			final Optional<SamsClubResponse> response = sendRequest(client, request, HttpStatus.SC_OK);
-			if(response.isPresent()) {
+			if(response.isPresent() && response.get().success) {
 				return Optional.of(new JSONObject(response.get().response));
 			}
 		} catch(final Exception e) {
