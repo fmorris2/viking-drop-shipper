@@ -1,6 +1,7 @@
 package main.org.vikingsoftware.dropshipper.core.net.http;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,11 +20,14 @@ import org.apache.http.cookie.ClientCookie;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.util.EntityUtils;
+import org.apache.log4j.Logger;
 
 import main.org.vikingsoftware.dropshipper.core.db.impl.VSDSDBManager;
 import main.org.vikingsoftware.dropshipper.core.net.proxy.VSDSProxy;
 
 public class WrappedHttpClient {
+	
+	private static final Logger log = Logger.getLogger(WrappedHttpClient.class);
 	
 	public final HttpClient client;
 	public final VSDSProxy proxy;
@@ -39,6 +43,9 @@ public class WrappedHttpClient {
 	public HttpResponse execute(final HttpUriRequest request) throws ClientProtocolException, IOException {
 		try {
 			return client.execute(request, context);
+		} catch(final SocketException e) {
+			log.warn("Encountered socket exception when executing request w/ proxy " + proxy, e);
+			HttpClientManager.get().flag(this);
 		} catch(final IndexOutOfBoundsException e) { //happens on too many redirects?
 			HttpClientManager.get().flag(this);
 		}
